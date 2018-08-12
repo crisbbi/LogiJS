@@ -18,7 +18,6 @@ h1, h2, h3, h4, h5, h6, span, p {
 header {
     z-index: 1;
     background-color: rgb(50, 50, 50);
-    height: 8em;
 }
 
 .header-container {
@@ -34,7 +33,7 @@ header {
 }
 
 nav {
-    margin-top: 1.9em;
+    margin-top: 2.3em;
 }
 
 nav ul {
@@ -56,89 +55,72 @@ nav ul li a:hover {
     background-color: rgb(200,50,50);
 }
 
-.main {
-    position: relative;
-    margin-top: 0em;
-    height: 45em;
-}
-
 .blurry-background {
-    position: absolute;
-    background-image: url(../images/background.png);
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+    position: relative;
     width: 100%;
     height: 45em;
-    filter: blur(3px);
     z-index: -1;
 }
 
-.title-area {
+.blurry-background::before {
+    content: "";
+    background-image: url(../images/background.png);
     position: absolute;
     width: 100%;
+    height: 100%;
+    filter: blur(3px);
 }
 
 .title-background {
     position: absolute;
-    background-color: rgb(50, 50, 50);
-    opacity: 0.8;
-    width: 100%;
-    height: 22em;
-    z-index: 1;
     margin-top: 10em;
+    background-color: rgba(50, 50, 50, 0.8);
+    z-index: 1;
+    width: 100%;
+    height: auto;
 }
 
-#title {
+#welcome {
+    text-align: center;
     font-size: 3em;
-    text-align: center;
-    margin-top: 4em;
-    position: relative;
-    z-index: 2;
+    padding-top: 0.5em;
     color: white;
 }
 
-#subtitle {
-    z-index: 3;
-    font-size: 2em;
-    color: white;
+#description {
     text-align: center;
-    position: relative;
-    font-weight: 100;
-    margin: -1em auto 1em auto;
-    width: 80%;
+    color: white;
+    font-size: 2em;
+    margin-top: -0.5em;
+    font-weight: 100; 
 }
 
 .buttons {
-    width: 100%;
-    position: relative;
-    z-index: 2;
     text-align: center;
-    font-weight: 100;
 }
 
-.button-style {
-    background-color: rgb(210,60,60);
-    border: none;
-    color: white;
-    padding: 10px 15px;
+#start-button {
     font-size: 1.5em;
-    font-weight: 100;
-    box-shadow: 0px 2px black;
+    color: white;
+    background-color: rgb(200,50,50);
+    border: none;
+    padding: 0.5em 0.8em;
 }
 
-.button-style:hover {
-    cursor: pointer;
-    background-color: rgb(245, 60, 60);
+#tutorial {
+    font-size: 1.5em;
+    color: white;
+    background-color: rgb(200,50,50);
+    border: none;
+    padding: 0.5em 0.8em;
 }
 
 #contributors {
-    font-size: 1.3em;
+    color: white;
     text-align: center;
     font-weight: 100;
-    color: white;
-    z-index: 3;
-    position: relative;
+    padding-bottom: 1em;
+    padding-top: 0.5em;
 }
 
 footer {
