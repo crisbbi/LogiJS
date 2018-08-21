@@ -8,15 +8,15 @@ function generateCode(filename) {
     var xorCounter = 0;
 
     // import library ieee to use 
-    code = code.concat("library ieee; use ieee.std_logic_1164.all;");
+    code = code.concat("library ieee; \n use ieee.std_logic_1164.all; \n");
     
     // create an entity of the gates with I/O-ports
     for(let index = 0; index < gates.length; index++) {
         switch(caption){
             case "and":
                 // begin entity description
-                code = code.concat(" entity And_" + gates[index].inputCount + " is");
-                code = code.concat(" ports(");
+                code = code.concat("entity And_" + gates[index].inputCount + " is \n");
+                code = code.concat(" ports( \n");
 
                 /*  
                 add input ports:
@@ -27,7 +27,7 @@ function generateCode(filename) {
                     if(inputNumber < inputCount - 1) {
                         code = code.concat(" in" + inputNumber + ", ");
                     } else {
-                        code = code.concat(" in" + inputNumber + ": STD_LOGIC;");
+                        code = code.concat(" in" + inputNumber + ": STD_LOGIC; \n");
                     }
                 }
 
@@ -40,17 +40,49 @@ function generateCode(filename) {
                     if(outputNumber < inputCount - 1) {
                         code = code.concat(" out" + outputNumber + ", ");
                     } else {
-                        code = code.concat(" out" + outputNumber + ": STD_LOGIC;");
+                        code = code.concat(" out" + outputNumber + ": STD_LOGIC; \n");
                     }
                 }
                 
                 // close entity description
-                code = code.concat(" ); end And_" + gates[index].inputCount + ";");
+                code = code.concat(" ); \n end And_" + gates[index].inputCount + "; \n \n");
 
                 // add architecture part
                 break;
             case "or":
                 code = code.concat(" entity Or_" + gates[index].inputCount + " is");
+                code = code.concat(" ports( \n");
+
+                /*  
+                add input ports:
+                count up until inputCount - 1 and then add the last 
+                port, to then attach ": STD_LOGIC;" to it
+                */
+                for(let inputNumber = 0; inputNumber < inputCount; inputNumber++) {
+                    if(inputNumber < inputCount - 1) {
+                        code = code.concat(" in" + inputNumber + ", ");
+                    } else {
+                        code = code.concat(" in" + inputNumber + ": STD_LOGIC; \n");
+                    }
+                }
+
+                /*  
+                add output ports:
+                count up until outputCount - 1 and then add the last 
+                port, to then attach ": STD_LOGIC;" to it
+                */
+                for(let outputNumber = 0; outputNumber < outputCount; outputNumber++) {
+                    if(outputNumber < inputCount - 1) {
+                        code = code.concat(" out" + outputNumber + ", ");
+                    } else {
+                        code = code.concat(" out" + outputNumber + ": STD_LOGIC; \n");
+                    }
+                }
+                
+                // close entity description
+                code = code.concat(" ); \n end Or_" + gates[index].inputCount + "; \n \n");
+
+                // add architecture part
                 break;
             case "xor":
                 code = code.concat(" entity Xor_" + gates[index].inputCount + " is");
