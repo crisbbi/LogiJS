@@ -490,6 +490,12 @@ function setup() { // jshint ignore:line
     textInput.elt.style.fontFamily = 'Open Sans';
     textInput.elt.className = "textInput";
 
+    // Export to VHDL
+    vhdlButton = createButton('VHDL');
+    vhdlButton.position(windowWidth - textInput.width - 335, 4);
+    vhdlButton.mousePressed(vhdlClicked);
+    vhdlButton.elt.className = "button";
+    
     // Clears the canvas and resets the view
     newButton = createButton('New');
     newButton.position(windowWidth - textInput.width - 265, 4);
@@ -660,6 +666,28 @@ function saveClicked() {
         showSClickBox = false;
         previewSymbol = null;
         saveSketch(textInput.value() + '.json');
+        document.title = textInput.value() + ' - LogiJS';
+    } else {
+        // TODO: Error should pop up as tooltip under textInput
+        alert("Circuit name cannot be empty");
+    }
+}
+
+// Triggered when a sketch should be saved
+function vhdlClicked() {
+    /*  
+        Only save circuits with "valid" names, here erasing all whitespaces (for now)
+        replace(...) used as suggestion from StackOverflow 
+        "/\s" says to sarch for the whitespace in the word (pattern),
+        "/g" says to search through the whole string and replace "\s" (whitespace) by ""
+        TODO: Delete all illegal characters
+    */
+    if(textInput.value().replace(/\s/g, "") !== ""){
+        selectMode = 'none';
+        showSClickBox = false;
+        previewSymbol = null;
+        alert(textInput.value());
+        generateCode(textInput.value().replace(/\s/g, ""));
         document.title = textInput.value() + ' - LogiJS';
     } else {
         // TODO: Error should pop up as tooltip under textInput
