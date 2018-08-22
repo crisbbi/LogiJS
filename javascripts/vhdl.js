@@ -10,7 +10,8 @@ function generateCode(filename) {
     
     // create an entity of the gates with I/O-ports
     for(let index = 0; index < gates.length; index++) {
-        switch(caption){
+        let gateLogic = gates[index].logicFunction;
+        switch(gateLogic){
             case "and":
                 // begin entity description
                 codeArray.push("entity And_" + gates[index].inputCount + " is");
@@ -53,10 +54,10 @@ function generateCode(filename) {
                 // add architecture part
                 break;
             case "or":
-                
+                codeArray = codeArray;
                 break;
             case "xor":
-                codeArray = codeArray.concat(" entity Xor_" + gates[index].inputCount + " is");
+                codeArray = codeArray;
                 break;
             default: 
                 codeArray = codeArray;
