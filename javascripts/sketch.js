@@ -686,7 +686,6 @@ function vhdlClicked() {
         selectMode = 'none';
         showSClickBox = false;
         previewSymbol = null;
-        alert(textInput.value());
         generateCode(textInput.value().replace(/\s/g, ""));
         document.title = textInput.value() + ' - LogiJS';
     } else {
