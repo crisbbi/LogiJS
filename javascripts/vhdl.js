@@ -23,11 +23,11 @@ function generateCode(filename) {
                 port, to then attach ": STD_LOGIC;" to it
                 */
                 let inputsString = "";
-                for(let inputNumber = 0; inputNumber < inputCount; inputNumber++) {
-                    if(inputNumber < inputCount - 1) {
-                        inputsString.concat("in" + inputNumber + ", ");
+                for(let inputNumber = 0; inputNumber < gates[index].inputCount; inputNumber++) {
+                    if(inputNumber < gates[index].inputCount - 1) {
+                        inputsString += "in" + inputNumber + ", ";
                     } else {
-                        inputsString.concat(" in" + inputNumber + ": STD_LOGIC;");
+                        inputsString += "in" + inputNumber + ": STD_LOGIC;";
                     }
                 }
                 codeArray.push(inputsString);
@@ -38,11 +38,11 @@ function generateCode(filename) {
                 port, to then attach ": STD_LOGIC;" to it
                 */
                 let outputsString = "";
-                for(let outputNumber = 0; outputNumber < inputCount; outputNumber++) {
-                   if(outputNumber < inputCount - 1) {
-                        outputsString.concat("out" + outputNumber + ", ");
+                for(let outputNumber = 0; outputNumber < gates[index].outputCount; outputNumber++) {
+                   if(outputNumber < gates[index].outputCount - 1) {
+                        outputsString += "out" + outputNumber + ", ";
                    } else {
-                        outputsString.concat(" out" + outputNumber + ": STD_LOGIC;");
+                        outputsString += "out" + outputNumber + ": STD_LOGIC;";
                    }
                 }
                 codeArray.push(outputsString);
