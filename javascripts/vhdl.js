@@ -52,6 +52,21 @@ function generateCode(filename) {
                 codeArray.push("end And_" + gates[index].inputCount + ";");
 
                 // add architecture part
+                codeArray.push("architecture behaviour of " + gates[index].inputCount + " is");
+                codeArray.push("begin");
+
+                // assign logic to inputs/output
+                let behaviourString = "out0 <= ";
+                // TODO check for NOT logic 
+                for(let inputNumber = 0; inputNumber < gates.length[index].inputCount; inputNumber++) {
+                    if(inputNumber < gates[index].inputCount - 1) {
+                        behaviourString += "in" + inputNumber + " and ";
+                    } else {
+                        behaviourString += "in" + inputNumber + ");";
+                    }
+                }
+                codeArray.push(behaviourString);
+                codeArray.push("end behaviour;");
                 break;
             case "or":
                 codeArray = codeArray;
