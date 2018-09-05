@@ -61,6 +61,11 @@ function generateCode(filename) {
                 if(gates[index].outputsInv[0] === false) {
                     console.log("output ist false");
                 }
+
+                /*  
+                same principle as upper for loops,
+                builds the string to describe the logic function
+                */
                 for(let inputNumber_1 = 0; inputNumber_1 < gates[index].inputCount; inputNumber_1++) {
                     if(inputNumber_1 < gates[index].inputCount - 1) {
                         behaviourString += "in" + inputNumber_1 + " and ";
