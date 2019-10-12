@@ -758,14 +758,15 @@ function setup() { // jshint ignore:line
         guiLabels[i].style.fontSize = "16px";
     }
 
-    socket = io.connect();
+    //socket = io.connect();
 
     let loadfile = urlParam('sketch');
     if (loadfile !== '') {
         textInput.value(loadfile);
         setLoading(true);
         loadSketch(loadfile + '.json');
-        socket.emit('getDescription', { file: loadfile, access_token: getCookieValue('access_token') });
+        //socket.emit('getDescription', { file: loadfile, access_token: getCookieValue('access_token') });
+        /*
         socket.on('sketchDescription', (data) => {
             try {
                 let d = JSON.parse(data.data);
@@ -777,8 +778,9 @@ function setup() { // jshint ignore:line
                     descInput.value(data.data);
                 }
             }
-            socket.off('sketchDescription');
+            //socket.off('sketchDescription');
         });
+        */
     }
 
     //Hide hints if there is a cookie 
@@ -788,12 +790,14 @@ function setup() { // jshint ignore:line
         nextStepButton.hide();
     }
 
+    /*
     socket.on('demousererror', function () {
         error = 'Saving failed: No permissions!';
         errordesc = 'This is a demo account.';
         reDraw();
         setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
     });
+    */
 
     reDraw();
     setTimeout(reDraw, 100); // Redraw after 100ms in case fonts weren't loaded on first redraw
@@ -897,7 +901,7 @@ function saveClicked() {
         setLoading(false);
         reDraw();
         look.desc = descInput.value();
-        socket.emit('savePreview', { name: textInput.value(), img: previewImg, desc: JSON.stringify(look), access_token: getCookieValue('access_token') });
+        //socket.emit('savePreview', { name: textInput.value(), img: previewImg, desc: JSON.stringify(look), access_token: getCookieValue('access_token') });
     });
     reDraw();
 }
@@ -2137,14 +2141,16 @@ function showCustomDialog() {
     pageDownButton.show();
     cancelButton.position(Math.round(window.width / 8) + 180, window.height - 90);
     cancelButton.show();
-    socket.emit('getImportSketches', { access_token: getCookieValue('access_token') });
+    //socket.emit('getImportSketches', { access_token: getCookieValue('access_token') });
+    /*
     socket.on('importSketches', (data) => {
-        socket.off('importSketches');
+        //socket.off('importSketches');
         maxPage = Math.ceil(Math.ceil(data.sketches.length / maxCustCols) / maxCustRows) - 1;
         for (let i = 0; i < data.sketches.length; i++) {
             showCustomItem(i + 1, data.images[i], data.sketches[i], data.looks[i]);
         }
     });
+    */
 }
 
 function showCustomItem(place, img, caption, look) {
