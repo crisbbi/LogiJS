@@ -6,6 +6,7 @@
 function deleteInvalidDiodes() {
     for (let j = diodes.length - 1; j >= 0; j--) {
         if (!fullCrossing(diodes[j].x, diodes[j].y)) {
+            console.log("not fullCrossing");
             diodes.splice(j, 1);
         }
     }
@@ -45,6 +46,7 @@ function segmentEndsIn(x, y) {
     Only creates if not existing and no diode at the point
 */
 function createConpoint(x, y, state, g) {
+    console.log("createConPoint");
     if (isConPoint(x, y) < 0) {
         conpoints.push(new ConPoint(x, y, state, g));
     }
@@ -63,6 +65,23 @@ function rightAngle(x, y) {
         }
     }
     return (hor && ver);
+}
+
+function wireSegmentsLikeTconnected(x, y) {
+    let horizontalWireSegments = 0;
+    let verticalWireSegments = 0;
+    for (let i = 0; i < segments.length; i++) {
+        if ((segments[i].startX === x && segments[i].startY === y) || (segments[i].endX === x && segments[i].endY === y)) {
+            if (segments[i].direction === 0) {
+                horizontalWireSegments++;
+            }
+            if (segments[i].direction === 1) {
+                verticalWireSegments++;
+            }
+        }
+    }
+    return ((horizontalWireSegments === 2 && verticalWireSegments === 1) ||
+            (horizontalWireSegments === 1 && verticalWireSegments === 2));
 }
 
 function fullCrossing(x, y) {
@@ -213,6 +232,15 @@ function toggleConpoint(undoable) {
 }
 
 function toggleDiodeAndConpoint() {
+    /* 14.10.2019
+     * PROBLEM: a "T" connection between wire segments can't bypass the checks
+     * in doConpoints() that create a normal connection point because the check
+     * for 3 connected wires succeeds, hence it doesn't change. This prevents
+     * the switch to a diode connection. Could be better solved with
+     * chain-of-responsability or state pattern that takes a key->value map for
+     * each connection?
+     * Don't know a shorthand fix.
+     */
     if (isDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) >= 0) {
         toggleDiode(false);
     } else {

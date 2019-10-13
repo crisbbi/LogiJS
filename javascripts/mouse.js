@@ -173,6 +173,17 @@ function updateCursors() {
                 } else {
                     showCPPreview = true;
                 }
+            } 
+            if (wireSegmentsLikeTconnected(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+                console.log("tShapeCrossing");
+                hand = true;
+                cursor(HAND);
+                if (isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) < 0 ||
+                    isDiode(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) >= 0) {
+                    showDPreview = true;
+                } else {
+                    showCPPreview = true;
+                }
             }
         } else {
             for (const elem of inputs) {
@@ -213,8 +224,8 @@ function updateCursors() {
             }
         }
     }
-    // if two wires have a right angle, show a hand
-    if (rightAngle(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
+    // if two wires cross each other like a "T", show a hand
+    if (wireSegmentsLikeTconnected(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
         hand = true;
         cursor(HAND);
     }
@@ -582,6 +593,10 @@ function mouseReleased() {
                             }
                         }
                         if (fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+                            console.log("fullcrosstoggleConPoint");
+                            toggleDiodeAndConpoint();
+                        } else if (wireSegmentsLikeTconnected(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+                            console.log("tShapetoggleConPoint");
                             toggleDiodeAndConpoint();
                         }
                     }
