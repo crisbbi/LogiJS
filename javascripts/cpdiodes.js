@@ -236,10 +236,8 @@ function toggleDiodeAndConpoint() {
      * PROBLEM: a "T" connection between wire segments can't bypass the checks
      * in doConpoints() that create a normal connection point because the check
      * for 3 connected wires succeeds, hence it doesn't change. This prevents
-     * the switch to a diode connection. Could be better solved with
-     * chain-of-responsability or state pattern that takes a key->value map for
-     * each connection?
-     * Don't know a shorthand fix.
+     * the switch to a diode connection. Could be solved with 3 if statements
+     * and in each case change the connection.
      */
     let nearestGridXpositionFromMouseX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE; 
     let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
