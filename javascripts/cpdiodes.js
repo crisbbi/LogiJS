@@ -146,13 +146,13 @@ function listConpoints(x1, y1, x2, y2) {
     return cps;
 }
 
-function isDiode(x, y) {
-    for (let i = 0; i < diodes.length; i++) {
-        if (diodes[i].x === x && diodes[i].y === y) {
-            return i;
+function isDiodeAtPosition(xPosition, yPosition) {
+    for (let diode of diodes) {
+        if (diode.x === xPosition && diode.y === yPosition) {
+            return true;
         }
     }
-    return -1;
+    return false;
 }
 
 /*
@@ -241,10 +241,12 @@ function toggleDiodeAndConpoint() {
      * each connection?
      * Don't know a shorthand fix.
      */
-    if (isDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) >= 0) {
+    let nearestGridXpositionFromMouseX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE; 
+    let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
+    if (isDiodeAtPosition(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
         toggleDiode(false);
     } else {
-        if (isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) >= 0) {
+        if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
             toggleConpoint(true);
         } else {
             toggleDiode(false);
