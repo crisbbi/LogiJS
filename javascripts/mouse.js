@@ -397,6 +397,7 @@ function mouseClicked() {
                             }
                             break;
                         case 10:
+                        case 11:
                             if (mouseButton === LEFT) {
                                 addCustom(customFile, gateDirection);
                             }

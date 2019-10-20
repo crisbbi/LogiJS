@@ -80,6 +80,12 @@ let maxPage = 0;
 let error = '';
 let errordesc = '';
 
+let previewData = {
+    isCustom: false,
+    customData: {},
+    type: 'none'
+};
+
 let syncFramerate = true;
 
 let segIndizees = [];
@@ -266,53 +272,204 @@ function setup() { // jshint ignore:line
 
     // Adds an rs-flipflop
     rsFlipFlopButton = createButton('RS-FlipFlop');
-    rsFlipFlopButton.mousePressed(function () { setActive(rsFlipFlopButton, true); return importCustom('rs-flipflop.json'); });
+    rsFlipFlopButton.mousePressed(function () {
+        setActive(rsFlipFlopButton, true);
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['S', 'R'],
+            outputLabels: ['Q', ''],
+            caption: 'RS-FF',
+            inputs: 2,
+            outputs: 2
+        });
+        return importCustom('rs-flipflop.json');
+    });
     rsFlipFlopButton.elt.className = "buttonLeft";
     rsFlipFlopButton.parent(leftSideButtons);
     // Adds a d-flipflop
     dFlipFlopButton = createButton('D-FlipFlop');
-    dFlipFlopButton.mousePressed(function () { setActive(dFlipFlopButton, true); return importCustom('d-flipflop.json'); });
+    dFlipFlopButton.mousePressed(function () {
+        setActive(dFlipFlopButton, true);
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['D', '>'],
+            outputLabels: ['Q', ''],
+            caption: 'D-FF',
+            inputs: 2,
+            outputs: 2
+        });
+        return importCustom('d-flipflop.json');
+    });
     dFlipFlopButton.elt.className = "buttonLeft";
     dFlipFlopButton.parent(leftSideButtons);
     // Adds a counter
     counterButton = createButton('Counter');
-    counterButton.mousePressed(function () { setActive(counterButton, true); return counterClicked(); });
+    counterButton.mousePressed(function () {
+        setActive(counterButton, true);
+        let opLabels = new Array(counterBitWidth).fill('');
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['>'],
+            outputLabels: opLabels,
+            caption: 'Counter',
+            inputs: 1,
+            outputs: counterBitWidth
+        });
+        return counterClicked();
+    });
     counterButton.elt.className = "buttonLeft";
     counterButton.parent(leftSideButtons);
     // Adds a decoder
     decoderButton = createButton('Decoder');
-    decoderButton.mousePressed(function () { setActive(decoderButton, true); return decoderClicked(); });
+    decoderButton.mousePressed(function () {
+        setActive(decoderButton, true);
+        let opLabels = [];
+        for (let i = 0; i < Math.pow(2, decoderBitWidth); i++) {
+            opLabels.push(i);
+        }
+        let ipLabels = new Array(decoderBitWidth).fill('');
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ipLabels,
+            outputLabels: opLabels,
+            caption: 'Decoder',
+            inputs: decoderBitWidth,
+            outputs: Math.pow(2, decoderBitWidth)
+        });
+        return decoderClicked();
+    });
     decoderButton.elt.className = "buttonLeft";
     decoderButton.parent(leftSideButtons);
     // Adds a multiplexer
     muxButton = createButton('Multiplexer');
-    muxButton.mousePressed(function () { setActive(muxButton, true); return muxClicked(); });
+    muxButton.mousePressed(function () {
+        setActive(muxButton, true);
+        let ipLabels = [];
+        switch (muxBitWidth) {
+            case 1:
+                ipLabels.push('2º');
+                break;
+            case 2:
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+            case 3:
+                ipLabels.push('2²');
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+        }
+        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
+            ipLabels.push(i);
+        }
+        let tops = [];
+        for (let i = 0; i < muxBitWidth; i++) {
+            tops.push(i);
+        }
+        setPreviewElement(true, {
+            tops: tops,
+            inputLabels: ipLabels,
+            outputLabels: [''],
+            caption: 'MUX',
+            inputs: Math.pow(2, muxBitWidth) + muxBitWidth,
+            outputs: 1
+        });
+        return muxClicked();
+    });
     muxButton.elt.className = "buttonLeft";
     muxButton.parent(leftSideButtons);
     // Adds a demultiplexer
     demuxButton = createButton('Demultiplexer');
-    demuxButton.mousePressed(function () { setActive(demuxButton, true); return demuxClicked(); });
+    demuxButton.mousePressed(function () {
+        setActive(demuxButton, true);
+        let ipLabels = [];
+        switch (muxBitWidth) {
+            case 1:
+                ipLabels.push('2º');
+                break;
+            case 2:
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+            case 3:
+                ipLabels.push('2²');
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+        }
+        ipLabels.push('');
+        let tops = [];
+        for (let i = 0; i < muxBitWidth; i++) {
+            tops.push(i);
+        }
+        let opLabels = [];
+        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
+            opLabels.push(i);
+        }
+        setPreviewElement(true, {
+            tops: tops,
+            inputLabels: ipLabels,
+            outputLabels: opLabels,
+            caption: 'DEMUX',
+            inputs: 1 + muxBitWidth,
+            outputs: Math.pow(2, muxBitWidth)
+        });
+        return demuxClicked();
+    });
     demuxButton.elt.className = "buttonLeft";
     demuxButton.parent(leftSideButtons);
     // Adds a register (4Bit)
     reg4Button = createButton('4Bit-Register');
-    reg4Button.mousePressed(function () { setActive(reg4Button, true); return importCustom('4-register.json'); });
+    reg4Button.mousePressed(function () {
+        setActive(reg4Button, true);
+        setPreviewElement(true, {
+            tops: [0, 1],
+            inputLabels: ['L', '>', '2³', '2²', '2¹', '2º'],
+            outputLabels: ['2³', '2²', '2¹', '2º'],
+            caption: 'Register',
+            inputs: 6,
+            outputs: 4
+        });
+        return importCustom('4-register.json');
+    });
     reg4Button.elt.className = "buttonLeft";
     reg4Button.parent(leftSideButtons);
     // Adds a Half Adder
     halfaddButton = createButton('Half Adder');
-    halfaddButton.mousePressed(function () { setActive(halfaddButton, true); return importCustom('half_add.json'); });
+    halfaddButton.mousePressed(function () {
+        setActive(halfaddButton, true);
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['', ''],
+            outputLabels: ['', ''],
+            caption: 'HA',
+            inputs: 2,
+            outputs: 2
+        });
+        return importCustom('half_add.json');
+    });
     halfaddButton.elt.className = "buttonLeft";
     halfaddButton.parent(leftSideButtons);
 
     // Adds a Full Adder
     fulladdButton = createButton('Full Adder');
-    fulladdButton.mousePressed(function () { setActive(fulladdButton, true); return importCustom('full_add.json'); });
+    fulladdButton.mousePressed(function () {
+        setActive(fulladdButton, true);
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['', '', ''],
+            outputLabels: ['', ''],
+            caption: 'FA',
+            inputs: 3,
+            outputs: 2
+        });
+        return importCustom('full_add.json');
+    });
     fulladdButton.elt.className = "buttonLeft";
     fulladdButton.parent(leftSideButtons);
 
-    customButton = createButton('Sketch Import');
-    customButton.mousePressed(customClicked);
+    customButton = createButton('<i class="fa fa-file-import"></i> Import Sketch');
+    customButton.mousePressed(function () { custPage = 0; customClicked(); });
     customButton.elt.className = "buttonLeft";
     customButton.parent(leftSideButtons);
     if (getCookieValue('access_token') === '') {
@@ -570,36 +727,32 @@ function setup() { // jshint ignore:line
     cancelButton.elt.className = "btn btn-lg btn-red";
     cancelButton.hide();
 
-    pageUpButton = createButton('Previous Page');
-    pageUpButton.position(window.width - 545, window.height - 90);
-    pageUpButton.elt.style.width = '200px';
+    pageUpButton = createButton('<i class="fas fa-arrow-up"></i> Up');
+    pageUpButton.position(window.width - 545, window.height - window.height / 5);
     pageUpButton.style('padding-left', '10px');
     pageUpButton.style('padding-right', '10px');
     pageUpButton.mousePressed(function () {
         if (custPage <= 0) {
             return;
-        } else {
-            custPage--;
-            closeCustomDialog();
-            customClicked();
         }
+        custPage--;
+        closeCustomDialog();
+        customClicked();
     });
     pageUpButton.elt.className = "btn btn-lg btn-red";
     pageUpButton.hide();
 
-    pageDownButton = createButton('Next Page');
-    pageDownButton.position(window.width - 335, window.height - 90);
-    //pageDownButton.elt.style.width = '200px';
+    pageDownButton = createButton('<i class="fas fa-arrow-down"></i> Down');
+    pageDownButton.position(window.width - 335, window.height - window.height / 5 + 50);
     pageDownButton.style('padding-left', '10px');
     pageDownButton.style('padding-right', '10px');
     pageDownButton.mousePressed(function () {
         if (custPage >= maxPage) {
             return;
-        } else {
-            custPage++;
-            closeCustomDialog();
-            customClicked();
         }
+        custPage++;
+        closeCustomDialog();
+        customClicked();
     });
     pageDownButton.elt.className = "btn btn-lg btn-red";
     pageDownButton.hide();
@@ -815,7 +968,11 @@ function importCustom(filename) {
         setPropMode(true);
     } else {
         setControlMode('addObject');
-        addType = 10; // custom
+        if (customDialog) {
+            addType = 11; // external custom
+        } else {
+            addType = 10; // internal custom
+        }
         directionSelect.show();
         labelDirection.show();
         customFile = filename;
@@ -824,6 +981,7 @@ function importCustom(filename) {
 
 function customClicked() {
     customDialog = true;
+    setPreviewElement(false, {}, 'none');
     setUnactive();
     setLoading(true);
 }
@@ -1225,21 +1383,109 @@ function newBitLength() {
 }
 
 function newCounterBitLength() {
-    counterOutputBitWidth = parseInt(counterBitSelect.value());
-    customFile = counterOutputBitWidth + '-counter.json';
+    counterBitWidth = parseInt(counterBitSelect.value());
+    custFile = counterBitWidth + '-counter.json';
+    if (isActive(counterButton)) {
+        let opLabels = new Array(counterBitWidth).fill('');
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ['>'],
+            outputLabels: opLabels,
+            caption: 'Counter',
+            inputs: 1,
+            outputs: counterBitWidth
+        });
+    }
 }
 
 function newDecoderBitLength() {
-    decoderInputBitWidth = parseInt(decoderBitSelect.value());
-    customFile = decoderInputBitWidth + '-decoder.json';
+    decoderBitWidth = parseInt(decoderBitSelect.value());
+    custFile = decoderBitWidth + '-decoder.json';
+    if (isActive(decoderButton)) {
+        let opLabels = [];
+        for (let i = 0; i < Math.pow(2, decoderBitWidth); i++) {
+            opLabels.push(i);
+        }
+        let ipLabels = new Array(decoderBitWidth).fill('');
+        setPreviewElement(true, {
+            tops: [],
+            inputLabels: ipLabels,
+            outputLabels: opLabels,
+            caption: 'Decoder',
+            inputs: decoderBitWidth,
+            outputs: Math.pow(2, decoderBitWidth)
+        });
+    }
 }
 
 function newMuxBitLength() {
     muxBitWidth = parseInt(multiplexerBitSelect.value());
     if (isActive(muxButton)) {
-        customFile = muxBitWidth + '-mux.json';
+        let ipLabels = [];
+        switch (muxBitWidth) {
+            case 1:
+                ipLabels.push('2º');
+                break;
+            case 2:
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+            case 3:
+                ipLabels.push('2²');
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+        }
+        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
+            ipLabels.push(i);
+        }
+        let tops = [];
+        for (let i = 0; i < muxBitWidth; i++) {
+            tops.push(i);
+        }
+        setPreviewElement(true, {
+            tops: tops,
+            inputLabels: ipLabels,
+            outputLabels: [''],
+            caption: 'MUX',
+            inputs: Math.pow(2, muxBitWidth) + muxBitWidth,
+            outputs: 1
+        });
+        custFile = muxBitWidth + '-mux.json';
     } else if (isActive(demuxButton)) {
-        customFile = muxBitWidth + '-demux.json';
+        let ipLabels = [];
+        switch (muxBitWidth) {
+            case 1:
+                ipLabels.push('2º');
+                break;
+            case 2:
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+            case 3:
+                ipLabels.push('2²');
+                ipLabels.push('2¹');
+                ipLabels.push('2º');
+                break;
+        }
+        ipLabels.push('');
+        let tops = [];
+        for (let i = 0; i < muxBitWidth; i++) {
+            tops.push(i);
+        }
+        let opLabels = [];
+        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
+            opLabels.push(i);
+        }
+        setPreviewElement(true, {
+            tops: tops,
+            inputLabels: ipLabels,
+            outputLabels: opLabels,
+            caption: 'DEMUX',
+            inputs: 1 + muxBitWidth,
+            outputs: Math.pow(2, muxBitWidth)
+        });
+        custFile = muxBitWidth + '-demux.json';
     }
 }
 
@@ -1297,6 +1543,7 @@ function andClicked(dontToggle = false) {
         setActive(andButton, true);
         setControlMode('addObject');
         addType = 1; // and
+        setPreviewElement(false, {}, 'and');
         gateInputSelect.show();
         labelGateInputs.show();
         directionSelect.show();
@@ -1316,6 +1563,7 @@ function orClicked(dontToggle = false) {
         setActive(orButton, true);
         setControlMode('addObject');
         addType = 2; // or
+        setPreviewElement(false, {}, 'or');
         gateInputSelect.show();
         labelGateInputs.show();
         directionSelect.show();
@@ -1335,6 +1583,7 @@ function xorClicked(dontToggle = false) {
         setActive(xorButton, true);
         setControlMode('addObject');
         addType = 3; // xor
+        setPreviewElement(false, {}, 'xor');
         gateInputSelect.show();
         labelGateInputs.show();
         directionSelect.show();
@@ -1354,6 +1603,7 @@ function inputClicked(dontToggle = false) {
         setActive(inputButton, true);
         newIsButton = false;
         newIsClock = false;
+        setPreviewElement(false, {}, 'switch');
         setControlMode('addObject');
         addType = 4; // switch
         previewSymbol = new CreatePreviewSymbol(new Input(mouseX, mouseY, transform));
@@ -1371,6 +1621,7 @@ function buttonClicked(dontToggle = false) {
         setActive(buttonButton, true);
         newIsButton = true;
         newIsClock = false;
+        setPreviewElement(false, {}, 'button');
         setControlMode('addObject');
         addType = 5; // button
         previewSymbol = new CreatePreviewSymbol(new Input(mouseX, mouseY, transform));
@@ -1388,6 +1639,7 @@ function clockClicked(dontToggle = false) {
         setActive(clockButton, true);
         newIsButton = false;
         newIsClock = true;
+        setPreviewElement(false, {}, 'clock');
         setControlMode('addObject');
         addType = 6; // clock
         previewSymbol = new CreatePreviewSymbol(new Input(mouseX, mouseY, transform));
@@ -1405,7 +1657,7 @@ function outputClicked(dontToggle = false) {
         setActive(outputButton, true);
         setControlMode('addObject');
         addType = 7; // output
-        previewSymbol = new CreatePreviewSymbol(new Output(mouseX, mouseY, transform, 0));
+        setPreviewElement(false, {}, 'output');
     }
 }
 
@@ -1420,6 +1672,7 @@ function segDisplayClicked(dontToggle = false) {
         setActive(segDisplayButton, true);
         setControlMode('addObject');
         addType = 8; // segDisplay
+        setPreviewElement(false, {}, '7-segment');
         bitSelect.show();
         labelBits.show();
         previewSymbol = new CreatePreviewSymbol(new SegmentDisplay(mouseX, mouseY, transform, 4));
@@ -1452,7 +1705,7 @@ function labelButtonClicked(dontToggle = false) {
         setActive(labelButton, true);
         setControlMode('addObject');
         addType = 9; // label
-        previewSymbol = new CreatePreviewSymbol(new Label(mouseX, mouseY, 'New label', transform));
+        setPreviewElement(false, {}, 'label');
     }
 }
 
@@ -1845,9 +2098,7 @@ function draw() {
             generateSegmentSet(previewSegmentStartX, previewSegmentStartY, Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
                 Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
             reDraw();
-        }
-
-        if (controlMode === 'select') {
+        } else if (ctrlMode === 'select' || ctrlMode === 'addObject' && !mouseIsPressed) {
             reDraw();
         }
 
@@ -1943,6 +2194,7 @@ function reDraw() {
         rect(Math.min(selectStartX, selectEndX), Math.min(selectStartY, selectEndY),
             Math.abs(selectStartX - selectEndX), Math.abs(selectStartY - selectEndY));
     }
+
     //let t1 = performance.now();
     //console.log("took " + (t1 - t0) + " milliseconds.");
 
@@ -1982,6 +2234,8 @@ function reDraw() {
     }
 
     // Draw the zoom and framerate labels
+    textFont('Gudea');
+    textAlign(LEFT, TOP);
     textSize(12);
     fill(0);
     noStroke();
@@ -2098,6 +2352,7 @@ function showTutorial() {
 }
 
 function showMessage(msg, subline = '') {
+    textFont('Open Sans');
     fill(0, 0, 0, 80);
     noStroke();
     rect(0, 0, window.width, window.height);
@@ -2127,15 +2382,13 @@ function showSaveDialog() {
 
 function showCustomDialog() {
     maxCustCols = Math.floor((window.width - window.width / 4) / 240);
-    maxCustRows = Math.floor((window.height - 180) / 240);
-    pageUpButton.position(maxCustCols * 240 + 10, window.height - 90);
-    pageDownButton.position(maxCustCols * 240 + 220, window.height - 90);
+    maxCustRows = Math.floor((window.height - window.height / 10) / 240);
+    pageUpButton.position(Math.round(window.width / 8) + maxCustCols * 240 + 180, maxCustRows * 240 - 85);
+    pageDownButton.position(Math.round(window.width / 8) + maxCustCols * 240 + 180, maxCustRows * 240 - 30);
     fill('rgba(50, 50, 50, 0.95)');
     noStroke();
-    rect(Math.round(window.width / 8), 90, window.width - Math.round(window.width / 4), window.height - 140);
-    pageUpButton.show();
-    pageDownButton.show();
-    cancelButton.position(Math.round(window.width / 8) + 180, window.height - 90);
+    rect(Math.round(window.width / 8), 50, maxCustCols * 240 + 220, maxCustRows * 240 + 40);
+    cancelButton.position(Math.round(window.width / 8) + maxCustCols * 240 + 180, maxCustRows * 240 + 25);
     cancelButton.show();
     socket.emit('getImportSketches', { access_token: getCookieValue('access_token') });
     socket.on('importSketches', (data) => {
@@ -2144,13 +2397,19 @@ function showCustomDialog() {
         for (let i = 0; i < data.sketches.length; i++) {
             showCustomItem(i + 1, data.images[i], data.sketches[i], data.looks[i]);
         }
+        if (maxPage > 0 && custPage < maxPage) {
+            pageDownButton.show();
+        }
+        if (custPage > 0) {
+            pageUpButton.show();
+        }
     });
 }
 
 function showCustomItem(place, img, caption, look) {
     let row = Math.ceil(place / maxCustCols - 1) - (custPage * maxCustRows);
     let x = ((place - 1) % maxCustCols) * 240 + Math.round(window.width / 8) + 40;
-    let y = (row * 240) + 90 + 40;
+    let y = (row * 240) + 90;
     if (row >= maxCustRows || row < 0) {
         return;
     }
@@ -2215,6 +2474,7 @@ function showCustomItem(place, img, caption, look) {
             } else {
                 top_layer.mousePressed(function () {
                     setActive(customButton, true);
+                    setPreviewElement(true, look);
                     importCustom(caption + '.json');
                     closeCustomDialog();
                 });
@@ -2269,9 +2529,9 @@ function showElements() {
         }
     }
 
-    if (gatesList.length > 0) {
-        textFont('monospace');
-        for (const elem of gatesList) {
+    textFont('monospace');
+    if (gates.length > 0) {
+        for (const elem of gates) {
             elem.show();
         }
     }
@@ -2315,6 +2575,11 @@ function showElements() {
         elem.show();
     }
 
+    if (ctrlMode === 'addObject') {
+        textFont('monospace');
+        showElementPreview();
+    }
+
     if (showSClickBox) {
         sClickBox.markClickBox();
     }
@@ -2347,6 +2612,7 @@ function keyPressed() {
                 setControlMode('none');
                 setActive(propertiesButton);
                 setPropMode(true);
+                reDraw();
                 break;
             case RETURN:
                 setPropMode(false);
@@ -2434,10 +2700,6 @@ function setLoading(l) {
     closeTutorialButton.elt.disabled = l;
     nextStepButton.elt.disabled = l;
     updateUndoButtons();
-    if (l) {
-        undoButton.elt.disabled = true;
-        redoButton.elt.disabled = true;
-    }
     reDraw();
 }
 
