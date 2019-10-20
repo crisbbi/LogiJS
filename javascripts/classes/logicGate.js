@@ -65,13 +65,12 @@ function LogicGate(x, y, transform, direction, inputCount, outputCount, logicFun
         this.outputsInv.push(false); // Set all outputs to not inverted
         this.outputClickBoxes.push(new ClickBox(0, 0, IOCBSIZE, IOCBSIZE, this.transform)); // Create new clickBoxes for every output
     }
-}
+}  
 
 LogicGate.prototype.setInvertions = function (ipinv, opinv) {
     this.inputsInv = ipinv;
     this.outputsInv = opinv;
 };
-    
 LogicGate.prototype.getData = function () {
     let data = {};
     data.x = JSON.stringify(this.x);
