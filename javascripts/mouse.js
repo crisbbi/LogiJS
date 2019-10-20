@@ -51,7 +51,7 @@ function mouseWheel(event) {
                 break;
 
         }
-        if (controlMode !== 'none' && selectMode === 'none') {
+        if (ctrlMode !== 'none' && selectMode === 'none') {
             setPropMode(false);
         }
         return;
@@ -91,25 +91,25 @@ function updateCursors() {
     let showCPPreview = false;
     if (simulationIsRunning || propMode) {
         if (!simulationIsRunning) {
-            for (const elem of outputsList) {
+            for (const elem of outputs) {
                 if (elem.mouseOver()) {
                     hand = true;
                     cursor(HAND);
                 }
             }
-            for (const elem of inputsList) {
+            for (const elem of inputs) {
                 if (elem.mouseOver()) {
                     hand = true;
                     cursor(HAND);
                 }
             }
-            for (const elem of labelsList) {
+            for (const elem of labels) {
                 if (elem.mouseOver()) {
                     hand = true;
                     cursor(HAND);
                 }
             }
-            for (const elem of gatesList) {
+            for (const elem of gates) {
                 for (const e of elem.inputClickBoxes) {
                     if (e.mouseOver()) {
                         hand = true;
@@ -186,7 +186,7 @@ function updateCursors() {
                 }
             }
         } else {
-            for (const elem of inputsList) {
+            for (const elem of inputs) {
                 if (elem.mouseOver() && !elem.getIsClock()) {
                     hand = true;
                     cursor(HAND);
@@ -194,7 +194,7 @@ function updateCursors() {
             }
         }
     }
-    if (controlMode === 'select' && sClickBox.mouseOver() && showSClickBox) {
+    if (ctrlMode === 'select' && sClickBox.mouseOver() && showSClickBox) {
         hand = true;
         cursor(MOVE);
     }
@@ -204,11 +204,11 @@ function updateCursors() {
 
     // Repositions and draws the preview component, so the user will see where the gate will be placed
     // First checks whether one of the basic components is chosen 
-    if(controlMode === 'addObject' && !mouseOverGUI() && previewSymbol !== null && 0 >= addType <= 9){
+    if(ctrlMode === 'addObject' && !mouseOverGUI() && previewSymbol !== null && 0 >= addType <= 9){
         // Prevents that a gate is created over an existing gate
-        for (let i = 0; i < gatesList.length; i++) {
-            if ((gatesList[i].x === Math.round(((mouseX - GRIDSIZE / 2) / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
-                (gatesList[i].y === Math.round(((mouseY - GRIDSIZE / 2) / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
+        for (let i = 0; i < gates.length; i++) {
+            if ((gates[i].x === Math.round(((mouseX - GRIDSIZE / 2) / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
+                (gates[i].y === Math.round(((mouseY - GRIDSIZE / 2) / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
                     return;
             }  
         }
@@ -216,8 +216,8 @@ function updateCursors() {
     } 
     
 
-    if (controlMode === 'addObject' && addType === 'diode') {
-        for (const elem of diodesList) {
+    if (ctrlMode === 'addObject' && addType === 'diode') {
+        for (const elem of diodes) {
             if (elem.mouseOver()) {
                 hand = true;
                 cursor(HAND);
@@ -257,7 +257,7 @@ function updateCursors() {
 
 function mouseDragged() {
     if (loading) { return; }
-    if (controlMode === 'select' && selectMode === 'drag') {
+    if (ctrlMode === 'select' && selectMode === 'drag') {
         if (sDragX2 !== Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE ||
             sDragY2 !== Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) {
             moveSelection(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE - sDragX2,
@@ -274,14 +274,14 @@ function mouseDragged() {
 */
 function mousePressed() {
     if (loading) { return; }
-    if (controlMode !== 'select') {
+    if (ctrlMode !== 'select') {
         showSClickBox = false;
     }
     if (wireMode === 'hold') {
         wireMode = 'none';
     }
     if (!simulationIsRunning && !mouseOverGUI() && (mouseButton === LEFT)) {
-        switch (controlMode) {
+        switch (ctrlMode) {
             case 'none':
                 switch (wireMode) {
                     case 'none':
@@ -292,41 +292,41 @@ function mousePressed() {
                     default:
                 }
                 let noValidTarget = true;
-                for (let i = 0; i < inputsList.length; i++) {
-                    if (Boolean(inputsList[i].mouseOver()) && propMode) {
+                for (let i = 0; i < inputs.length; i++) {
+                    if (Boolean(inputs[i].mouseOver()) && propMode) {
                         noValidTarget = false;
                         // If the propMode is active, give options to name and make top
                         if (propInput !== i) {
                             if (propInput >= 0) {
-                                inputsList[propInput].mark(false);
+                                inputs[propInput].mark(false);
                             }
-                            inputsList[i].mark(true);
+                            inputs[i].mark(true);
                             propInput = i;
                             showInputPropMenu();
                         }
                     }
                 }
-                for (let i = 0; i < outputsList.length; i++) {
-                    if (Boolean(outputsList[i].mouseOver()) && propMode) {
+                for (let i = 0; i < outputs.length; i++) {
+                    if (Boolean(outputs[i].mouseOver()) && propMode) {
                         noValidTarget = false;
                         if (propOutput !== i) {
                             if (propOutput >= 0) {
-                                outputsList[propOutput].mark(false);
+                                outputs[propOutput].mark(false);
                             }
-                            outputsList[i].mark(true);
+                            outputs[i].mark(true);
                             propOutput = i;
                             showOutputPropMenu();
                         }
                     }
                 }
-                for (let i = 0; i < labelsList.length; i++) {
-                    if (Boolean(labelsList[i].mouseOver()) && propMode) {
+                for (let i = 0; i < labels.length; i++) {
+                    if (Boolean(labels[i].mouseOver()) && propMode) {
                         noValidTarget = false;
                         if (propLabel !== i) {
                             if (propLabel >= 0) {
-                                labelsList[propLabel].mark(false);
+                                labels[propLabel].mark(false);
                             }
-                            labelsList[i].mark(true);
+                            labels[i].mark(true);
                             propLabel = i;
                             showLabelPropMenu();
                         }
@@ -396,7 +396,7 @@ function mousePressed() {
 function mouseClicked() {
     if (loading) { return; }
     if (!simulationIsRunning && !mouseOverGUI()) {
-        switch (controlMode) {
+        switch (ctrlMode) {
             case 'addObject':
                 if (wireMode !== 'hold') {
                     switch (addType) { // Handle object adding
@@ -451,9 +451,9 @@ function mouseClicked() {
     } else {
         // Buttons should be operateable during simulation
         if (mouseButton === LEFT) {
-            for (var i = 0; i < inputsList.length; i++) {
-                if (Boolean(inputsList[i].mouseOver()) && !inputsList[i].getIsClock()) {
-                    inputsList[i].toggle();
+            for (var i = 0; i < inputs.length; i++) {
+                if (Boolean(inputs[i].mouseOver()) && !inputs[i].getIsClock()) {
+                    inputs[i].toggle();
                 }
             }
         }
@@ -470,7 +470,7 @@ function mouseReleased() {
     if (loading) { return; }
     if (!simulationIsRunning && !mouseOverGUI()) {
         if (mouseButton === LEFT) {
-            switch (controlMode) {
+            switch (ctrlMode) {
                 case 'addObject':
                     if (wireMode === 'preview') { // If the preview wire mode is active
                         let pushed = false;
@@ -481,22 +481,22 @@ function mouseReleased() {
                         }
                         if (pushed) {
                             let oldWires = [];
-                            for (let i = wiresList.length - 1; i >= 0; i--) {
-                                oldWires[i] = new Wire(wiresList[i].direction, wiresList[i].startX, wiresList[i].startY, false, wiresList[i].transform);
-                                oldWires[i].endX = wiresList[i].endX;
-                                oldWires[i].endY = wiresList[i].endY;
-                                oldWires[i].id = wiresList[i].id;
+                            for (let i = wires.length - 1; i >= 0; i--) {
+                                oldWires[i] = new Wire(wires[i].direction, wires[i].startX, wires[i].startY, false, wires[i].transform);
+                                oldWires[i].endX = wires[i].endX;
+                                oldWires[i].endY = wires[i].endY;
+                                oldWires[i].id = wires[i].id;
                             }
                             let oldSegments = [];
-                            for (let i = wireSegmentsList.length - 1; i >= 0; i--) {
-                                oldSegments[i] = new Wire(wireSegmentsList[i].direction, wireSegmentsList[i].startX, wireSegmentsList[i].startY, false, wireSegmentsList[i].transform);
-                                oldSegments[i].id = wireSegmentsList[i].id;
+                            for (let i = segments.length - 1; i >= 0; i--) {
+                                oldSegments[i] = new Wire(segments[i].direction, segments[i].startX, segments[i].startY, false, segments[i].transform);
+                                oldSegments[i].id = segments[i].id;
                             }
-                            pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(wireConnectionPointsList)]); // push the action for undoing
+                            pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(conpoints)]); // push the action for undoing
                         }
                         for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
                             if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
-                                wireSegmentsList.push(previewWireSegmentsList[i]);
+                                segments.push(previewWireSegmentsList[i]);
                             }
                         }
                         findLines();
@@ -520,22 +520,22 @@ function mouseReleased() {
                         }
                         if (pushed) {
                             let oldWires = [];
-                            for (let i = wiresList.length - 1; i >= 0; i--) {
-                                oldWires[i] = new Wire(wiresList[i].direction, wiresList[i].startX, wiresList[i].startY, false, wiresList[i].transform);
-                                oldWires[i].endX = wiresList[i].endX;
-                                oldWires[i].endY = wiresList[i].endY;
-                                oldWires[i].id = wiresList[i].id;
+                            for (let i = wires.length - 1; i >= 0; i--) {
+                                oldWires[i] = new Wire(wires[i].direction, wires[i].startX, wires[i].startY, false, wires[i].transform);
+                                oldWires[i].endX = wires[i].endX;
+                                oldWires[i].endY = wires[i].endY;
+                                oldWires[i].id = wires[i].id;
                             }
                             let oldSegments = [];
-                            for (let i = wireSegmentsList.length - 1; i >= 0; i--) {
-                                oldSegments[i] = new Wire(wireSegmentsList[i].direction, wireSegmentsList[i].startX, wireSegmentsList[i].startY, false, wireSegmentsList[i].transform);
-                                oldSegments[i].id = wireSegmentsList[i].id;
+                            for (let i = segments.length - 1; i >= 0; i--) {
+                                oldSegments[i] = new Wire(segments[i].direction, segments[i].startX, segments[i].startY, false, segments[i].transform);
+                                oldSegments[i].id = segments[i].id;
                             }
-                            pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(wireConnectionPointsList)]); // push the action for undoing
+                            pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(conpoints)]); // push the action for undoing
                         }
                         for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
                             if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
-                                wireSegmentsList.push(previewWireSegmentsList[i]);
+                                segments.push(previewWireSegmentsList[i]);
                             }
                         }
                         findLines();
@@ -550,17 +550,17 @@ function mouseReleased() {
                     }
                     if (wireMode === 'none') {
                         // Invert In-/Outputs
-                        for (let i = 0; i < gatesList.length; i++) {
-                            for (let j = 0; j < gatesList[i].inputCount; j++) {
-                                if (gatesList[i].mouseOverInput(j)) {
-                                    gatesList[i].invertInput(j);
+                        for (let i = 0; i < gates.length; i++) {
+                            for (let j = 0; j < gates[i].inputCount; j++) {
+                                if (gates[i].mouseOverInput(j)) {
+                                    gates[i].invertInput(j);
                                     let act = new Action('invGIP', [i, j], null);
                                     actionUndoList.push(act);
                                 }
                             }
-                            for (let j = 0; j < gatesList[i].outputCount; j++) {
-                                if (gatesList[i].mouseOverOutput(j)) {
-                                    gatesList[i].invertOutput(j);
+                            for (let j = 0; j < gates[i].outputCount; j++) {
+                                if (gates[i].mouseOverOutput(j)) {
+                                    gates[i].invertOutput(j);
                                     let act = new Action('invGOP', [i, j], null);
                                     actionUndoList.push(act);
                                 }
@@ -635,18 +635,18 @@ function mouseReleased() {
                         }
                     }
                     if (wireMode === 'delete') { // A wire should be deleted
-                        let oldWires = _.cloneDeep(wiresList);
-                        let oldSegments = _.cloneDeep(wireSegmentsList);
+                        let oldWires = _.cloneDeep(wires);
+                        let oldSegments = _.cloneDeep(segments);
                         let existing = false;
                         for (let i = previewWireSegmentsList.length - 1; i >= 0; i--) {
                             let exists = segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY);
                             if (exists >= 0) {
                                 existing = true;
-                                wireSegmentsList.splice(exists, 1);
+                                segments.splice(exists, 1);
                             }
                         }
                         if (existing) {
-                            pushUndoAction('reWire', 0, [oldSegments, oldWires, _.cloneDeep(wireConnectionPointsList)]); // Push the action, if more than 0 segments were deleted
+                            pushUndoAction('reWire', 0, [oldSegments, oldWires, _.cloneDeep(conpoints)]); // Push the action, if more than 0 segments were deleted
                             findLines();
                         }
                         previewWireSegmentsList = [];
@@ -690,8 +690,8 @@ function mouseReleased() {
 function mouseOverGate() {
     // Iterate backwards so that in overlapping situations
     // the last added gets removed first
-    for (let i = gatesList.length - 1; i >= 0; i--) {
-        if (gatesList[i].mouseOver()) {
+    for (let i = gates.length - 1; i >= 0; i--) {
+        if (gates[i].mouseOver()) {
             return i;
         }
     }
@@ -714,8 +714,8 @@ function mouseOverCustom() {
     Output number, if found, -1 else
 */
 function mouseOverOutput() {
-    for (let i = outputsList.length - 1; i >= 0; i--) {
-        if (outputsList[i].mouseOver()) {
+    for (let i = outputs.length - 1; i >= 0; i--) {
+        if (outputs[i].mouseOver()) {
             return i;
         }
     }
@@ -727,8 +727,8 @@ function mouseOverOutput() {
     Input number, if found, -1 else
 */
 function mouseOverInput() {
-    for (var i = inputsList.length - 1; i >= 0; i--) {
-        if (inputsList[i].mouseOver()) {
+    for (var i = inputs.length - 1; i >= 0; i--) {
+        if (inputs[i].mouseOver()) {
             return i;
         }
     }
@@ -736,8 +736,8 @@ function mouseOverInput() {
 }
 
 function mouseOverDiode() {
-    for (var i = diodesList.length - 1; i >= 0; i--) {
-        if (diodesList[i].mouseOver()) {
+    for (var i = diodes.length - 1; i >= 0; i--) {
+        if (diodes[i].mouseOver()) {
             return i;
         }
     }
@@ -745,8 +745,8 @@ function mouseOverDiode() {
 }
 
 function mouseOverLabel() {
-    for (var i = labelsList.length - 1; i >= 0; i--) {
-        if (labelsList[i].mouseOver()) {
+    for (var i = labels.length - 1; i >= 0; i--) {
+        if (labels[i].mouseOver()) {
             return i;
         }
     }

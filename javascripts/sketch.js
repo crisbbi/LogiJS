@@ -2,16 +2,16 @@
 
 p5.disableFriendlyErrors = true; // jshint ignore:line
 
-let gatesList = []; // List of gates (and, or, xor)
-let outputsList = []; // List of outputs
-let inputsList = []; // List of inputs (buttons, switches)
-let wireSegmentsList = []; // List of fixed wire segments
+let gates = []; // List of gates (and, or, xor)
+let outputs = []; // List of outputs
+let inputs = []; // List of inputs (buttons, switches)
+let segments = []; // List of fixed wire segments
 let previewWireSegmentsList = []; // List of preview wire segments
-let wireConnectionPointsList = []; // List of wire connection points
-let diodesList = []; // List of diodes
+let conpoints = []; // List of wire connection points
+let diodes = []; // List of diodes
 let customObjectsList = []; // List of custom objects
-let wiresList = []; // List of wires (aggregated wire segments)
-let labelsList = []; // List of text labels
+let wires = []; // List of wires (aggregated wire segments)
+let labels = []; // List of text labels
 let segmentDisplaysList = []; // List of 7-segment displays
 
 let segmentDisplayBits = 4; // Number of bits for new 7-segment displays
@@ -1192,15 +1192,15 @@ function hideAllOptions() {
     drawn individually
 */
 function clearItems() {
-    gatesList = [];
-    outputsList = [];
-    inputsList = [];
-    wireSegmentsList = [];
-    wireConnectionPointsList = [];
+    gates = [];
+    outputs = [];
+    inputs = [];
+    segments = [];
+    conpoints = [];
     customObjectsList = [];
-    diodesList = [];
-    labelsList = [];
-    wiresList = [];
+    diodes = [];
+    labels = [];
+    wires = [];
     segmentDisplaysList = [];
 }
 
@@ -1277,7 +1277,7 @@ function deleteClicked() {
         for (let i = 0; i < selectedElementsList.length; i++) {
             if (selectedElementsList[i] instanceof LogicGate) {
                 delGates[0].push(selectedElementsList[i]);
-                delGates[1].push(gatesList.indexOf(selectedElementsList[i]));
+                delGates[1].push(gates.indexOf(selectedElementsList[i]));
             } else if (selectedElementsList[i] instanceof CustomSketch) {
                 for (const elem of selectedElementsList[i].responsibles) {
                     customObjectsList.splice(customObjectsList.indexOf(elem), 1);
@@ -1287,15 +1287,15 @@ function deleteClicked() {
             }
             else if (selectedElementsList[i] instanceof Input) {
                 delInputs[0].push(selectedElementsList[i]);
-                delInputs[1].push(inputsList.indexOf(selectedElementsList[i]));
+                delInputs[1].push(inputs.indexOf(selectedElementsList[i]));
             }
             else if (selectedElementsList[i] instanceof Label) {
                 delLabels[0].push(selectedElementsList[i]);
-                delLabels[1].push(labelsList.indexOf(selectedElementsList[i]));
+                delLabels[1].push(labels.indexOf(selectedElementsList[i]));
             }
             else if (selectedElementsList[i] instanceof Output) {
                 delOutputs[0].push(selectedElementsList[i]);
-                delOutputs[1].push(outputsList.indexOf(selectedElementsList[i]));
+                delOutputs[1].push(outputs.indexOf(selectedElementsList[i]));
             }
             else if (selectedElementsList[i] instanceof SegmentDisplay) {
                 delSegDisplays[0].push(selectedElementsList[i]);
@@ -1316,19 +1316,19 @@ function deleteClicked() {
             }*/
         }
         for (let j = delGates[1].length - 1; j >= 0; j--) {
-            gatesList.splice(delGates[1][j], 1);
+            gates.splice(delGates[1][j], 1);
         }
         for (let j = delCustoms[1].length - 1; j >= 0; j--) {
             customObjectsList.splice(delCustoms[1][j], 1);
         }
         for (let j = delInputs[1].length - 1; j >= 0; j--) {
-            inputsList.splice(delInputs[1][j], 1);
+            inputs.splice(delInputs[1][j], 1);
         }
         for (let j = delLabels[1].length - 1; j >= 0; j--) {
-            labelsList.splice(delLabels[1][j], 1);
+            labels.splice(delLabels[1][j], 1);
         }
         for (let j = delOutputs[1].length - 1; j >= 0; j--) {
-            outputsList.splice(delOutputs[1][j], 1);
+            outputs.splice(delOutputs[1][j], 1);
         }
         /*for (let j = delWires[1].length - 1; j >= 0; j--) {
             //console.log('Deleting wire No. ' + delWires[1][j]);
@@ -1345,7 +1345,7 @@ function deleteClicked() {
         wireMode = 'none';
         lockElements = false;
         if (selectedElementsList.length > 0) {
-            pushUndoAction('delSel', 0, [_.cloneDeep(delGates), _.cloneDeep(delCustoms), _.cloneDeep(diodesList), _.cloneDeep(delInputs), _.cloneDeep(delLabels), _.cloneDeep(delOutputs), _.cloneDeep(delWires), _.cloneDeep(delSegDisplays), _.cloneDeep(wireConnectionPointsList), _.cloneDeep(delSegments)]);
+            pushUndoAction('delSel', 0, [_.cloneDeep(delGates), _.cloneDeep(delCustoms), _.cloneDeep(diodes), _.cloneDeep(delInputs), _.cloneDeep(delLabels), _.cloneDeep(delOutputs), _.cloneDeep(delWires), _.cloneDeep(delSegDisplays), _.cloneDeep(conpoints), _.cloneDeep(delSegments)]);
         }
         doConpoints();
     } else {
@@ -1364,7 +1364,7 @@ function deleteClicked() {
     This triggers when a label text was altered
 */
 function labelChanged() {
-    labelsList[propLabel].alterText(labelTextBox.value()); // Alter the text of the selected label
+    labels[propLabel].alterText(labelTextBox.value()); // Alter the text of the selected label
 }
 
 function newGateInputNumber() {
@@ -1513,8 +1513,8 @@ function newDirection() {
 
 function newClockspeed() {
     if (propInput >= 0) {
-        if (inputsList[propInput].clock) {
-            inputsList[propInput].speed = 60 - clockspeedSlider.value();
+        if (inputs[propInput].clock) {
+            inputs[propInput].speed = 60 - clockspeedSlider.value();
         }
     }
 }
@@ -1738,9 +1738,9 @@ function setControlMode(mode) {
     Adds a new gate with given type, input count and direction
 */
 function addGate(type, inputs, direction) {
-    for (let i = 0; i < gatesList.length; i++) {
-        if ((gatesList[i].x === Math.round(((mouseX - GRIDSIZE / 2) / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
-            (gatesList[i].y === Math.round(((mouseY - GRIDSIZE / 2) / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
+    for (let i = 0; i < gates.length; i++) {
+        if ((gates[i].x === Math.round(((mouseX - GRIDSIZE / 2) / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
+            (gates[i].y === Math.round(((mouseY - GRIDSIZE / 2) / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
             return;
         }
     }
@@ -1750,21 +1750,21 @@ function addGate(type, inputs, direction) {
             newGate = new LogicGate(mouseX, mouseY, transform, direction, inputs, 1, 'and');
             newGate.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
             newGate.updateClickBoxes();
-            gatesList.push(newGate);
+            gates.push(newGate);
             pushUndoAction('addGate', [], newGate);
             break;
         case 2:
             newGate = new LogicGate(mouseX, mouseY, transform, direction, inputs, 1, 'or');
             newGate.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
             newGate.updateClickBoxes();
-            gatesList.push(newGate);
+            gates.push(newGate);
             pushUndoAction('addGate', [], newGate);
             break;
         case 3:
             newGate = new LogicGate(mouseX, mouseY, transform, direction, inputs, 1, 'xor');
             newGate.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
             newGate.updateClickBoxes();
-            gatesList.push(newGate);
+            gates.push(newGate);
             pushUndoAction('addGate', [], newGate);
             break;
         default:
@@ -1797,16 +1797,16 @@ function addCustom(file, direction) {
     Adds a new output (lamp)
 */
 function addOutput() {
-    for (var i = 0; i < outputsList.length; i++) {
-        if ((outputsList[i].x === Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
-            (outputsList[i].y === Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
+    for (var i = 0; i < outputs.length; i++) {
+        if ((outputs[i].x === Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
+            (outputs[i].y === Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
             return;
         }
     }
     var newOutput = new Output(mouseX, mouseY, transform, 0);
     newOutput.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newOutput.updateClickBox();
-    outputsList.push(newOutput);
+    outputs.push(newOutput);
     pushUndoAction('addOut', [], newOutput);
     reDraw();
 }
@@ -1833,9 +1833,9 @@ function addSegDisplay(bits) {
     Adds a new input (switch, button or clock)
 */
 function addInput() {
-    for (var i = 0; i < inputsList.length; i++) {
-        if ((inputsList[i].x === (Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) - GRIDSIZE / 2) &&
-            (inputsList[i].y === (Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) - GRIDSIZE / 2)) {
+    for (var i = 0; i < inputs.length; i++) {
+        if ((inputs[i].x === (Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) - GRIDSIZE / 2) &&
+            (inputs[i].y === (Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) - GRIDSIZE / 2)) {
             return;
         }
     }
@@ -1850,7 +1850,7 @@ function addInput() {
         newInput.framecount = -1;
     }
     newInput.clock = newIsClock;
-    inputsList.push(newInput);
+    inputs.push(newInput);
     pushUndoAction('addIn', [], newInput);
     reDraw();
 }
@@ -1859,16 +1859,16 @@ function addInput() {
     Adds a new label
 */
 function addLabel() {
-    for (var i = 0; i < labelsList.length; i++) {
-        if ((labelsList[i].x === (Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE)) &&
-            (labelsList[i].y === (Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE))) {
+    for (var i = 0; i < labels.length; i++) {
+        if ((labels[i].x === (Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE)) &&
+            (labels[i].y === (Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE))) {
             return;
         }
     }
     var newLabel = new Label(mouseX, mouseY, 'New label', transform);
     newLabel.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newLabel.updateClickBox();
-    labelsList.push(newLabel);
+    labels.push(newLabel);
     pushUndoAction('addLabel', [], newLabel);
     reDraw();
 }
@@ -1877,7 +1877,7 @@ function addLabel() {
     Deletes the given gate
 */
 function deleteGate(gateNumber) {
-    pushUndoAction('delGate', [], [gatesList.splice(gateNumber, 1), gateNumber]);
+    pushUndoAction('delGate', [], [gates.splice(gateNumber, 1), gateNumber]);
     reDraw();
 }
 
@@ -1898,7 +1898,7 @@ function deleteCustom(customNumber) {
     Deletes the given output (lamp)
 */
 function deleteOutput(outputNumber) {
-    pushUndoAction('delOut', [], outputsList.splice(outputNumber, 1));
+    pushUndoAction('delOut', [], outputs.splice(outputNumber, 1));
     reDraw();
 }
 
@@ -1906,7 +1906,7 @@ function deleteOutput(outputNumber) {
     Deletes the given input (switch)
 */
 function deleteInput(inputNumber) {
-    pushUndoAction('delIn', [], inputsList.splice(inputNumber, 1));
+    pushUndoAction('delIn', [], inputs.splice(inputNumber, 1));
     reDraw();
 }
 
@@ -1914,14 +1914,14 @@ function deleteInput(inputNumber) {
     Deletes the given diode
 */
 function deleteDiode(diodeNumber) {
-    if (diodesList[diodeNumber].cp) {
-        let x = diodesList[diodeNumber].x;
-        let y = diodesList[diodeNumber].y;
-        pushUndoAction('delDi', [], diodesList.splice(diodeNumber, 1));
+    if (diodes[diodeNumber].cp) {
+        let x = diodes[diodeNumber].x;
+        let y = diodes[diodeNumber].y;
+        pushUndoAction('delDi', [], diodes.splice(diodeNumber, 1));
         createConpoint(x, y, false, -1);
     }
     else {
-        pushUndoAction('delDi', [], diodesList.splice(diodeNumber, 1));
+        pushUndoAction('delDi', [], diodes.splice(diodeNumber, 1));
     }
     doConpoints(); // Conpoints under diodes should appear again
     reDraw();
@@ -1931,7 +1931,7 @@ function deleteDiode(diodeNumber) {
     Deletes the given label
 */
 function deleteLabel(labelNumber) {
-    pushUndoAction('delLabel', [], labelsList.splice(labelNumber, 1));
+    pushUndoAction('delLabel', [], labels.splice(labelNumber, 1));
     reDraw();
 }
 
@@ -1965,7 +1965,7 @@ function startSimulation() {
     integrateElements();
 
     // Reset all clocks
-    for (const elem of inputsList) {
+    for (const elem of inputs) {
         if (elem.getIsClock()) {
             elem.resetFramecount();
         }
@@ -2002,7 +2002,7 @@ function endSimulation(reset = true) {
     sfcheckbox.hide();
 
     wireGroupsList = []; // Reset the groups, as they are regenerated when starting again
-    for (const elem of gatesList) {
+    for (const elem of gates) {
         elem.shutdown(); // Tell all the gates to leave the simulation mode
     }
     for (const elem of customObjectsList) {
@@ -2012,19 +2012,19 @@ function endSimulation(reset = true) {
         elem.shutdown();
     }
     // Set all item states to zero
-    for (const elem of wireConnectionPointsList) {
+    for (const elem of conpoints) {
         elem.state = false;
     }
-    for (const elem of outputsList) {
+    for (const elem of outputs) {
         elem.state = false;
     }
-    for (const elem of inputsList) {
+    for (const elem of inputs) {
         elem.setState(false);
     }
-    for (const elem of diodesList) {
+    for (const elem of diodes) {
         elem.setState(false);
     }
-    for (const elem of wiresList) {
+    for (const elem of wires) {
         elem.state = false;
     }
     simulationIsRunning = false;
@@ -2116,7 +2116,7 @@ function draw() {
 */
 function updateTick() {
     // Tell all gates to update
-    for (const value of gatesList) {
+    for (const value of gates) {
         value.update();
     }
 
@@ -2132,12 +2132,12 @@ function updateTick() {
     updateGroups();
 
     // Update all connection points to adopt the state of their wire group
-    for (const value of wireConnectionPointsList) {
+    for (const value of conpoints) {
         value.state = wireGroupsList[value.group].state;
     }
 
     // Update all self-toggling input elements (buttons and clocks)
-    for (const value of inputsList) {
+    for (const value of inputs) {
         if (value.framecount === 0) {
             if (value.getIsClock()) {
                 value.toggle();
@@ -2159,7 +2159,7 @@ function updateTick() {
     // Update the states of all diodes
     // They adopt the state of their group A (horizontal wire)
     // and if they are high, they pass that event to group B
-    for (const value of diodesList) {
+    for (const value of diodes) {
         value.state = wireGroupsList[value.gA].state;
         if (value.state) {
             wireGroupsList[value.gB].diodeHigh();
@@ -2555,15 +2555,15 @@ function showElements() {
         elem.show();
     }
 
-    for (const elem of outputsList) {
+    for (const elem of outputs) {
         elem.show();
     }
 
-    for (const elem of inputsList) {
+    for (const elem of inputs) {
         elem.show();
     }
 
-    for (const elem of diodesList) {
+    for (const elem of diodes) {
         elem.show();
     }
 
@@ -2577,7 +2577,7 @@ function showElements() {
     textFont('Gudea');
     textSize(20);
     textAlign(LEFT, TOP);
-    for (const elem of labelsList) {
+    for (const elem of labels) {
         elem.show();
     }
 
