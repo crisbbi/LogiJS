@@ -446,8 +446,8 @@ function mouseClicked() {
             default:
                 break;
         }
-        redoButton.elt.disabled = (actionRedoList.length === 0);
-        undoButton.elt.disabled = (actionUndoList.length === 0);
+        redoButton.elt.disabled = (actionRedo.length === 0);
+        undoButton.elt.disabled = (actionUndo.length === 0);
     } else {
         // Buttons should be operateable during simulation
         if (mouseButton === LEFT) {
@@ -474,8 +474,8 @@ function mouseReleased() {
                 case 'addObject':
                     if (wireMode === 'preview') { // If the preview wire mode is active
                         let pushed = false;
-                        for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
-                            if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
+                        for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
+                            if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
                                 pushed = true;
                             }
                         }
@@ -494,14 +494,14 @@ function mouseReleased() {
                             }
                             pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(conpoints)]); // push the action for undoing
                         }
-                        for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
-                            if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
-                                segments.push(previewWireSegmentsList[i]);
+                        for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
+                            if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
+                                segments.push(pwSegments[i]);
                             }
                         }
                         findLines();
                         lockElements = false;
-                        previewWireSegmentsList = []; // delete the preview segments
+                        pwSegments = []; // delete the preview segments
                         if (pushed) {
                             wireMode = 'hold'; // wiring done, reset wireMode
                         } else {
@@ -513,8 +513,8 @@ function mouseReleased() {
                 case 'none':
                     if (wireMode === 'preview') { // If the preview wire mode is active
                         let pushed = false;
-                        for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
-                            if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
+                        for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
+                            if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
                                 pushed = true;
                             }
                         }
@@ -533,14 +533,14 @@ function mouseReleased() {
                             }
                             pushUndoAction('reWire', 0, [_.cloneDeep(oldSegments), _.cloneDeep(oldWires), _.cloneDeep(conpoints)]); // push the action for undoing
                         }
-                        for (let i = 0; i < previewWireSegmentsList.length; i++) { // Push all preview segments to the existing segments
-                            if (segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY) < 0) {
-                                segments.push(previewWireSegmentsList[i]);
+                        for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
+                            if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
+                                segments.push(pwSegments[i]);
                             }
                         }
                         findLines();
                         lockElements = false;
-                        previewWireSegmentsList = []; // delete the preview segments
+                        pwSegments = []; // delete the preview segments
                         if (pushed) {
                             wireMode = 'hold'; // wiring done, reset wireMode
                         } else {
@@ -555,14 +555,14 @@ function mouseReleased() {
                                 if (gates[i].mouseOverInput(j)) {
                                     gates[i].invertInput(j);
                                     let act = new Action('invGIP', [i, j], null);
-                                    actionUndoList.push(act);
+                                    actionUndo.push(act);
                                 }
                             }
                             for (let j = 0; j < gates[i].outputCount; j++) {
                                 if (gates[i].mouseOverOutput(j)) {
                                     gates[i].invertOutput(j);
                                     let act = new Action('invGOP', [i, j], null);
-                                    actionUndoList.push(act);
+                                    actionUndo.push(act);
                                 }
                             }
                         }
@@ -572,14 +572,14 @@ function mouseReleased() {
                                     if (customObjectsList[i].mouseOverInput(j)) {
                                         customObjectsList[i].invertInput(j);
                                         let act = new Action('invCIP', [i, j], null);
-                                        actionUndoList.push(act);
+                                        actionUndo.push(act);
                                     }
                                 }
                                 for (let j = 0; j < customObjectsList[i].outputCount; j++) {
                                     if (customObjectsList[i].mouseOverOutput(j)) {
                                         customObjectsList[i].invertOutput(j);
                                         let act = new Action('invCOP', [i, j], null);
-                                        actionUndoList.push(act);
+                                        actionUndo.push(act);
                                     }
                                 }
                             }
@@ -589,7 +589,7 @@ function mouseReleased() {
                                 if (segmentDisplaysList[i].mouseOverInput(j)) {
                                     segmentDisplaysList[i].invertInput(j);
                                     let act = new Action('invDIP', [i, j], null);
-                                    actionUndoList.push(act);
+                                    actionUndo.push(act);
                                 }
                             }
                         }
@@ -638,8 +638,8 @@ function mouseReleased() {
                         let oldWires = _.cloneDeep(wires);
                         let oldSegments = _.cloneDeep(segments);
                         let existing = false;
-                        for (let i = previewWireSegmentsList.length - 1; i >= 0; i--) {
-                            let exists = segmentExists(previewWireSegmentsList[i].startX, previewWireSegmentsList[i].startY, previewWireSegmentsList[i].endX, previewWireSegmentsList[i].endY);
+                        for (let i = pwSegments.length - 1; i >= 0; i--) {
+                            let exists = segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY);
                             if (exists >= 0) {
                                 existing = true;
                                 segments.splice(exists, 1);
@@ -649,7 +649,7 @@ function mouseReleased() {
                             pushUndoAction('reWire', 0, [oldSegments, oldWires, _.cloneDeep(conpoints)]); // Push the action, if more than 0 segments were deleted
                             findLines();
                         }
-                        previewWireSegmentsList = [];
+                        pwSegments = [];
                         wireMode = 'none';
                         lockElements = false;
                         doConpoints();
@@ -674,10 +674,10 @@ function mouseReleased() {
             }
         }
         // Enable or disable the Undo-Redo buttons
-        redoButton.elt.disabled = (actionRedoList.length === 0);
-        undoButton.elt.disabled = (actionUndoList.length === 0);
+        redoButton.elt.disabled = (actionRedo.length === 0);
+        undoButton.elt.disabled = (actionUndo.length === 0);
     } else {
-        previewWireSegmentsList = [];
+        pwSegments = [];
         wireMode = 'none';
         lockElements = false;
     }

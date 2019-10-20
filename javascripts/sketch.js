@@ -6,7 +6,7 @@ let gates = []; // List of gates (and, or, xor)
 let outputs = []; // List of outputs
 let inputs = []; // List of inputs (buttons, switches)
 let segments = []; // List of fixed wire segments
-let previewWireSegmentsList = []; // List of preview wire segments
+let pwSegments = []; // List of preview wire segments
 let conpoints = []; // List of wire connection points
 let diodes = []; // List of diodes
 let customObjectsList = []; // List of custom objects
@@ -42,8 +42,8 @@ let newIsClock = false;
 
 let customFile = '';
 
-let actionUndoList = [];
-let actionRedoList = [];
+let actionUndo = [];
+let actionRedo = [];
 
 let selectStartX = 0;
 let selectStartY = 0;
@@ -1208,8 +1208,8 @@ function clearItems() {
     This clears the undo and redo stacks
 */
 function clearActionStacks() {
-    actionUndoList = [];
-    actionRedoList = [];
+    actionUndo = [];
+    actionRedo = [];
 }
 
 function pushSelectAction(dx, dy, x1, y1, x2, y2) {
@@ -1341,7 +1341,7 @@ function deleteClicked() {
         for (let j = delSegDisplays[1].length - 1; j >= 0; j--) {
             segmentDisplaysList.splice(delSegDisplays[1][j], 1);
         }
-        previewWireSegmentsList = [];
+        pwSegments = [];
         wireMode = 'none';
         lockElements = false;
         if (selectedElementsList.length > 0) {
@@ -2040,8 +2040,8 @@ function setSimButtonText(text) {
     depending on the state of the stack
 */
 function updateUndoButtons() {
-    redoButton.elt.disabled = (actionRedoList.length === 0);
-    undoButton.elt.disabled = (actionUndoList.length === 0);
+    redoButton.elt.disabled = (actionRedo.length === 0);
+    undoButton.elt.disabled = (actionUndo.length === 0);
     if (loading) {
         redoButton.elt.disabled = true;
         undoButton.elt.disabled = true;
@@ -2185,7 +2185,7 @@ function reDraw() {
 
     // Display the preview wire segment set
     if (wireMode === 'preview' || wireMode === 'delete') {
-        for (const elem of previewWireSegmentsList) { // Display preview segments
+        for (const elem of pwSegments) { // Display preview segments
             elem.show(wireMode === 'delete');
         }
     }
