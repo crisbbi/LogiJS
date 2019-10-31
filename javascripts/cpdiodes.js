@@ -243,12 +243,10 @@ function toggleDiodeAndConpoint() {
     let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
     if (isDiodeAtPosition(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
         toggleDiode(false);
+    } else if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
+        toggleConpoint(true);
     } else {
-        if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
-            toggleConpoint(true);
-        } else {
-            toggleDiode(false);
-        }
+        toggleDiode(false);
     }
     reDraw();
 }
