@@ -15,7 +15,7 @@ let previewSymbol = null;
 */
 function mouseWheel(event) {
     if (loading || mouseOverGUI()) { return; }
-    if (keyIsDown(18) && !simulationIsRunning) { // If the alt key is pressed => scroll trough basic elements
+    if (keyIsDown(18) && !simRunning) { // If the alt key is pressed => scroll trough basic elements
         wheel = Math.sign(event.deltaY);
         addType = Math.max(1, Math.min(9, addType + wheel));
         switch (addType) {
@@ -52,7 +52,7 @@ function mouseWheel(event) {
 
         }
         if (ctrlMode !== 'none' && selectMode === 'none') {
-            setPropMode(false);
+            leaveModifierMode();
         }
         return;
     }
@@ -69,7 +69,7 @@ function mouseWheel(event) {
         }
         transform.zoom = (gridSize / GRIDSIZE);
         dragSpeed = 1 / transform.zoom;
-        if (!simulationIsRunning) {
+        if (!simRunning && !customDialog) {
             reDraw();
         }
     }
@@ -77,7 +77,7 @@ function mouseWheel(event) {
 }
 
 function mouseMoved() {
-    if (loading) { return; }
+    //if (loading) { return; }
     updateCursors();
 }
 
@@ -89,8 +89,8 @@ function updateCursors() {
     let hand = false;
     let showDPreview = false;
     let showCPPreview = false;
-    if (simulationIsRunning || propMode) {
-        if (!simulationIsRunning) {
+    if (simRunning || modifierModeActive) {
+        if (!simRunning) {
             for (const elem of outputs) {
                 if (elem.mouseOver()) {
                     hand = true;
@@ -129,7 +129,7 @@ function updateCursors() {
                     }
                 }
             }
-            for (const elem of segmentDisplaysList) {
+            for (const elem of segDisplays) {
                 for (const e of elem.inputClickBoxes) {
                     if (e.mouseOver()) {
                         hand = true;
@@ -140,7 +140,7 @@ function updateCursors() {
                     }
                 }
             }
-            for (const elem of customObjectsList) {
+            for (const elem of customs) {
                 if (!elem.visible) {
                     continue;
                 }
@@ -194,6 +194,18 @@ function updateCursors() {
             }
         }
     }
+    if (customDialog) {
+        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, maxCustRows, maxCustCols);
+        let place = maxCustCols * pos.row + pos.col + custPage * maxCustCols * maxCustRows;
+        if (pos.col >= 0 && pos.row >= 0 && place < importSketchData.sketches.length) {
+            hand = true;
+            cursor(HAND);
+            if (importSketchData.looks[place].outputs === 0) {
+                hand = true;
+                cursor('not-allowed');
+            }
+        }
+    }
     if (ctrlMode === 'select' && sClickBox.mouseOver() && showSClickBox) {
         hand = true;
         cursor(MOVE);
@@ -201,62 +213,29 @@ function updateCursors() {
     if (!hand) {
         cursor(ARROW);
     }
-
-    // Repositions and draws the preview component, so the user will see where the gate will be placed
-    // First checks whether one of the basic components is chosen 
-    if(ctrlMode === 'addObject' && !mouseOverGUI() && previewSymbol !== null && 0 >= addType <= 9){
-        // Prevents that a gate is created over an existing gate
-        for (let i = 0; i < gates.length; i++) {
-            if ((gates[i].x === Math.round(((mouseX - GRIDSIZE / 2) / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE) &&
-                (gates[i].y === Math.round(((mouseY - GRIDSIZE / 2) / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
-                    return;
-            }  
-        }
-        reDraw();
-    } 
-    
-
-    if (ctrlMode === 'addObject' && addType === 'diode') {
-        for (const elem of diodes) {
-            if (elem.mouseOver()) {
-                hand = true;
-                cursor(HAND);
-            }
-        }
+    if (customDialog) {
+        return;
     }
-    // if two wires cross each other like a "T", show a hand
-    if (wireSegmentsLikeTconnected(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE)) {
-        hand = true;
-        cursor(HAND);
+    if (removeOldPreview) {
+        reDraw();
+        removeOldPreview = false;
     }
     if (showDPreview) {
-        reDraw();
         showPreview('diode', Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-        diodePreviewShown = true;
-    } else if (diodePreviewShown) {
-        reDraw();
-        diodePreviewShown = false;
+        removeOldPreview = true;
     }
     if (showCPPreview) {
-        reDraw();
         showPreview('conpoint', Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-        conpointPreviewShown = true;
-    } else if (conpointPreviewShown) {
-        reDraw();
-        conpointPreviewShown = false;
+        removeOldPreview = true;
     }
     if (negPort !== null) {
-        reDraw();
         showNegationPreview(negPort, isOutput, negDir, isTop);
-        negPreviewShown = true;
-    } else if (negPreviewShown) {
-        reDraw();
-        negPreviewShown = false;
+        removeOldPreview = true;
     }
 }
 
 function mouseDragged() {
-    if (loading) { return; }
+    if (loading || customDialog || loading) { return; }
     if (ctrlMode === 'select' && selectMode === 'drag') {
         if (sDragX2 !== Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE ||
             sDragY2 !== Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) {
@@ -273,29 +252,28 @@ function mouseDragged() {
     Executed when a mouse button is pressed down
 */
 function mousePressed() {
-    if (loading) { return; }
+    if (loading || customDialog) { return; }
     if (ctrlMode !== 'select') {
         showSClickBox = false;
     }
     if (wireMode === 'hold') {
         wireMode = 'none';
     }
-    if (!simulationIsRunning && !mouseOverGUI() && (mouseButton === LEFT)) {
+    if (!simRunning && !mouseOverGUI() && (mouseButton === LEFT)) {
         switch (ctrlMode) {
             case 'none':
                 switch (wireMode) {
                     case 'none':
                         wireMode = 'preview';
-                        previewSegmentStartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
-                        previewSegmentStartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
+                        pwstartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
+                        pwstartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
                         break;
                     default:
                 }
                 let noValidTarget = true;
                 for (let i = 0; i < inputs.length; i++) {
-                    if (Boolean(inputs[i].mouseOver()) && propMode) {
+                    if (inputs[i].mouseOver() && modifierModeActive) {
                         noValidTarget = false;
-                        // If the propMode is active, give options to name and make top
                         if (propInput !== i) {
                             if (propInput >= 0) {
                                 inputs[propInput].mark(false);
@@ -307,7 +285,7 @@ function mousePressed() {
                     }
                 }
                 for (let i = 0; i < outputs.length; i++) {
-                    if (Boolean(outputs[i].mouseOver()) && propMode) {
+                    if (outputs[i].mouseOver() && modifierModeActive) {
                         noValidTarget = false;
                         if (propOutput !== i) {
                             if (propOutput >= 0) {
@@ -320,7 +298,7 @@ function mousePressed() {
                     }
                 }
                 for (let i = 0; i < labels.length; i++) {
-                    if (Boolean(labels[i].mouseOver()) && propMode) {
+                    if (labels[i].mouseOver() && modifierModeActive) {
                         noValidTarget = false;
                         if (propLabel !== i) {
                             if (propLabel >= 0) {
@@ -332,7 +310,7 @@ function mousePressed() {
                         }
                     }
                 }
-                if (noValidTarget && propMode) {
+                if (noValidTarget && modifierModeActive) {
                     hidePropMenu();
                     unmarkPropTargets();
                 }
@@ -341,15 +319,15 @@ function mousePressed() {
                 switch (wireMode) {
                     case 'none':
                         wireMode = 'preview';
-                        previewSegmentStartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
-                        previewSegmentStartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
+                        pwstartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
+                        pwstartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
                         break;
                     default:
                 }
                 break;
             case 'delete':
-                previewSegmentStartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
-                previewSegmentStartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
+                pwstartX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
+                pwstartY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
                 wireMode = 'delete';
                 break;
             case 'select':
@@ -376,8 +354,7 @@ function mousePressed() {
                             }
                             selectMode = 'drag';
                         } else {
-                            setControlMode('none');
-                            setActive(propertiesButton);
+                            enterModifierMode();
                             pushSelectAction(sDragX2 - initX, sDragY2 - initY, sClickBox.x - sClickBox.w / 2, sClickBox.y - sClickBox.h / 2,
                                 sClickBox.x + sClickBox.w / 2, sClickBox.y + sClickBox.h / 2);
                             initX = 0;
@@ -394,8 +371,15 @@ function mousePressed() {
 }
 
 function mouseClicked() {
+    if (customDialog) {
+        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, maxCustRows, maxCustCols);
+        if (pos.row >= 0 && pos.col >= 0) {
+            importItemClicked(pos.row, pos.col);
+        }
+        return;
+    }
     if (loading) { return; }
-    if (!simulationIsRunning && !mouseOverGUI()) {
+    if (!simRunning && !mouseOverGUI()) {
         switch (ctrlMode) {
             case 'addObject':
                 if (wireMode !== 'hold') {
@@ -410,7 +394,7 @@ function mouseClicked() {
                         case 10:
                         case 11:
                             if (mouseButton === LEFT) {
-                                addCustom(customFile, gateDirection);
+                                addCustom(custFile, gateDirection);
                             }
                             break;
                         case 7:
@@ -420,7 +404,7 @@ function mouseClicked() {
                             break;
                         case 8:
                             if (mouseButton === LEFT) {
-                                addSegDisplay(segmentDisplayBits);
+                                addSegDisplay(segBits);
                                 setTimeout(reDraw, 50);
                             }
                             break;
@@ -467,8 +451,8 @@ function mouseClicked() {
           Finishing the selection process by invoking handleSelection
 */
 function mouseReleased() {
-    if (loading) { return; }
-    if (!simulationIsRunning && !mouseOverGUI()) {
+    if (loading || customDialog) { return; }
+    if (!simRunning && !mouseOverGUI()) {
         if (mouseButton === LEFT) {
             switch (ctrlMode) {
                 case 'addObject':
@@ -566,28 +550,28 @@ function mouseReleased() {
                                 }
                             }
                         }
-                        for (let i = 0; i < customObjectsList.length; i++) {
-                            if (customObjectsList[i].visible) {
-                                for (let j = 0; j < customObjectsList[i].inputCount; j++) {
-                                    if (customObjectsList[i].mouseOverInput(j)) {
-                                        customObjectsList[i].invertInput(j);
+                        for (let i = 0; i < customs.length; i++) {
+                            if (customs[i].visible) {
+                                for (let j = 0; j < customs[i].inputCount; j++) {
+                                    if (customs[i].mouseOverInput(j)) {
+                                        customs[i].invertInput(j);
                                         let act = new Action('invCIP', [i, j], null);
                                         actionUndo.push(act);
                                     }
                                 }
-                                for (let j = 0; j < customObjectsList[i].outputCount; j++) {
-                                    if (customObjectsList[i].mouseOverOutput(j)) {
-                                        customObjectsList[i].invertOutput(j);
+                                for (let j = 0; j < customs[i].outputCount; j++) {
+                                    if (customs[i].mouseOverOutput(j)) {
+                                        customs[i].invertOutput(j);
                                         let act = new Action('invCOP', [i, j], null);
                                         actionUndo.push(act);
                                     }
                                 }
                             }
                         }
-                        for (let i = 0; i < segmentDisplaysList.length; i++) {
-                            for (let j = 0; j < segmentDisplaysList[i].inputCount; j++) {
-                                if (segmentDisplaysList[i].mouseOverInput(j)) {
-                                    segmentDisplaysList[i].invertInput(j);
+                        for (let i = 0; i < segDisplays.length; i++) {
+                            for (let j = 0; j < segDisplays[i].inputCount; j++) {
+                                if (segDisplays[i].mouseOverInput(j)) {
+                                    segDisplays[i].invertInput(j);
                                     let act = new Action('invDIP', [i, j], null);
                                     actionUndo.push(act);
                                 }
@@ -701,8 +685,8 @@ function mouseOverGate() {
 function mouseOverCustom() {
     // Iterate backwards so that in overlapping situations
     // the last added gets removed first
-    for (let i = customObjectsList.length - 1; i >= 0; i--) {
-        if (customObjectsList[i].mouseOver() && customObjectsList[i].visible) {
+    for (let i = customs.length - 1; i >= 0; i--) {
+        if (customs[i].mouseOver() && customs[i].visible) {
             return i;
         }
     }
@@ -754,12 +738,38 @@ function mouseOverLabel() {
 }
 
 function mouseOverSegDisplay() {
-    for (var i = segmentDisplaysList.length - 1; i >= 0; i--) {
-        if (segmentDisplaysList[i].mouseOver()) {
+    for (var i = segDisplays.length - 1; i >= 0; i--) {
+        if (segDisplays[i].mouseOver()) {
             return i;
         }
     }
     return -1;
+}
+
+/*
+    baseX, baseY: Top left corner where the first preview image starts
+*/
+function mouseOverImport(baseX, baseY, rows, cols) {
+    let mx = mouseX - baseX;
+    let my = mouseY - baseY;
+    if (mx % 240 > 200 || my % 240 > 200) {
+        return {
+            row: -1,
+            col: -1
+        };
+    }
+    mx = Math.floor(mx / 240);
+    my = Math.floor(my / 240);
+    if (my >= rows || mx >= cols || mx < 0 || my < 0) {
+        return {
+            row: -1,
+            col: -1
+        };
+    }
+    return {
+        row: my,
+        col: mx
+    };
 }
 
 //Checks if the mouse hovers over the GUI(true) or the grid(false)
@@ -780,7 +790,7 @@ function mouseOverGUI() {
     by calculating dx and dy
 */
 function handleDragging() {
-    if (loading) { return; }
+    if (loading || customDialog) { return; }
     if (mouseIsPressed && mouseButton === RIGHT && mouseX > 0 && mouseY > 0) {
         if (lastX !== 0) {
             transform.dx += Math.round((mouseX - lastX) * dragSpeed);
@@ -790,7 +800,7 @@ function handleDragging() {
         }
         lastMousePositionX = mouseX;
         lastMousePositionY = mouseY;
-        if (!simulationIsRunning) {
+        if (!simRunning) {
             reDraw();
         }
     } else {

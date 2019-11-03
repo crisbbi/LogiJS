@@ -168,7 +168,12 @@ input {
 }
 
 #carousel {
-    margin-top: 10%;
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    -ms-transform: translate(0%, -50%);
+    transform: translate(0%, -50%);
+    /*margin-top: 10%;*/
     min-width: 400px;
     padding: 0;
     height: 260px;
@@ -180,9 +185,14 @@ input {
 }
 
 #login_back {
-    margin: 10% auto 0 auto;
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    margin: 20px 0 0 0;
+    -ms-transform: translate(-50%, -0%);
+    transform: translate(-50%, -0%);
     max-width: 400px;
-    padding: 0;
+    padding: 20px;
     height: 400px;
     display: block;
     background-color: rgba(50, 50, 50, 0.9);
@@ -227,6 +237,11 @@ input {
 
 #demopic {
     display: block; 
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    -ms-transform: translate(-50%, 0%);
+    transform: translate(-50%, 0%);
     margin: 5% auto;
 }
 
