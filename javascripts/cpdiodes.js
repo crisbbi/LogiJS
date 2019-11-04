@@ -47,7 +47,7 @@ function segmentEndsIn(x, y) {
 */
 function createConpoint(x, y, state, g) {
     console.log("createConPoint");
-    if (isConPoint(x, y) < 0) {
+    if (!isConPoint(x, y)) {
         conpoints.push(new ConPoint(x, y, state, g));
     }
 }
@@ -110,22 +110,22 @@ function createDiode(x, y, state, restore) {
     diodes[diodes.length - 1].updateClickBox();
     pushUndoAction('addDi', [], diodes[diodes.length - 1]);
     let cp = isConPoint(x, y);
-    if (cp >= 0) {
+    if (cp) {
         conpoints.splice(cp, 1);
     }
-    diodes[diodes.length - 1].cp = ((restore) && (cp >= 0));
+    diodes[diodes.length - 1].cp = ((restore) && cp);
 }
 
 /*
     Checks if a connection point is at the given position
 */
 function isConPoint(x, y) {
-    for (let i = 0; i < conpoints.length; i++) {
-        if (conpoints[i].x === x && conpoints[i].y === y) {
-            return i;
+    for (let conpoint of conpoints) {
+        if (conpoint.x === x && conpoint.y === y) {
+            return true;
         }
     }
-    return -1;
+    return false;
 }
 
 function listConpoints(x1, y1, x2, y2) {
@@ -247,7 +247,7 @@ function toggleDiodeAndConpoint() {
     let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
     if (isDiode(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
         removeDiode(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY);
-    } else if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
+    } else if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
         toggleConpoint(true);
     } else {
         toggleDiode(false);
