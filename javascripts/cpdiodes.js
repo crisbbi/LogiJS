@@ -196,17 +196,20 @@ function showPreview(type, x, y) {
 }
 
 function toggleDiode(restore) {
-    for (let i = 0; i < diodes.length; i++) {
-        if ((diodes[i].x === Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) &&
-            (diodes[i].y === Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
-            diodes[i].cp = true;
-            deleteDiode(i);
+    createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
+    Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false, restore);
+    reDraw();
+}
+
+function removeDiode(xPosition, yPosition) {
+    for (let diode of diodes) {
+        if ((diode.x === Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) &&
+            (diode.y === Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+            diode.cp = true;
+            deleteDiode(diode); 
             return;
         }
     }
-    createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
-        Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false, restore);
-    reDraw();
 }
 
 function toggleConpoint(undoable) {
@@ -239,10 +242,11 @@ function toggleDiodeAndConpoint() {
      * the switch to a diode connection. Could be solved with 3 if statements
      * and in each case change the connection.
      */
+    // compute the nearest grid cross/intersection (x,y) coordinate, relative to mouse position
     let nearestGridXpositionFromMouseX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE; 
     let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
     if (isDiode(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
-        toggleDiode(false);
+        removeDiode(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY);
     } else if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
         toggleConpoint(true);
     } else {

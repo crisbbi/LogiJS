@@ -1815,15 +1815,15 @@ function deleteInput(inputNumber) {
 /*
     Deletes the given diode
 */
-function deleteDiode(diodeNumber) {
-    if (diodes[diodeNumber].cp) {
-        let x = diodes[diodeNumber].x;
-        let y = diodes[diodeNumber].y;
-        pushUndoAction('delDi', [], diodes.splice(diodeNumber, 1));
+function deleteDiode(diode) {
+    if (diode.cp) {
+        let x = diode.x;
+        let y = diode.y;
+        pushUndoAction('delDi', [], diodes.splice(diode, 1));
         createConpoint(x, y, false, -1);
     }
     else {
-        pushUndoAction('delDi', [], diodes.splice(diodeNumber, 1));
+        pushUndoAction('delDi', [], diodes.splice(diode, 1));
     }
     doConpoints(); // Conpoints under diodes should appear again
     reDraw();
