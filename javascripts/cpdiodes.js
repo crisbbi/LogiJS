@@ -146,7 +146,7 @@ function listConpoints(x1, y1, x2, y2) {
     return cps;
 }
 
-function isDiodeAtPosition(xPosition, yPosition) {
+function isDiode(xPosition, yPosition) {
     for (let diode of diodes) {
         if (diode.x === xPosition && diode.y === yPosition) {
             return true;
@@ -241,7 +241,7 @@ function toggleDiodeAndConpoint() {
      */
     let nearestGridXpositionFromMouseX = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE; 
     let nearestGridYpositionFromMouseY = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE; 
-    if (isDiodeAtPosition(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
+    if (isDiode(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY)) {
         toggleDiode(false);
     } else if (isConPoint(nearestGridXpositionFromMouseX, nearestGridYpositionFromMouseY) >= 0) {
         toggleConpoint(true);
