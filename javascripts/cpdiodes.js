@@ -213,10 +213,10 @@ function removeDiode(xPosition, yPosition) {
 }
 
 function toggleConpoint(undoable) {
-    for (var i = 0; i < conpoints.length; i++) {
-        if ((conpoints[i].x === Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) &&
-            (conpoints[i].y === Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
-            let cp = conpoints.splice(i, 1);
+    for (let conpoint of conpoints) {
+        if ((conpoint.x === Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) &&
+            (conpoint.y === Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+            let cp = conpoints.splice(conpoint, 1);
             let before = conpoints.slice(0);
             doConpoints();
             if (JSON.stringify(conpoints) === JSON.stringify(before) && undoable) {
