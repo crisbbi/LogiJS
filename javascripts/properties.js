@@ -1,48 +1,33 @@
 // File: properties.js
-// Contains functions for the properties mode
-
-/*
-    Starts or stops the properties mode
-*/
-function setmodifierModeActive(active) {
-    modifierModeActive = active;
-    if (!active) {
-        hidePropMenu();
-        unmarkPropTargets();
-    } else {
-        setControlMode('none');
-        addType = 0;
-    }
-}
+// Contains functions for the modifier mode
 
 function enterModifierMode() {
-    modifierModeActive = true;
-    setControlMode('none');
-    setActive(modifierModeButton);
+    setControlMode('modify');
+    setActive(modifierModeButton, true);
     disableButtons(false);
     addType = 0;
 }
 
 function leaveModifierMode() {
-    modifierModeActive = false;
-    hidePropMenu();
+    closeModifierMenu();
     unmarkPropTargets();
 }
 
 // Hides the PropMenu without quitting the modifierModeActive
 // Used, when the user clickes outside a valid target for modifierModeActive
-function hidePropMenu() {
-    propBoxLabel.hide();
+function closeModifierMenu() {
     setInputModifierVisibility(false);
     setOutputModifierVisibility(false);
     setLabelModifierVisibility(false);
-    propInput = -1;
-    propLabel = -1;
-    propOutput = -1;
+    captionInput.hide();
+    sequencer.hide();
+    inputToModify = -1;
+    labelToModify = -1;
+    outputToModify = -1;
 }
 
 /*
-    Unmarks all objects that can be marked in the properties mode
+    Unmarks all objects that can be marked in the modifier mode
 */
 function unmarkPropTargets() {
     for (const elem of inputs) {
@@ -54,9 +39,9 @@ function unmarkPropTargets() {
     for (const elem of labels) {
         elem.mark(false);
     }
-    propInput = -1;
-    propOutput = -1;
-    propLabel = -1;
+    inputToModify = -1;
+    outputToModify = -1;
+    labelToModify = -1;
 }
 
 /*
@@ -94,26 +79,51 @@ function unmarkAll() {
 
 /*
     Shows the DOM elements for the input options and unmarks all other
-    objects that can be marked in properties mode
+    objects that can be marked in modifier mode
 */
 function showInputPropMenu() {
-    propBoxLabel.show();
     setOutputModifierVisibility(false);
     setInputModifierVisibility(true);
     setLabelModifierVisibility(false);
-    if (inputs[propInput].clock) {
-        clockspeedLabel.show();
+    if (inputs[inputToModify].clock) {
+        minusLabel.show();
+        plusLabel.show();
         clockspeedSlider.show();
-        clockspeedSlider.value(60 - inputs[propInput].speed);
+        clockspeedSlider.value(60 - inputs[inputToModify].speed);
     } else {
-        clockspeedLabel.hide();
+        minusLabel.hide();
+        plusLabel.hide();
         clockspeedSlider.hide();
     }
-    inputIsTopBox.checked(inputs[propInput].isTop);
-    inputCaptionBox.value(inputs[propInput].lbl);
-    propOutput = -1;
-    propLabel = -1;
+    inputIsTopBox.checked(inputs[inputToModify].isTop);
+    captionInput.value(inputs[inputToModify].lbl);
+    sequencer.value(inputToModify + 1);
+
+    outputToModify = -1;
+    labelToModify = -1;
     for (const elem of outputs) {
+        elem.mark(false);
+    }
+    for (const elem of labels) {
+        elem.mark(false);
+    }
+}
+
+/*
+    Shows the DOM elements for the output options and unmarks all other
+    objects that can be marked in modifier mode
+*/
+function showOutputPropMenu() {
+    setOutputModifierVisibility(true);
+    setInputModifierVisibility(false);
+    setLabelModifierVisibility(false);
+    setOutputColor(outputs[outputToModify].colr);
+    captionInput.value(outputs[outputToModify].lbl);
+    sequencer.value(outputToModify + 1);
+
+    inputToModify = -1;
+    labelToModify = -1;
+    for (const elem of inputs) {
         elem.mark(false);
     }
     for (const elem of labels) {
@@ -123,16 +133,15 @@ function showInputPropMenu() {
 
 /*
     Shows the DOM elements for the label options and unmarks all other
-    objects that can be marked in properties mode
+    objects that can be marked in modifier mode
 */
 function showLabelPropMenu() {
-    propBoxLabel.show();
     setInputModifierVisibility(false);
     setOutputModifierVisibility(false);
     setLabelModifierVisibility(true);
-    labelTextBox.value(labels[propLabel].txt);
-    propOutput = -1;
-    propInput = -1;
+    labelTextBox.value(labels[labelToModify].txt);
+    outputToModify = -1;
+    inputToModify = -1;
     for (const elem of outputs) {
         elem.mark(false);
     }
@@ -141,38 +150,91 @@ function showLabelPropMenu() {
     }
 }
 
-/*
-    Shows the DOM elements for the output options and unmarks all other
-    objects that can be marked in properties mode
-*/
-function showOutputPropMenu() {
-    propBoxLabel.show();
-    setOutputModifierVisibility(true);
-    setInputModifierVisibility(false);
-    setLabelModifierVisibility(false);
-    setOutputColor(outputs[propOutput].colr);
-    outputCaptionBox.value(outputs[propOutput].lbl);
-    propInput = -1;
-    propLabel = -1;
-    for (const elem of inputs) {
-        elem.mark(false);
+function showModifierMenu() {
+    fill('rgba(50, 50, 50, 0.9)');
+    noStroke();
+    strokeCap(SQUARE);
+    if (inputToModify >= 0) {
+        modifierMenuX = (inputs[inputToModify].x + transform.dx - 1) * transform.zoom;
+        modifierMenuY = (inputs[inputToModify].y + transform.dy + GRIDSIZE + 2) * transform.zoom;
+        if (!inputs[inputToModify].clock) {
+            rect(modifierMenuX, modifierMenuY, 250, 100);
+        } else {
+            rect(modifierMenuX, modifierMenuY, 250, 150);
+        }
+    } else if (outputToModify >= 0) {
+        modifierMenuX = (outputs[outputToModify].x + transform.dx - GRIDSIZE / 2 - 1) * transform.zoom;
+        modifierMenuY = (outputs[outputToModify].y + transform.dy + GRIDSIZE / 2 + 2) * transform.zoom;
+        rect(modifierMenuX, modifierMenuY, 250, 100);
+    } else if (labelToModify >= 0) {
+        modifierMenuX = (labels[labelToModify].x + transform.dx - GRIDSIZE / 2 - 1) * transform.zoom;
+        modifierMenuY = (labels[labelToModify].y + transform.dy + GRIDSIZE / 2 + GRIDSIZE * (labels[labelToModify].lines.length - 1) + 2) * transform.zoom;
+        rect(modifierMenuX, modifierMenuY, 250, 150);
     }
-    for (const elem of labels) {
-        elem.mark(false);
-    }
+    strokeCap(ROUND);
+}
+
+function positionModifierElements() {
+    sequencer.position(modifierMenuX + 332, modifierMenuY + 27);
+
+    captionInput.position(modifierMenuX + 150, modifierMenuY + 30);
+    inputIsTopBox.position(modifierMenuX + 160, modifierMenuY + 80);
+    clockspeedSlider.position(modifierMenuX + 190, modifierMenuY + 130);
+    minusLabel.position(modifierMenuX + 168, modifierMenuY + 121);
+    plusLabel.position(modifierMenuX + 365, modifierMenuY + 125);
+
+    redButton.position(modifierMenuX + 195, modifierMenuY + 90);
+    yellowButton.position(modifierMenuX + 235, modifierMenuY + 90);
+    greenButton.position(modifierMenuX + 275, modifierMenuY + 90);
+    blueButton.position(modifierMenuX + 315, modifierMenuY + 90);
+
+    labelTextBox.position(modifierMenuX + 160, modifierMenuY + 40);
 }
 
 function newIsTopState() {
-    inputs[propInput].setIsTop(inputIsTopBox.checked());
+    inputs[inputToModify].setIsTop(inputIsTopBox.checked());
 }
 
-function newInputCaption() {
-    inputs[propInput].lbl = inputCaptionBox.value();
+function newCaption() {
+    if (inputToModify >= 0) {
+        inputs[inputToModify].lbl = captionInput.value();
+    } else {
+        outputs[outputToModify].lbl = captionInput.value();
+    }
 }
 
-function newOutputCaption() {
-    outputs[propOutput].lbl = outputCaptionBox.value();
+function sequencerChanged() {
+    if (inputToModify >= 0) {
+        inputs[parseInt(sequencer.value()) - 1] = inputs.splice(inputToModify, 1, inputs[parseInt(sequencer.value()) - 1])[0];
+        inputToModify = parseInt(sequencer.value()) - 1;
+        inputIsTopBox.checked(inputs[inputToModify].isTop);
+        captionInput.value(inputs[inputToModify].lbl);
+        if (inputs[inputToModify].clock) {
+            clockspeedSlider.value(60 - inputs[inputToModify].speed);
+        }
+        adjustSequencer(false, inputToModify + 1);
+        sequencer.value(inputToModify + 1);
+    } else {
+        outputs[parseInt(sequencer.value()) - 1] = outputs.splice(outputToModify, 1, outputs[parseInt(sequencer.value()) - 1])[0];
+        outputToModify = parseInt(sequencer.value()) - 1;
+        captionInput.value(outputs[outputToModify].lbl);
+        setOutputColor(outputs[outputToModify].colr);
+        adjustSequencer(true, outputToModify + 1);
+        sequencer.value(outputToModify + 1);
+    }
 }
+
+function fillSequencer(max, top) {
+    sequencer.elt.innerHTML = '';
+    sequencer.option(top);
+    for (let i = 1; i <= max; i++) {
+        if (i !== top) {
+            sequencer.option(i);
+        }
+    }
+    sequencer.value('1');
+}
+
 
 /*
     Updates the color of the marked output according to the
@@ -180,8 +242,8 @@ function newOutputCaption() {
 */
 function newOutputColor(code) {
     setOutputColor(code);
-    outputs[propOutput].colr = code;
-    outputs[propOutput].updateColor();
+    outputs[outputToModify].colr = code;
+    outputs[outputToModify].updateColor();
 }
 
 function setOutputColor(code) {
@@ -206,34 +268,34 @@ function setOutputColor(code) {
 function setOutputModifierVisibility(show) {
     setColorButtonVisibility(show);
     if (show) {
-        opNameLabel.show();
-        outputCaptionBox.show();
-    } else {
-        opNameLabel.hide();
-        outputCaptionBox.hide();
+        captionInput.show();
+        if (!sequencerAdjusted) {
+            adjustSequencer(true, outputToModify + 1);
+        }
+        sequencer.show();
     }
 }
 
 function setInputModifierVisibility(show) {
     if (show) {
         inputIsTopBox.show();
-        inputCaptionBox.show();
-        ipNameLabel.show();
+        captionInput.show();
+        if (!sequencerAdjusted) {
+            adjustSequencer(false, inputToModify + 1);
+        }
+        sequencer.show();
     } else {
         inputIsTopBox.hide();
-        inputCaptionBox.hide();
-        ipNameLabel.hide();
-        clockspeedLabel.hide();
+        minusLabel.hide();
+        plusLabel.hide();
         clockspeedSlider.hide();
     }
 }
 
 function setLabelModifierVisibility(show) {
     if (show) {
-        labCaptLabel.show();
         labelTextBox.show();
     } else {
-        labCaptLabel.hide();
         labelTextBox.hide();
     }
 }
@@ -252,6 +314,19 @@ function setColorButtonVisibility(show) {
     }
 }
 
+function modifierMenuDisplayed() {
+    return (controlMode === 'modify' && (inputToModify + outputToModify + labelToModify >= -2));
+}
+
+function adjustSequencer(io, top) {
+    if (io) {
+        fillSequencer(outputs.length, top);
+    } else {
+        fillSequencer(inputs.length, top);
+    }
+    sequencerAdjusted = true;
+}
+
 function setColorButtonsUnactive() {
     redButton.elt.className = 'colorButton redButton';
     yellowButton.elt.className = 'colorButton yellowButton';
@@ -262,32 +337,32 @@ function setColorButtonsUnactive() {
 function createColorButtons() {
     redButton = createButton('');
     redButton.size(40, 25);
-    redButton.position(windowWidth - 190, 90);
     redButton.elt.className = 'colorButton redButton';
+    redButton.elt.title = 'Make this output red';
     redButton.mousePressed(function () {
         newOutputColor(0);
     });
 
     yellowButton = createButton('');
     yellowButton.size(40, 25);
-    yellowButton.position(windowWidth - 150, 90);
     yellowButton.elt.className = 'colorButton yellowButton';
+    yellowButton.elt.title = 'Make this output yellow';
     yellowButton.mousePressed(function () {
         newOutputColor(1);
     });
 
     greenButton = createButton('');
     greenButton.size(40, 25);
-    greenButton.position(windowWidth - 110, 90);
     greenButton.elt.className = 'colorButton greenButton';
+    greenButton.elt.title = 'Make this output green';
     greenButton.mousePressed(function () {
         newOutputColor(2);
     });
 
     blueButton = createButton('');
     blueButton.size(40, 25);
-    blueButton.position(windowWidth - 70, 90);
     blueButton.elt.className = 'colorButton blueButton';
+    blueButton.elt.title = 'Make this output blue';
     blueButton.mousePressed(function () {
         newOutputColor(3);
     });
@@ -296,66 +371,57 @@ function createColorButtons() {
 }
 
 function createModifierElements() {
-    propBoxLabel = createP('Properties');
-    propBoxLabel.hide();
-    propBoxLabel.elt.style.color = 'white';
-    propBoxLabel.elt.style.fontFamily = 'Open Sans';
-    propBoxLabel.elt.style.margin = '3px 0px 0px 0px';
-    propBoxLabel.position(windowWidth - 190, 30);
-    propBoxLabel.style('font-size', '30px');
-
-    inputIsTopBox = createCheckbox('Pin input to the top', false);
+    inputIsTopBox = createCheckbox('Pin this to the top', false);
     inputIsTopBox.hide();
-    inputIsTopBox.position(windowWidth - 190, 90);
     inputIsTopBox.changed(newIsTopState);
-    inputIsTopBox.elt.style.color = 'white';
-    inputIsTopBox.elt.style.fontFamily = 'Open Sans';
+    inputIsTopBox.elt.className = 'topBox';
+    inputIsTopBox.elt.title = 'Select this to fix the pin of this input on top of this sketch\'s custom module';
 
-    ipNameLabel = createP('Input name:');
-    ipNameLabel.hide();
-    ipNameLabel.elt.style.color = 'white';
-    ipNameLabel.elt.style.fontFamily = 'Open Sans';
-    ipNameLabel.elt.style.margin = '3px 0px 0px 0px';
-    ipNameLabel.position(windowWidth - 190, 120);
+    minusLabel = createP('-');
+    minusLabel.hide();
+    minusLabel.elt.style.color = 'white';
+    minusLabel.elt.style.fontFamily = 'Open Sans';
+    minusLabel.elt.style.margin = '3px 0px 0px 0px';
+    minusLabel.style('font-size', '30px');
 
-    inputCaptionBox = createInput('');
-    inputCaptionBox.elt.style.fontFamily = 'Open Sans';
-    inputCaptionBox.hide();
-    inputCaptionBox.size(170, 15);
-    inputCaptionBox.position(windowWidth - 190, 150);
-    inputCaptionBox.input(newInputCaption);
-    inputCaptionBox.elt.className = "textInput";
+    captionInput = createInput('');
+    captionInput.elt.style.fontFamily = 'Open Sans';
+    captionInput.hide();
+    captionInput.size(167, 15);
+    captionInput.attribute('placeholder', 'Pin name');
+    captionInput.input(newCaption);
+    captionInput.elt.className = "textInput";
+    captionInput.elt.title = 'This is the name that will appear on the corresponding pin on the custom module.';
 
-    opNameLabel = createP('Output name:');
-    opNameLabel.hide();
-    opNameLabel.elt.style.color = 'white';
-    opNameLabel.elt.style.fontFamily = 'Open Sans';
-    opNameLabel.elt.style.margin = '3px 0px 0px 0px';
-    opNameLabel.position(windowWidth - 190, 120);
+    plusLabel = createP('+');
+    plusLabel.hide();
+    plusLabel.elt.style.color = 'white';
+    plusLabel.elt.style.fontFamily = 'Open Sans';
+    plusLabel.elt.style.margin = '3px 0px 0px 0px';
+    plusLabel.style('font-size', '30px');
 
-    labCaptLabel = createP('Label text:');
-    labCaptLabel.hide();
-    labCaptLabel.elt.style.color = 'white';
-    labCaptLabel.elt.style.fontFamily = 'Open Sans';
-    labCaptLabel.elt.style.margin = '3px 0px 0px 0px';
-    labCaptLabel.position(windowWidth - 190, 90);
-
-    outputCaptionBox = createInput('');
-    outputCaptionBox.elt.style.fontFamily = 'Open Sans';
-    outputCaptionBox.hide();
-    outputCaptionBox.size(170, 15);
-    outputCaptionBox.position(windowWidth - 190, 150);
-    outputCaptionBox.elt.className = 'textInput';
-    outputCaptionBox.input(newOutputCaption);
+    clockspeedSlider = createSlider(1, 60, 30, 1);
+    clockspeedSlider.hide();
+    clockspeedSlider.input(function () {
+        newClockspeed();
+    });
+    clockspeedSlider.elt.className = 'slider';
+    clockspeedSlider.elt.title = 'Clock speed';
 
     labelTextBox = createElement('textarea');
-    labelTextBox.elt.style.fontFamily = 'Open Sans';
-    labelTextBox.elt.style.fontSize = '15px';
+    labelTextBox.elt.className = 'labelTextBox';
+    labelTextBox.attribute('placeholder', 'New Label');
     labelTextBox.hide();
-    labelTextBox.size(170, 200);
-    labelTextBox.position(windowWidth - 190, 120);
-    labelTextBox.input(labelChanged);
+    labelTextBox.size(215, 115);
+    labelTextBox.elt.onkeyup = labelChanged;
 
+    sequencer = createSelect();
+    sequencer.hide();
+    sequencer.size(43, 33);
+    sequencer.changed(sequencerChanged);
+    fillSequencer(1);
+    sequencer.elt.className = 'sequencer';
+    sequencer.elt.title = 'Change order';
 
     createColorButtons();
 }

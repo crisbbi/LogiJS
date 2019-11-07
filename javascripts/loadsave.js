@@ -3,8 +3,7 @@
 function saveSketch(filename, callback) {
     // Create a new json object to store all elements in
     let json = {};
-    // New elements should have the filename as their caption (for now)
-    json.caption = filename.substring(0, filename.indexOf('.'));
+    json.caption = moduleNameInput.value();
     json.gates = [];
     json.outputs = [];
     json.inputs = [];
@@ -53,8 +52,8 @@ function saveSketch(filename, callback) {
 }
 
 function loadSketch(file) {
-    next = 0;
-    queue = [];
+    nextCustomToLoadIndex = 0;
+    customsToLoadQueue = [];
     loading = true;
     loadFile = file;
     document.title = 'LogiJS: ' + loadFile.split('.')[0];
@@ -72,8 +71,8 @@ function loadSketch(file) {
 }
 
 function loadSketchFromJSON(data, file) {
-    next = 0;
-    queue = [];
+    nextCustomToLoadIndex = 0;
+    customsToLoadQueue = [];
     loading = true;
     loadFile = file;
     document.title = 'LogiJS: ' + file;
@@ -98,13 +97,13 @@ function load(loadData) {
     labels = [];
     segDisplays = [];
     transform = new Transformation(0, 0, 1);
-    gridSize = GRIDSIZE;
+    currentGridSize = GRIDSIZE;
     actionUndo = []; // Clear Undo / Redo stacks
     actionRedo = [];
     endSimulation(); // End ongoing simulations
     disableButtons(true);
     simButton.elt.disabled = true;
-    saveButton.elt.disabled = true;
+    moduleNameInput.value(loadData.caption);
     // Load all gate parameters and create new gates based on that information
     for (let i = 0; i < loadData.gates.length; i++) {
         gates[i] = new LogicGate(JSON.parse(loadData.gates[i].x), JSON.parse(loadData.gates[i].y), transform, JSON.parse(loadData.gates[i].direction),
@@ -278,7 +277,7 @@ function loadCustom(loadData, num, hlparent) {
         customs[customs.length - 1].visible = false;
         customs[customs.length - 1].setParentID(customs[hlparent].id);
         customs[num].responsibles.push(customs[customs.length - 1]);
-        queue.push([customs[customs.length - 1].filename, (customs.length - 1), num]);
+        customsToLoadQueue.push([customs[customs.length - 1].filename, (customs.length - 1), num]);
         params[CUSTNUM][i] = customs[customs.length - 1];
     }
     customs[num].setSketchParams(params);
@@ -291,9 +290,9 @@ function loadCustom(loadData, num, hlparent) {
 */
 function loadCustomSketches() {
     for (let i = 0; i < customs.length; i++) {
-        queue.push([customs[i].filename, i, i]);
+        customsToLoadQueue.push([customs[i].filename, i, i]);
     }
-    if (queue.length > 0) {
+    if (customsToLoadQueue.length > 0) {
         loadNext();
     } else {
         setLoading(false);
@@ -301,11 +300,11 @@ function loadCustomSketches() {
 }
 
 function loadNext() {
-    if (queue.length <= next) {
+    if (customsToLoadQueue.length <= nextCustomToLoadIndex) {
         setLoading(false);
     } else {
-        loadCustomFile(queue[next][0], queue[next][1], queue[next][2]);
-        next++;
+        loadCustomFile(customsToLoadQueue[nextCustomToLoadIndex][0], customsToLoadQueue[nextCustomToLoadIndex][1], customsToLoadQueue[nextCustomToLoadIndex][2]);
+        nextCustomToLoadIndex++;
     }
 }
 
@@ -338,6 +337,26 @@ function getLookData(json) {
         } else {
             look.outputLabels.push('');
         }
+    }
+    return look;
+}
+
+function getThisLook() {
+    let look = {};
+    look.tops = [];
+    look.inputLabels = [];
+    look.outputLabels = [];
+    look.caption = moduleNameInput.value();
+    look.inputs = inputs.length;
+    look.outputs = outputs.length;
+    for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].isTop) {
+            look.tops.push(i);
+        }
+        look.inputLabels.push(inputs[i].lbl);
+    }
+    for (let i = 0; i < outputs.length; i++) {
+        look.outputLabels.push(outputs[i].lbl);
     }
     return look;
 }

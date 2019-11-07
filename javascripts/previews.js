@@ -30,7 +30,7 @@ function showElementPreview() {
             w = (Math.max(item.inputs - item.tops.length, item.outputs) + 1) * 30;
         }
 
-        let grid_height = (Math.max(item.inputs - item.tops.length, item.outputs) + 1);
+        let gridHeight = (Math.max(item.inputs - item.tops.length, item.outputs) + 1);
 
         stroke(0);
         strokeWeight(3);
@@ -65,26 +65,26 @@ function showElementPreview() {
                 switch (gateDirection) {
                     case 0:
                         x1 = mx - 6;
-                        y1 = my + (h * (i - tops)) / grid_height;
+                        y1 = my + (h * (i - tops)) / gridHeight;
                         x2 = mx;
-                        y2 = my + (h * (i - tops)) / grid_height;
+                        y2 = my + (h * (i - tops)) / gridHeight;
                         break;
                     case 1:
-                        x1 = mx + (w * (i - tops)) / grid_height;
+                        x1 = mx + (w * (i - tops)) / gridHeight;
                         y1 = my - 6;
-                        x2 = mx + (w * (i - tops)) / grid_height;
+                        x2 = mx + (w * (i - tops)) / gridHeight;
                         y2 = my;
                         break;
                     case 2:
                         x1 = mx + w;
-                        y1 = my + (h * (i - tops)) / grid_height;
+                        y1 = my + (h * (i - tops)) / gridHeight;
                         x2 = mx + w + 6;
-                        y2 = my + (h * (i - tops)) / grid_height;
+                        y2 = my + (h * (i - tops)) / gridHeight;
                         break;
                     case 3:
-                        x1 = mx + (w * (i - tops)) / grid_height;
+                        x1 = mx + (w * (i - tops)) / gridHeight;
                         y1 = my + h;
-                        x2 = mx + (w * (i - tops)) / grid_height;
+                        x2 = mx + (w * (i - tops)) / gridHeight;
                         y2 = my + h + 6;
                         break;
                     default:
@@ -94,28 +94,28 @@ function showElementPreview() {
                 tops++;
                 switch (gateDirection) {
                     case 0:
-                        x1 = mx + (h * tops) / grid_height;
+                        x1 = mx + (h * tops) / gridHeight;
                         y1 = my - 6;
-                        x2 = mx + (h * tops) / grid_height;
+                        x2 = mx + (h * tops) / gridHeight;
                         y2 = my;
                         break;
                     case 1:
                         x1 = mx + w + 6;
-                        y1 = my + (w * tops) / grid_height;
+                        y1 = my + (w * tops) / gridHeight;
                         x2 = mx + w;
-                        y2 = my + (w * tops) / grid_height;
+                        y2 = my + (w * tops) / gridHeight;
                         break;
                     case 2:
-                        x1 = mx + (h * tops) / grid_height;
+                        x1 = mx + (h * tops) / gridHeight;
                         y1 = my + h;
-                        x2 = mx + (h * tops) / grid_height;
+                        x2 = mx + (h * tops) / gridHeight;
                         y2 = my + h + 6;
                         break;
                     case 3:
                         x1 = mx;
-                        y1 = my + (w * tops) / grid_height;
+                        y1 = my + (w * tops) / gridHeight;
                         x2 = mx - 6;
-                        y2 = my + (w * tops) / grid_height;
+                        y2 = my + (w * tops) / gridHeight;
                         break;
                     default:
                         console.log('Gate direction doesn\'t exist!');
@@ -539,14 +539,23 @@ function showImportPreview(item, x, y) {
 }
 
 function showPreviewImage() {
-    let raw = new Image();
+    let raw = new Image(window.height, window.height);
     raw.src = previewImg;
+    let gradImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAQAAAAHUWYVAAABV0lEQVR4Ae3YBxEAMRADMafwxxwU6RKFHd+XnpKDIIggCCIIggiCIIKwWk8NFoIggiCIIAgiCIIIgiD4dWIhCCIIggiCIILgOwQLEQRBBEEQQRBEEARBEEHwL8tCEEQQBBEEQRDEdwgWIgiCCIIggiAIggiCIH6dYCGCIIggCIIggiCID0MsRBAEEQRBEEQQfIdYCIIIgiCCIAiCCIIggiCIf1lYiCAI8idBBEEQQfAdYiEIIgiCIIggCCIIggiCXycWgiAIIgiCCIIggiCIIAhCDxaChVgIFmIhCOJkYSGC4GRhIRaChQiCk2UhCOJkYSFYiIUgiJOFhVgIFmIhWAiCOFlYiCA4WRaChVgIguBkWQgWYiEI4mRhIRaChSCIk4WFWAgWIghOloUgCE6WhWAhFoIgThYWYiFYCII4WViIhWAhguBkWQgWgoUIgpNlIViIhSDIFwafxgPUTiURLQAAAABJRU5ErkJggg==';
+    let gradientRaw = new Image(200, 200);
+    gradientRaw.src = gradImg;
     raw.onload = function () {
         let img = createImage(raw.width, raw.height);
         img.drawingContext.drawImage(raw, 0, 0, window.height, window.height, 0, 0, window.height, window.height);
         img.resize(0, window.height / 1.5);
         img.resize(0, window.height / 3);
         img.resize(0, 200);
-        image(img, window.width / 2 - 330, window.height / 2 - 99);
+        img.drawingContext.drawImage(gradientRaw, 0, 0);
+        fill(0);
+        image(img, window.width / 2 - 333, window.height / 2 - 39);
+        let look = getThisLook();
+        if (look.outputs > 0) {
+            showImportPreview(look, window.width / 2 - 330, window.height / 2 - 36);
+        }
     };
 }

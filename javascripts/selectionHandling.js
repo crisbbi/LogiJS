@@ -6,12 +6,12 @@
     It selects all underlying items 
 */
 function handleSelection(x1, y1, x2, y2) {
-    sClickBox.updatePosition(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2);
-    sClickBox.updateSize(x2 - x1, y2 - y1);
-    sClickBox.setTransform(transform);
-    showSClickBox = true;
+    selectionBox.updatePosition(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2);
+    selectionBox.updateSize(x2 - x1, y2 - y1);
+    selectionBox.setTransform(transform);
+    showSelectionBox = true;
     selection = [];
-    segIndizees = [];
+    segIndices = [];
     wireIndices = [];
     for (let i = 0; i < gates.length; i++) {
         if (gates[i].x >= x1 && gates[i].x <= x2 && gates[i].y >= y1 && gates[i].y <= y2) {
@@ -99,10 +99,10 @@ function handleSelection(x1, y1, x2, y2) {
             return ((a.startX === segments[i].startX) && (a.endX === segments[i].endX) && (a.startY === segments[i].startY) && (a.endY === segments[i].endY));
         }) >= 0) {
             segSelection.push(segments[i]);
-            segIndizees.push(i);
+            segIndices.push(i);
         }
     }
-    segIndizees.reverse();*/
+    segIndices.reverse();*/
     let preLength = selection.length;
     selection = selection.concat(wireSelection);
     //selection = selection.concat(wireIndices);
@@ -111,15 +111,11 @@ function handleSelection(x1, y1, x2, y2) {
     selection.push(wireSelection.length);
 }
 
-function compWires(a, b) {
-    return ((a.startX === b.startX) && (a.endX === b.endX) && (a.startY === b.startY) && (a.endY === b.endY));
-}
-
 /*
     Moves the selected items by dx, dy
 */
 function moveSelection(dx, dy) {
-    sClickBox.updatePosition(sClickBox.x + dx, sClickBox.y + dy);
+    selectionBox.updatePosition(selectionBox.x + dx, selectionBox.y + dy);
     let wireCount = selection[selection.length - 1];
     let preLength = selection[selection.length - 2];
     for (let i = 0; i < preLength; i++) {
