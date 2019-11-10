@@ -29,7 +29,7 @@ function deleteInvalidConpoints() {
 */
 function createConpoint(x, y, state, g) {
     console.log("createConPoint");
-    if (isConPoint(x, y) >= 0) {
+    if (isConPoint(x, y) < 0) {
         conpoints.push(new ConPoint(x, y, state, g));
         return conpoints.length - 1;
     }
