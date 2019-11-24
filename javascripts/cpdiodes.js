@@ -81,25 +81,56 @@ function fullCrossing(x, y) {
     return (horFound && verFound);
 }
 
-function tCrossing(x, y) {
-    let horLooseFound = false;
-    let verLooseFound = false;
-    let horTightFound = false;
-    let verTightFound = false;
-    for (let i = 0; i < wires.length; i++) {
-        if (wires[i].direction === 0 && Math.min(wires[i].startX, wires[i].endX) <= x && Math.max(wires[i].startX, wires[i].endX) >= x && Math.min(wires[i].startY, wires[i].endY) === y) {
-            horLooseFound = true;
-        } else if (wires[i].direction === 1 && Math.min(wires[i].startY, wires[i].endY) < y && Math.max(wires[i].startY, wires[i].endY) > y && Math.min(wires[i].startX, wires[i].endX) === x) {
-            verTightFound = true;
-        }
+function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
+    return wires[wireNumber].direction === 0 && 
+        (Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate || 
+        Math.max(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate) && 
+        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+}
 
-        if (wires[i].direction === 0 && Math.min(wires[i].startX, wires[i].endX) < x && Math.max(wires[i].startX, wires[i].endX) > x && Math.min(wires[i].startY, wires[i].endY) === y) {
-            horTightFound = true;
-        } else if (wires[i].direction === 1 && Math.min(wires[i].startY, wires[i].endY) <= y && Math.max(wires[i].startY, wires[i].endY) >= y && Math.min(wires[i].startX, wires[i].endX) === x) {
-            verLooseFound = true;
+function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
+    return wires[wireNumber].direction === 0 && 
+        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) < crossPointXcoordinate && 
+        Math.max(wires[wireNumber].startX, wires[wireNumber].endX) > crossPointXcoordinate && 
+        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+}
+
+function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
+    return wires[wireNumber].direction === 1 && 
+        (Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate || 
+        Math.max(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate) && 
+        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+}
+
+function isVerticalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
+    return wires[wireNumber].direction === 1 && 
+        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) < crossPointYcoordinate && 
+        Math.max(wires[wireNumber].startY, wires[wireNumber].endY) > crossPointYcoordinate && 
+        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+}
+
+function tCrossing(crossPointXcoordinate, crossPointYcoordinate) {
+    let horizontalWireConnection = false;
+    let verticalWireConnection = false;
+    let horizontalWireCrossing = false;
+    let verticalWireCrossing = false;
+    for (let i = 0; i < wires.length; i++) {
+        if (hasWireHorizontalConnection(i, crossPointXcoordinate, crossPointYcoordinate)) {
+            horizontalWireConnection = true;
+        }
+        if (isVerticalWireCrossing(i, crossPointXcoordinate, crossPointYcoordinate)) {
+            verticalWireCrossing = true;
+        }
+        if (isHorizontalWireCrossing(i, crossPointXcoordinate, crossPointYcoordinate)) {
+            horizontalWireCrossing = true;
+        }
+        if (hasWireVerticalConnection(i, crossPointXcoordinate, crossPointYcoordinate)) {
+            verticalWireConnection = true;
         }
     }
-    return ((horLooseFound && verTightFound) || (horTightFound && verLooseFound)) && !(horTightFound && verTightFound);
+    return ((horizontalWireConnection && verticalWireCrossing) || 
+            (horizontalWireCrossing && verticalWireConnection)) && 
+            !(horizontalWireCrossing && verticalWireCrossing);
 }
 
 function deleteConpoint(conpointNumber) {
