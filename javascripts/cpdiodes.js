@@ -51,7 +51,7 @@ function rightAngle(x, y) {
     return (hor && ver);
 }
 
-function wireSegmentsLikeTconnected(x, y) {
+function wiresAreTconnected(x, y) {
     let horizontalWireSegments = 0;
     let verticalWireSegments = 0;
     for (let i = 0; i < segments.length; i++) {
