@@ -51,23 +51,6 @@ function rightAngle(x, y) {
     return (hor && ver);
 }
 
-function wiresAreTconnected(x, y) {
-    let horizontalWireSegments = 0;
-    let verticalWireSegments = 0;
-    for (let i = 0; i < segments.length; i++) {
-        if ((segments[i].startX === x && segments[i].startY === y) || (segments[i].endX === x && segments[i].endY === y)) {
-            if (segments[i].direction === 0) {
-                horizontalWireSegments++;
-            }
-            if (segments[i].direction === 1) {
-                verticalWireSegments++;
-            }
-        }
-    }
-    return ((horizontalWireSegments === 2 && verticalWireSegments === 1) ||
-            (horizontalWireSegments === 1 && verticalWireSegments === 2));
-}
-
 function fullCrossing(x, y) {
     let horFound = false;
     let verFound = false;
