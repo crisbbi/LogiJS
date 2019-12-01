@@ -5,7 +5,7 @@
 */
 function deleteInvalidDiodes() {
     for (let j = diodes.length - 1; j >= 0; j--) {
-        if (!fullCrossing(diodes[j].x, diodes[j].y)) {
+        if (!fullCrossing(diodes[j].x, diodes[j].y) && !tCrossing(diodes[j].x, diodes[j].y)) {
             console.log("not fullCrossing");
             diodes.splice(j, 1);
         }
