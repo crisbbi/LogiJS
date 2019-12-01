@@ -81,6 +81,15 @@ function fullCrossing(x, y) {
     return (horFound && verFound);
 }
 
+/**
+ * Checks whether a wire connects horizontally with the given coordinates, 
+ * that represent the grid position. 
+ * Returns true, if the current wire is horizontal and starts or ends on the 
+ * same coordinates.
+ * @param wireNumber The number of the current wire 
+ * @param crossPointXcoordinate The x coordinate on the grid
+ * @param crossPointYcoordinate The y coordinate on the grid
+ */
 function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
     return wires[wireNumber].direction === 0 && 
         (Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate || 
@@ -88,6 +97,13 @@ function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPoi
         Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
 }
 
+/**
+ * Checks whether a wire crosses the given coordinates horizontally, that 
+ * represent the grid position. In case it does, return true. 
+ * @param wireNumber The number of the current wire 
+ * @param crossPointXcoordinate The x coordinate on the grid
+ * @param crossPointYcoordinate The y coordinate on the grid
+ */
 function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
     return wires[wireNumber].direction === 0 && 
         Math.min(wires[wireNumber].startX, wires[wireNumber].endX) < crossPointXcoordinate && 
@@ -95,6 +111,15 @@ function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointY
         Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
 }
 
+/**
+ * Checks whether a wire connects vertically with the given coordinates, 
+ * that represent the grid position. 
+ * Returns true, if the current wire is vertical and starts or ends on the 
+ * same coordinates.
+ * @param wireNumber The number of the current wire 
+ * @param crossPointXcoordinate The x coordinate on the grid
+ * @param crossPointYcoordinate The y coordinate on the grid
+ */
 function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
     return wires[wireNumber].direction === 1 && 
         (Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate || 
@@ -102,6 +127,13 @@ function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPoint
         Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
 }
 
+/**
+ * Checks whether a wire crosses the given coordinates vertically, that 
+ * represent the grid position. In case it does, return true. 
+ * @param wireNumber The number of the current wire 
+ * @param crossPointXcoordinate The x coordinate on the grid
+ * @param crossPointYcoordinate The y coordinate on the grid
+ */
 function isVerticalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
     return wires[wireNumber].direction === 1 && 
         Math.min(wires[wireNumber].startY, wires[wireNumber].endY) < crossPointYcoordinate && 
@@ -109,6 +141,12 @@ function isVerticalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYco
         Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
 }
 
+/**
+ * Checks for a T connection between wires. Returns true, if the (crossPointXcoordinate, crossPointYcoordinate)
+ * coordinate has one wire connected to it and one wire crossing it.
+ * @param crossPointXcoordinate The x coordinate on the grid 
+ * @param crossPointYcoordinate The y coordinate on the grid
+ */
 function tCrossing(crossPointXcoordinate, crossPointYcoordinate) {
     let horizontalWireConnection = false;
     let verticalWireConnection = false;
