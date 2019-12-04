@@ -74,10 +74,12 @@ function fullCrossing(x, y) {
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    return wires[wireNumber].direction === 0 && 
-        (Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate || 
-        Math.max(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate) && 
-        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+    let isHorizontal = wires[wireNumber].direction === 0; // && 
+    let wireConnectsFromLeft = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; // (|| 
+    let wireConnectsFromRight = Math.max(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; // )&& 
+    let yPositionIsCorrect = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+
+    return isHorizontal && (wireConnectsFromLeft || wireConnectsFromRight) && yPositionIsCorrect;
 }
 
 /**
@@ -88,10 +90,12 @@ function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPoi
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    return wires[wireNumber].direction === 0 && 
-        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) < crossPointXcoordinate && 
-        Math.max(wires[wireNumber].startX, wires[wireNumber].endX) > crossPointXcoordinate && 
-        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+    let isHorizontal = wires[wireNumber].direction === 0; // && 
+    let isHorizontalWireCrossing = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) < crossPointXcoordinate && 
+                                    Math.max(wires[wireNumber].startX, wires[wireNumber].endX) > crossPointXcoordinate; // &&
+    let yPositionIsCorrect = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+        
+    return isHorizontal && isHorizontalWireCrossing && yPositionIsCorrect;
 }
 
 /**
@@ -104,10 +108,12 @@ function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointY
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    return wires[wireNumber].direction === 1 && 
-        (Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate || 
-        Math.max(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate) && 
-        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+    let isVertical = wires[wireNumber].direction === 1; // && 
+    let wireConnectsFromAbove = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate; // (|| 
+    let wireConnectsFromBelow = Math.max(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate; // )&& 
+    let xPositionIsCorrect = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+    
+    return isVertical && (wireConnectsFromAbove || wireConnectsFromBelow) && xPositionIsCorrect;
 }
 
 /**
@@ -118,10 +124,12 @@ function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPoint
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function isVerticalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    return wires[wireNumber].direction === 1 && 
-        Math.min(wires[wireNumber].startY, wires[wireNumber].endY) < crossPointYcoordinate && 
-        Math.max(wires[wireNumber].startY, wires[wireNumber].endY) > crossPointYcoordinate && 
-        Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+    let isVertical = wires[wireNumber].direction === 1; // && 
+    let wireCrossesVertically = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) < crossPointYcoordinate && 
+                                Math.max(wires[wireNumber].startY, wires[wireNumber].endY) > crossPointYcoordinate;
+    let xPositionIsCorrect = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
+
+    return isVertical && wireCrossesVertically && xPositionIsCorrect;
 }
 
 /**
@@ -216,11 +224,22 @@ function isDiode(x, y) {
     Updates all ConPoints, including deleting
 */
 function doConpoints() {
+    /**
+     * 4.12.19
+     * PROBLEM: The state transition from full cross with diode to T cross
+     * uses deleteWires() to delete the diode before cleaning up with 
+     * doConpoints(), so a T cross always returns to dot connection after
+     * deleting full cross. Also potential problems with recognition of
+     * horizontally/vertically connected/crossing wires, transition from
+     * a T cross, rotated clockwise with a dot connection, doesn't remove the 
+     * dot when replacing with diode.  
+     * 
+     */
     for (let i = 0; i < wires.length; i++) {
-        if (tCrossing(wires[i].startX, wires[i].startY)) {
+        if (tCrossing(wires[i].startX, wires[i].startY) && isDiode(wires[i].startX, wires[i].startY) < 0) {
             createConpoint(wires[i].startX, wires[i].startY, false, -1);
         }
-        if (tCrossing(wires[i].endX, wires[i].endY)) {
+        if (tCrossing(wires[i].endX, wires[i].endY) && isDiode(wires[i].endX, wires[i].endY) < 0) {
             createConpoint(wires[i].endX, wires[i].endY, false, -1);
         }
     }
@@ -254,22 +273,24 @@ function switchDiodeForConpoint(diodeNumber) {
 }
 
 function toggleDiodeAndConpoint() {
-    /* 14.10.2019
-     * PROBLEM: a "T" connection between wire segments can't bypass the checks
-     * in doConpoints() that create a normal connection point because the check
-     * for 3 connected wires succeeds, hence it doesn't change. This prevents
-     * the switch to a diode connection. Could be solved with 3 if statements
-     * and in each case change the connection.
-     */
     let diode = isDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-    if (diode >= 0) {
-        switchDiodeForConpoint(diode);
-    } else {
-        let conpoint = isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-        if (conpoint >= 0) {
-            deleteConpoint(conpoint);
+    let conpoint = isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
+    let isFullCrossing = fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
+
+    if (isFullCrossing) {
+        if (diode >= 0) {
+            switchDiodeForConpoint(diode);
+        } else if (conpoint >= 0) {
+                deleteConpoint(conpoint);
         } else {
-            createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
+                createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
+            }
+    } else {
+        if (diode >= 0) {
+            switchDiodeForConpoint(diode);
+        } else {
+            createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);    
+            deleteConpoint(conpoint);
         }
     }
     reDraw();
