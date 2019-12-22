@@ -74,9 +74,9 @@ function fullCrossing(x, y) {
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    let isHorizontal = wires[wireNumber].direction === 0; // && 
-    let wireConnectsFromLeft = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; // (|| 
-    let wireConnectsFromRight = Math.max(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; // )&& 
+    let isHorizontal = wires[wireNumber].direction === 0; 
+    let wireConnectsFromLeft = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; 
+    let wireConnectsFromRight = Math.max(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate; 
     let yPositionIsCorrect = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
 
     return isHorizontal && (wireConnectsFromLeft || wireConnectsFromRight) && yPositionIsCorrect;
@@ -90,9 +90,9 @@ function hasWireHorizontalConnection(wireNumber, crossPointXcoordinate, crossPoi
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    let isHorizontal = wires[wireNumber].direction === 0; // && 
+    let isHorizontal = wires[wireNumber].direction === 0; 
     let isHorizontalWireCrossing = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) < crossPointXcoordinate && 
-                                    Math.max(wires[wireNumber].startX, wires[wireNumber].endX) > crossPointXcoordinate; // &&
+                                    Math.max(wires[wireNumber].startX, wires[wireNumber].endX) > crossPointXcoordinate; 
     let yPositionIsCorrect = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
         
     return isHorizontal && isHorizontalWireCrossing && yPositionIsCorrect;
@@ -108,9 +108,9 @@ function isHorizontalWireCrossing(wireNumber, crossPointXcoordinate, crossPointY
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    let isVertical = wires[wireNumber].direction === 1; // && 
-    let wireConnectsFromAbove = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate; // (|| 
-    let wireConnectsFromBelow = Math.max(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate; // )&& 
+    let isVertical = wires[wireNumber].direction === 1; 
+    let wireConnectsFromAbove = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
+    let wireConnectsFromBelow = Math.max(wires[wireNumber].startY, wires[wireNumber].endY) === crossPointYcoordinate;
     let xPositionIsCorrect = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
     
     return isVertical && (wireConnectsFromAbove || wireConnectsFromBelow) && xPositionIsCorrect;
@@ -124,7 +124,7 @@ function hasWireVerticalConnection(wireNumber, crossPointXcoordinate, crossPoint
  * @param crossPointYcoordinate The y coordinate on the grid
  */
 function isVerticalWireCrossing(wireNumber, crossPointXcoordinate, crossPointYcoordinate) {
-    let isVertical = wires[wireNumber].direction === 1; // && 
+    let isVertical = wires[wireNumber].direction === 1; 
     let wireCrossesVertically = Math.min(wires[wireNumber].startY, wires[wireNumber].endY) < crossPointYcoordinate && 
                                 Math.max(wires[wireNumber].startY, wires[wireNumber].endY) > crossPointYcoordinate;
     let xPositionIsCorrect = Math.min(wires[wireNumber].startX, wires[wireNumber].endX) === crossPointXcoordinate;
