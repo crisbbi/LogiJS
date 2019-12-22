@@ -272,26 +272,31 @@ function switchDiodeForConpoint(diodeNumber) {
     }
 }
 
-function toggleDiodeAndConpoint() {
+function toggleFullCrossingConnection() {
     let diode = isDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
     let conpoint = isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-    let isFullCrossing = fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
 
-    if (isFullCrossing) {
-        if (diode >= 0) {
-            switchDiodeForConpoint(diode);
-        } else if (conpoint >= 0) {
-                deleteConpoint(conpoint);
-        } else {
-                createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
-            }
+    if (diode >= 0) {
+        switchDiodeForConpoint(diode);
+    } else if (conpoint >= 0) {
+        deleteConpoint(conpoint);
     } else {
-        if (diode >= 0) {
-            switchDiodeForConpoint(diode);
-        } else {
-            createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);    
-            deleteConpoint(conpoint);
-        }
+        createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
     }
+    
+    reDraw();
+}
+
+function toggleTcrossingConnection() {
+    let diode = isDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
+    let conpoint = isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
+
+    if (diode >= 0) {
+        switchDiodeForConpoint(diode);
+    } else {
+        createDiode(Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);    
+        deleteConpoint(conpoint);
+    }
+
     reDraw();
 }

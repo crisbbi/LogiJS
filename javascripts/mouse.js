@@ -476,10 +476,10 @@ function mouseReleased() {
                                 }
                             }
                             if (fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
-                                toggleDiodeAndConpoint();
+                                toggleFullCrossingConnection();
                             } else if (tCrossing(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
                                 console.log("tShapetoggleConPoint");
-                                toggleDiodeAndConpoint();
+                                toggleTcrossingConnection();
                             }
                             for (let i = 0; i < inputs.length; i++) {
                                 if (inputs[i].mouseOver() && controlMode === 'modify') {
