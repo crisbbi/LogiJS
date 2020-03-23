@@ -333,7 +333,7 @@ function setup() { // jshint ignore:line
     andButton = createButton('');
     andButton.mousePressed(function () { andClicked(false); });
     andButton.elt.className = 'previewButton';
-    andButton.elt.innerHTML = '<img class="preview" src="images/and-gate.png">';
+    andButton.elt.innerHTML = '<img class="preview" src="./views/images/and-gate.png">';
     andButton.mouseOver(function () {
         setHelpText('AND-Gate');
     });
@@ -346,7 +346,7 @@ function setup() { // jshint ignore:line
     orButton = createButton('');
     orButton.mousePressed(function () { orClicked(false); });
     orButton.elt.className = 'previewButton';
-    orButton.elt.innerHTML = '<img class="preview" src="images/or-gate.png">';
+    orButton.elt.innerHTML = '<img class="preview" src="./views/images/or-gate.png">';
     orButton.mouseOver(function () {
         setHelpText('OR-Gate');
     });
@@ -359,7 +359,7 @@ function setup() { // jshint ignore:line
     xorButton = createButton('');
     xorButton.mousePressed(function () { xorClicked(false); });
     xorButton.elt.className = 'previewButton';
-    xorButton.elt.innerHTML = '<img class="preview" src="images/xor-gate.png">';
+    xorButton.elt.innerHTML = '<img class="preview" src="./views/images/xor-gate.png">';
     xorButton.mouseOver(function () {
         setHelpText('XOR-Gate');
     });
@@ -372,7 +372,7 @@ function setup() { // jshint ignore:line
     inputButton = createButton('');
     inputButton.mousePressed(function () { inputClicked(false); });
     inputButton.elt.className = 'previewButton';
-    inputButton.elt.innerHTML = '<img class="preview" src="images/switch.png">';
+    inputButton.elt.innerHTML = '<img class="preview" src="./views/images/switch.png">';
     inputButton.mouseOver(function () {
         setHelpText('Switch');
     });
@@ -385,7 +385,7 @@ function setup() { // jshint ignore:line
     buttonButton = createButton('');
     buttonButton.mousePressed(function () { buttonClicked(false); });
     buttonButton.elt.className = 'previewButton';
-    buttonButton.elt.innerHTML = '<img class="preview" src="images/button.png">';
+    buttonButton.elt.innerHTML = '<img class="preview" src="./views/images/button.png">';
     buttonButton.mouseOver(function () {
         setHelpText('Button');
     });
@@ -398,7 +398,7 @@ function setup() { // jshint ignore:line
     clockButton = createButton('');
     clockButton.mousePressed(function () { clockClicked(false); });
     clockButton.elt.className = 'previewButton';
-    clockButton.elt.innerHTML = '<img class="preview" src="images/clock.png">';
+    clockButton.elt.innerHTML = '<img class="preview" src="./views/images/clock.png">';
     clockButton.mouseOver(function () {
         setHelpText('Clock');
     });
@@ -411,7 +411,7 @@ function setup() { // jshint ignore:line
     outputButton = createButton('');
     outputButton.mousePressed(function () { outputClicked(false); });
     outputButton.elt.className = 'previewButton';
-    outputButton.elt.innerHTML = '<img class="preview" src="images/output.png">';
+    outputButton.elt.innerHTML = '<img class="preview" src="./views/images/output.png">';
     outputButton.mouseOver(function () {
         setHelpText('Lamp');
     });
@@ -424,7 +424,7 @@ function setup() { // jshint ignore:line
     segDisplayButton = createButton('');
     segDisplayButton.mousePressed(function () { segDisplayClicked(false); });
     segDisplayButton.elt.className = 'previewButton';
-    segDisplayButton.elt.innerHTML = '<img class="preview" src="images/segments.png">';
+    segDisplayButton.elt.innerHTML = '<img class="preview" src="./views/images/segments.png">';
     segDisplayButton.mouseOver(function () {
         setHelpText('7-Segment Display');
     });
@@ -437,7 +437,7 @@ function setup() { // jshint ignore:line
     labelButton = createButton('');
     labelButton.mousePressed(function () { labelButtonClicked(false); });
     labelButton.elt.className = 'previewButton';
-    labelButton.elt.innerHTML = '<img class="preview" src="images/label.png">';
+    labelButton.elt.innerHTML = '<img class="preview" src="./views/images/label.png">';
     labelButton.mouseOver(function () {
         setHelpText('Text Label');
     });
@@ -466,7 +466,7 @@ function setup() { // jshint ignore:line
         return importCustom('rs-flipflop.json');
     });
     rsFlipFlopButton.elt.className = 'previewButton';
-    rsFlipFlopButton.elt.innerHTML = '<img class="preview" src="images/rs-flipflop.png">';
+    rsFlipFlopButton.elt.innerHTML = '<img class="preview" src="./views/images/rs-flipflop.png">';
     rsFlipFlopButton.mouseOver(function () {
         setHelpText('RS Flip-Flop');
     });
@@ -489,7 +489,7 @@ function setup() { // jshint ignore:line
         return importCustom('d-flipflop.json');
     });
     dFlipFlopButton.elt.className = 'previewButton';
-    dFlipFlopButton.elt.innerHTML = '<img class="preview" src="images/d-flipflop.png">';
+    dFlipFlopButton.elt.innerHTML = '<img class="preview" src="./views/images/d-flipflop.png">';
     dFlipFlopButton.mouseOver(function () {
         setHelpText('D Flip-Flop');
     });
@@ -513,7 +513,7 @@ function setup() { // jshint ignore:line
         return counterClicked();
     });
     counterButton.elt.className = 'previewButton';
-    counterButton.elt.innerHTML = '<img class="preview" src="images/counter.png">';
+    counterButton.elt.innerHTML = '<img class="preview" src="./views/images/counter.png">';
     counterButton.mouseOver(function () {
         setHelpText('Counter');
     });
@@ -541,7 +541,7 @@ function setup() { // jshint ignore:line
         return decoderClicked();
     });
     decoderButton.elt.className = 'previewButton';
-    decoderButton.elt.innerHTML = '<img class="preview" src="images/decoder.png">';
+    decoderButton.elt.innerHTML = '<img class="preview" src="./views/images/decoder.png">';
     decoderButton.mouseOver(function () {
         setHelpText('Decoder');
     });
@@ -586,7 +586,7 @@ function setup() { // jshint ignore:line
         return muxClicked();
     });
     muxButton.elt.className = 'previewButton';
-    muxButton.elt.innerHTML = '<img class="preview" src="images/mux.png">';
+    muxButton.elt.innerHTML = '<img class="preview" src="./views/images/mux.png">';
     muxButton.mouseOver(function () {
         setHelpText('Multiplexer');
     });
@@ -633,7 +633,7 @@ function setup() { // jshint ignore:line
         return demuxClicked();
     });
     demuxButton.elt.className = 'previewButton';
-    demuxButton.elt.innerHTML = '<img class="preview" src="images/demux.png">';
+    demuxButton.elt.innerHTML = '<img class="preview" src="./views/images/demux.png">';
     demuxButton.mouseOver(function () {
         setHelpText('Demultiplexer');
     });
@@ -656,7 +656,7 @@ function setup() { // jshint ignore:line
         return importCustom('4-register.json');
     });
     reg4Button.elt.className = 'previewButton';
-    reg4Button.elt.innerHTML = '<img class="preview" src="images/register.png">';
+    reg4Button.elt.innerHTML = '<img class="preview" src="./views/images/register.png">';
     reg4Button.mouseOver(function () {
         setHelpText('4-bit Register');
     });
@@ -679,7 +679,7 @@ function setup() { // jshint ignore:line
         return importCustom('half_add.json');
     });
     halfaddButton.elt.className = 'previewButton';
-    halfaddButton.elt.innerHTML = '<img class="preview" src="images/halfadd.png">';
+    halfaddButton.elt.innerHTML = '<img class="preview" src="./views/images/halfadd.png">';
     halfaddButton.mouseOver(function () {
         setHelpText('Half Adder');
     });
@@ -703,7 +703,7 @@ function setup() { // jshint ignore:line
         return importCustom('full_add.json');
     });
     fulladdButton.elt.className = 'previewButton';
-    fulladdButton.elt.innerHTML = '<img class="preview" src="images/fulladd.png">';
+    fulladdButton.elt.innerHTML = '<img class="preview" src="./views/images/fulladd.png">';
     fulladdButton.mouseOver(function () {
         setHelpText('Full Adder');
     });
