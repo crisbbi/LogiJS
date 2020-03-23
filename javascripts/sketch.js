@@ -3,19 +3,22 @@
 let gates = []; // List of gates (and, or, xor)
 let outputs = []; // List of outputs
 let inputs = []; // List of inputs (buttons, switches)
-let segments = []; // List of fixed wire segments
-let pwSegments = []; // List of preview wire segments
+let pwWireX = null;
+let pwWireY = null;
 let conpoints = []; // List of wire connection points
 let diodes = []; // List of diodes
 let customs = []; // List of custom objects
-let wires = []; // List of wires (aggregated wire segments)
+let wires = []; // List of wires
 let labels = []; // List of text labels
 let segDisplays = []; // List of 7-segment displays
 
 let segBits = 4; // Number of bits for new 7-segment displays
 let counterBitWidth = 4; // Output width of counter objects
-let decoderBitWidth = 4; // Input width of decoder objects
+let decoderBitWidth = 2; // Input width of decoder objects
 let muxBitWidth = 1; // In/output width for (de-) multiplexers
+
+let startDirection = 0; // Start direction for the current wire preview
+let traced = []; // List of all traced wires (needed by parseGroups)
 
 /*
     This is a list of all elements that are currently selected with the selection tool
@@ -24,7 +27,6 @@ let selection = [];
 
 let selectionConpoints = [];
 let selectionWires = [];
-let selectionSegments = [];
 
 /*
     These are the start coordinates for the wire preview elements
@@ -263,15 +265,18 @@ let labelTextBox; // Label elements
 */
 let sequencer;
 
-let sketchNameInput, moduleNameInput, saveDialogText, saveButton, saveDialogButton, dashboardButton, cancelButton, descInput, loadButton, newButton, pageUpButton, pageDownButton;
-let deleteButton, simButton, labelBasic, labelAdvanced,
+let sketchNameInput, moduleNameInput, saveButton, saveDialogText;
+let helpLabel, customDialogText, saveDialogButton, dashboardButton, cancelButton, descInput, newButton, pageUpButton, pageDownButton;
+let deleteButton, simButton, labelBasic, labelAdvanced, labelOptions,
     andButton, orButton, xorButton, inputButton, buttonButton, clockButton,
     outputButton, clockspeedSlider, undoButton, redoButton, modifierModeButton, labelButton, segDisplayButton;
 
 let counterButton, decoderButton, dFlipFlopButton, rsFlipFlopButton, reg4Button,
     muxButton, demuxButton, halfaddButton, fulladdButton, customButton;
 
-let updater, sfcheckbox, gateInputSelect, labelGateInputs, directionSelect, bitSelect, labelDirection, labelBits, counterBitSelect, labelOutputWidth,
+let updater, sfcheckbox;
+
+let gateInputSelect, labelGateInputs, directionSelect, bitSelect, labelDirection, labelBits, counterBitSelect, labelOutputWidth,
     decoderBitSelect, labelInputWidth, multiplexerBitSelect;
 
 /*
@@ -298,8 +303,8 @@ document.addEventListener('contextmenu', event => event.preventDefault());
     Sets up the canvas and caps the framerate
 */
 function setup() { // jshint ignore:line
-    mainCanvas = createCanvas(windowWidth - 150, windowHeight - 30);     // Creates the canvas in full window size
-    mainCanvas.position(150, 30);
+    mainCanvas = createCanvas(windowWidth - 230, windowHeight - 50);     // Creates the canvas in full window size
+    mainCanvas.position(230, 50);
     mainCanvas.id('mainCanvas');
 
     // Prevents the input field from being focused when clicking in the canvas
@@ -319,96 +324,135 @@ function setup() { // jshint ignore:line
     leftSideButtons.elt.style.margin = '55px 0px';
 
     // Adds text 'Basic'
-    labelBasic = createP('Basic');
-    labelBasic.elt.style.color = 'white';
-    labelBasic.elt.style.fontFamily = 'Open Sans';
+    labelBasic = createP('BASIC ELEMENTS');
     labelBasic.elt.className = 'label';
-    labelBasic.elt.style.textAlign = 'center';
-    labelBasic.elt.style.margin = '3px 0px 0px 0px';
     labelBasic.parent(leftSideButtons);
 
     // Left Side Buttons
     // Adds and-gates
     andButton = createButton('');
     andButton.mousePressed(function () { andClicked(false); });
-    andButton.elt.className = "previewButton";
-    andButton.elt.innerHTML = '<img src="views/images/and-gate.png">';
-    andButton.elt.title = 'AND-Gate';
+    andButton.elt.className = 'previewButton';
+    andButton.elt.innerHTML = '<img class="preview" src="images/and-gate.png">';
+    andButton.mouseOver(function () {
+        setHelpText('AND-Gate');
+    });
+    andButton.mouseOut(function () {
+        setHelpText('');
+    });
     andButton.parent(leftSideButtons);
 
     // Adds or-gates
     orButton = createButton('');
     orButton.mousePressed(function () { orClicked(false); });
-    orButton.elt.className = "previewButton";
-    orButton.elt.innerHTML = '<img src="views/images/or-gate.png">';
-    orButton.elt.title = 'OR-Gate';
+    orButton.elt.className = 'previewButton';
+    orButton.elt.innerHTML = '<img class="preview" src="images/or-gate.png">';
+    orButton.mouseOver(function () {
+        setHelpText('OR-Gate');
+    });
+    orButton.mouseOut(function () {
+        setHelpText('');
+    });
     orButton.parent(leftSideButtons);
 
     // Adds xor-gates
     xorButton = createButton('');
     xorButton.mousePressed(function () { xorClicked(false); });
-    xorButton.elt.className = "previewButton";
-    xorButton.elt.innerHTML = '<img src="views/images/xor-gate.png">';
-    xorButton.elt.title = 'XOR-Gate';
+    xorButton.elt.className = 'previewButton';
+    xorButton.elt.innerHTML = '<img class="preview" src="images/xor-gate.png">';
+    xorButton.mouseOver(function () {
+        setHelpText('XOR-Gate');
+    });
+    xorButton.mouseOut(function () {
+        setHelpText('');
+    });
     xorButton.parent(leftSideButtons);
 
     // Adds switches
     inputButton = createButton('');
     inputButton.mousePressed(function () { inputClicked(false); });
-    inputButton.elt.className = "previewButton";
-    inputButton.elt.innerHTML = '<img src="views/images/switch.png">';
-    inputButton.elt.title = 'Switch';
+    inputButton.elt.className = 'previewButton';
+    inputButton.elt.innerHTML = '<img class="preview" src="images/switch.png">';
+    inputButton.mouseOver(function () {
+        setHelpText('Switch');
+    });
+    inputButton.mouseOut(function () {
+        setHelpText('');
+    });
     inputButton.parent(leftSideButtons);
 
     // Adds buttons (short impulse)
     buttonButton = createButton('');
     buttonButton.mousePressed(function () { buttonClicked(false); });
-    buttonButton.elt.className = "previewButton";
-    buttonButton.elt.innerHTML = '<img src="views/images/button.png">';
-    buttonButton.elt.title = 'Button';
+    buttonButton.elt.className = 'previewButton';
+    buttonButton.elt.innerHTML = '<img class="preview" src="images/button.png">';
+    buttonButton.mouseOver(function () {
+        setHelpText('Button');
+    });
+    buttonButton.mouseOut(function () {
+        setHelpText('');
+    });
     buttonButton.parent(leftSideButtons);
 
     // Adds clocks (variable impulse)
     clockButton = createButton('');
     clockButton.mousePressed(function () { clockClicked(false); });
-    clockButton.elt.className = "previewButton";
-    clockButton.elt.innerHTML = '<img src="views/images/clock.png">';
-    clockButton.elt.title = 'Clock';
+    clockButton.elt.className = 'previewButton';
+    clockButton.elt.innerHTML = '<img class="preview" src="images/clock.png">';
+    clockButton.mouseOver(function () {
+        setHelpText('Clock');
+    });
+    clockButton.mouseOut(function () {
+        setHelpText('');
+    });
     clockButton.parent(leftSideButtons);
 
     // Adds outputs (lamps)
     outputButton = createButton('');
     outputButton.mousePressed(function () { outputClicked(false); });
-    outputButton.elt.className = "previewButton";
-    outputButton.elt.innerHTML = '<img src="views/images/output.png">';
-    outputButton.elt.title = 'Lamp';
+    outputButton.elt.className = 'previewButton';
+    outputButton.elt.innerHTML = '<img class="preview" src="images/output.png">';
+    outputButton.mouseOver(function () {
+        setHelpText('Lamp');
+    });
+    outputButton.mouseOut(function () {
+        setHelpText('');
+    });
     outputButton.parent(leftSideButtons);
 
     // Adds 7-segment displays
     segDisplayButton = createButton('');
     segDisplayButton.mousePressed(function () { segDisplayClicked(false); });
-    segDisplayButton.elt.className = "previewButton";
-    segDisplayButton.elt.innerHTML = '<img src="views/images/segments.png">';
-    segDisplayButton.elt.title = '7-Segment Display';
+    segDisplayButton.elt.className = 'previewButton';
+    segDisplayButton.elt.innerHTML = '<img class="preview" src="images/segments.png">';
+    segDisplayButton.mouseOver(function () {
+        setHelpText('7-Segment Display');
+    });
+    segDisplayButton.mouseOut(function () {
+        setHelpText('');
+    });
     segDisplayButton.parent(leftSideButtons);
 
     // Adds labels
-    labelButton = createButton('Text Label');
+    labelButton = createButton('');
     labelButton.mousePressed(function () { labelButtonClicked(false); });
-    labelButton.elt.className = 'buttonLeft';
+    labelButton.elt.className = 'previewButton';
+    labelButton.elt.innerHTML = '<img class="preview" src="images/label.png">';
+    labelButton.mouseOver(function () {
+        setHelpText('Text Label');
+    });
+    labelButton.mouseOut(function () {
+        setHelpText('');
+    });
     labelButton.parent(leftSideButtons);
 
-    // Adds text 'Advanced'
-    labelAdvanced = createP('Advanced');
-    labelAdvanced.elt.style.color = 'white';
-    labelAdvanced.elt.style.fontFamily = 'Open Sans';
-    labelAdvanced.elt.style.textAlign = 'center';
-    labelAdvanced.elt.style.margin = '3px 0px 0px 0px';
+    // Adds text 'Advanced Elements'
+    labelAdvanced = createP('ADVANCED ELEMENTS');
     labelAdvanced.elt.className = 'label';
     labelAdvanced.parent(leftSideButtons);
 
     // Adds an rs-flipflop
-    rsFlipFlopButton = createButton('RS-FlipFlop');
+    rsFlipFlopButton = createButton('RS Flip-Flop');
     rsFlipFlopButton.mousePressed(function () {
         setActive(rsFlipFlopButton, true);
         setPreviewElement(true, {
@@ -421,10 +465,17 @@ function setup() { // jshint ignore:line
         });
         return importCustom('rs-flipflop.json');
     });
-    rsFlipFlopButton.elt.className = 'buttonLeft';
+    rsFlipFlopButton.elt.className = 'previewButton';
+    rsFlipFlopButton.elt.innerHTML = '<img class="preview" src="images/rs-flipflop.png">';
+    rsFlipFlopButton.mouseOver(function () {
+        setHelpText('RS Flip-Flop');
+    });
+    rsFlipFlopButton.mouseOut(function () {
+        setHelpText('');
+    });
     rsFlipFlopButton.parent(leftSideButtons);
     // Adds a d-flipflop
-    dFlipFlopButton = createButton('D-FlipFlop');
+    dFlipFlopButton = createButton('D Flip-Flop');
     dFlipFlopButton.mousePressed(function () {
         setActive(dFlipFlopButton, true);
         setPreviewElement(true, {
@@ -437,7 +488,14 @@ function setup() { // jshint ignore:line
         });
         return importCustom('d-flipflop.json');
     });
-    dFlipFlopButton.elt.className = 'buttonLeft';
+    dFlipFlopButton.elt.className = 'previewButton';
+    dFlipFlopButton.elt.innerHTML = '<img class="preview" src="images/d-flipflop.png">';
+    dFlipFlopButton.mouseOver(function () {
+        setHelpText('D Flip-Flop');
+    });
+    dFlipFlopButton.mouseOut(function () {
+        setHelpText('');
+    });
     dFlipFlopButton.parent(leftSideButtons);
     // Adds a counter
     counterButton = createButton('Counter');
@@ -454,7 +512,14 @@ function setup() { // jshint ignore:line
         });
         return counterClicked();
     });
-    counterButton.elt.className = 'buttonLeft';
+    counterButton.elt.className = 'previewButton';
+    counterButton.elt.innerHTML = '<img class="preview" src="images/counter.png">';
+    counterButton.mouseOver(function () {
+        setHelpText('Counter');
+    });
+    counterButton.mouseOut(function () {
+        setHelpText('');
+    });
     counterButton.parent(leftSideButtons);
     // Adds a decoder
     decoderButton = createButton('Decoder');
@@ -475,7 +540,14 @@ function setup() { // jshint ignore:line
         });
         return decoderClicked();
     });
-    decoderButton.elt.className = 'buttonLeft';
+    decoderButton.elt.className = 'previewButton';
+    decoderButton.elt.innerHTML = '<img class="preview" src="images/decoder.png">';
+    decoderButton.mouseOver(function () {
+        setHelpText('Decoder');
+    });
+    decoderButton.mouseOut(function () {
+        setHelpText('');
+    });
     decoderButton.parent(leftSideButtons);
     // Adds a multiplexer
     muxButton = createButton('Multiplexer');
@@ -513,7 +585,14 @@ function setup() { // jshint ignore:line
         });
         return muxClicked();
     });
-    muxButton.elt.className = 'buttonLeft';
+    muxButton.elt.className = 'previewButton';
+    muxButton.elt.innerHTML = '<img class="preview" src="images/mux.png">';
+    muxButton.mouseOver(function () {
+        setHelpText('Multiplexer');
+    });
+    muxButton.mouseOut(function () {
+        setHelpText('');
+    });
     muxButton.parent(leftSideButtons);
     // Adds a demultiplexer
     demuxButton = createButton('Demultiplexer');
@@ -553,7 +632,14 @@ function setup() { // jshint ignore:line
         });
         return demuxClicked();
     });
-    demuxButton.elt.className = 'buttonLeft';
+    demuxButton.elt.className = 'previewButton';
+    demuxButton.elt.innerHTML = '<img class="preview" src="images/demux.png">';
+    demuxButton.mouseOver(function () {
+        setHelpText('Demultiplexer');
+    });
+    demuxButton.mouseOut(function () {
+        setHelpText('');
+    });
     demuxButton.parent(leftSideButtons);
     // Adds a register (4Bit)
     reg4Button = createButton('4Bit-Register');
@@ -569,7 +655,14 @@ function setup() { // jshint ignore:line
         });
         return importCustom('4-register.json');
     });
-    reg4Button.elt.className = 'buttonLeft';
+    reg4Button.elt.className = 'previewButton';
+    reg4Button.elt.innerHTML = '<img class="preview" src="images/register.png">';
+    reg4Button.mouseOver(function () {
+        setHelpText('4-bit Register');
+    });
+    reg4Button.mouseOut(function () {
+        setHelpText('');
+    });
     reg4Button.parent(leftSideButtons);
     // Adds a Half Adder
     halfaddButton = createButton('Half Adder');
@@ -585,7 +678,14 @@ function setup() { // jshint ignore:line
         });
         return importCustom('half_add.json');
     });
-    halfaddButton.elt.className = 'buttonLeft';
+    halfaddButton.elt.className = 'previewButton';
+    halfaddButton.elt.innerHTML = '<img class="preview" src="images/halfadd.png">';
+    halfaddButton.mouseOver(function () {
+        setHelpText('Half Adder');
+    });
+    halfaddButton.mouseOut(function () {
+        setHelpText('');
+    });
     halfaddButton.parent(leftSideButtons);
 
     // Adds a Full Adder
@@ -602,25 +702,46 @@ function setup() { // jshint ignore:line
         });
         return importCustom('full_add.json');
     });
-    fulladdButton.elt.className = 'buttonLeft';
+    fulladdButton.elt.className = 'previewButton';
+    fulladdButton.elt.innerHTML = '<img class="preview" src="images/fulladd.png">';
+    fulladdButton.mouseOver(function () {
+        setHelpText('Full Adder');
+    });
+    fulladdButton.mouseOut(function () {
+        setHelpText('');
+    });
     fulladdButton.parent(leftSideButtons);
 
-    customButton = createButton('<i class="fa fa-file-import"></i> Import Sketch');
+    customButton = createButton('<i class="fa fa-file-import icon"></i> Import own element');
     customButton.mousePressed(function () { customDialogPage = 0; customClicked(); });
     customButton.elt.className = 'buttonLeft';
+    customButton.mouseOver(function () {
+        setHelpText('Import your own sketches as custom elements');
+    });
+    customButton.mouseOut(function () {
+        setHelpText('');
+    });
     customButton.parent(leftSideButtons);
     if (getCookieValue('access_token') === '') {
         customButton.elt.disabled = true;
     }
 
+    // Adds text 'Options'
+    labelOptions = createP('OPTIONS');
+    labelOptions.elt.className = 'label';
+    labelOptions.parent(leftSideButtons);
+    labelOptions.hide();
+
+    helpLabel = createP('<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i>');
+    helpLabel.elt.className = 'label';
+    helpLabel.elt.style.color = 'white';
+    helpLabel.position(745, 5);
+    helpLabel.hide();
+
     // Adds text 'Gate inputs'
-    labelGateInputs = createP('Gate inputs');
+    labelGateInputs = createP('GATE INPUTS');
     labelGateInputs.hide();
-    labelGateInputs.elt.style.color = 'white';
-    labelGateInputs.elt.style.fontFamily = 'Open Sans';
-    labelGateInputs.elt.style.textAlign = 'center';
-    labelGateInputs.elt.style.margin = '3px 0px 0px 0px';
-    labelGateInputs.elt.className = 'label';
+    labelGateInputs.elt.className = 'optionLabel';
     labelGateInputs.parent(leftSideButtons);
 
     gateInputSelect = createSelect();
@@ -632,15 +753,17 @@ function setup() { // jshint ignore:line
     gateInputSelect.elt.className = 'selectLeft';
     gateInputSelect.parent(leftSideButtons);
     gateInputSelect.value('2');
+    gateInputSelect.mouseOver(function () {
+        setHelpText('Define the number of gate inputs');
+    });
+    gateInputSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Adds text 'Direction'
-    labelDirection = createP('Direction');
+    labelDirection = createP('DIRECTION');
     labelDirection.hide();
-    labelDirection.elt.style.color = 'white';
-    labelDirection.elt.style.fontFamily = 'Open Sans';
-    labelDirection.elt.style.textAlign = 'center';
-    labelDirection.elt.style.margin = '3px 0px 0px 0px';
-    labelDirection.elt.className = 'label';
+    labelDirection.elt.className = 'optionLabel';
     labelDirection.parent(leftSideButtons);
 
     directionSelect = createSelect();
@@ -653,35 +776,29 @@ function setup() { // jshint ignore:line
     directionSelect.elt.className = 'selectLeft';
     directionSelect.parent(leftSideButtons);
     directionSelect.value('Right');
+    directionSelect.mouseOver(function () {
+        setHelpText('Define the direction of the element');
+    });
+    directionSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Adds text 'Input width'
-    labelBits = createP('Input width');
+    labelBits = createP('INPUT WIDTH');
     labelBits.hide();
-    labelBits.elt.style.color = 'white';
-    labelBits.elt.style.fontFamily = 'Open Sans';
-    labelBits.elt.style.textAlign = 'center';
-    labelBits.elt.style.margin = '3px 0px 0px 0px';
-    labelBits.elt.className = 'label';
+    labelBits.elt.className = 'optionLabel';
     labelBits.parent(leftSideButtons);
 
     // Adds text 'Output width'
-    labelOutputWidth = createP('Output width');
+    labelOutputWidth = createP('OUTPUT WIDTH');
     labelOutputWidth.hide();
-    labelOutputWidth.elt.style.color = 'white';
-    labelOutputWidth.elt.style.fontFamily = 'Open Sans';
-    labelOutputWidth.elt.style.textAlign = 'center';
-    labelOutputWidth.elt.style.margin = '3px 0px 0px 0px';
-    labelOutputWidth.elt.className = 'label';
+    labelOutputWidth.elt.className = 'optionLabel';
     labelOutputWidth.parent(leftSideButtons);
 
     // Adds text 'Input width'
-    labelInputWidth = createP('Input width');
+    labelInputWidth = createP('INPUT WIDTH');
     labelInputWidth.hide();
-    labelInputWidth.elt.style.color = 'white';
-    labelInputWidth.elt.style.fontFamily = 'Open Sans';
-    labelInputWidth.elt.style.textAlign = 'center';
-    labelInputWidth.elt.style.margin = '3px 0px 0px 0px';
-    labelInputWidth.elt.className = 'label';
+    labelInputWidth.elt.className = 'optionLabel';
     labelInputWidth.parent(leftSideButtons);
 
 
@@ -696,6 +813,12 @@ function setup() { // jshint ignore:line
     bitSelect.elt.className = 'selectLeft';
     bitSelect.parent(leftSideButtons);
     bitSelect.value('4');
+    bitSelect.mouseOver(function () {
+        setHelpText('Define the number of input bits');
+    });
+    bitSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
     counterBitSelect = createSelect();
     counterBitSelect.hide();
@@ -706,6 +829,12 @@ function setup() { // jshint ignore:line
     counterBitSelect.elt.className = 'selectLeft';
     counterBitSelect.parent(leftSideButtons);
     counterBitSelect.value('4');
+    counterBitSelect.mouseOver(function () {
+        setHelpText('Define the number of output bits');
+    });
+    counterBitSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
     decoderBitSelect = createSelect();
     decoderBitSelect.hide();
@@ -715,8 +844,13 @@ function setup() { // jshint ignore:line
     decoderBitSelect.changed(newDecoderBitLength);
     decoderBitSelect.elt.className = 'selectLeft';
     decoderBitSelect.parent(leftSideButtons);
-    decoderBitSelect.value('4');
-
+    decoderBitSelect.value('2');
+    decoderBitSelect.mouseOver(function () {
+        setHelpText('Define the number of input bits');
+    });
+    decoderBitSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
     multiplexerBitSelect = createSelect();
     multiplexerBitSelect.hide();
@@ -727,10 +861,15 @@ function setup() { // jshint ignore:line
     multiplexerBitSelect.elt.className = 'selectLeft';
     multiplexerBitSelect.parent(leftSideButtons);
     multiplexerBitSelect.value('1');
+    multiplexerBitSelect.mouseOver(function () {
+        setHelpText('Define the address width of the element');
+    });
+    multiplexerBitSelect.mouseOut(function () {
+        setHelpText('');
+    });
 
-    sfcheckbox = createCheckbox('Sync Ticks', true);
+    sfcheckbox = createCheckbox('SYNC TICKS TO FRAMES', true);
     sfcheckbox.hide();
-    sfcheckbox.elt.title = 'If this is deactivated, the simulation is executed as fast as possible. Otherwise, the speed is synced to the frame rate.';
     sfcheckbox.changed(function () {
         syncFramerate = sfcheckbox.checked();
         if (!sfcheckbox.checked() && simRunning) {
@@ -739,40 +878,59 @@ function setup() { // jshint ignore:line
             clearInterval(updater);
         }
     });
-    sfcheckbox.elt.style.color = 'white';
-    sfcheckbox.elt.style.fontFamily = 'Open Sans';
-    sfcheckbox.elt.style.textAlign = 'center';
-    sfcheckbox.elt.style.margin = '10px 0 0 0';
     sfcheckbox.elt.className = 'checkbox';
     sfcheckbox.parent(leftSideButtons);
+    sfcheckbox.mouseOver(function () {
+        setHelpText('Synchronize the simulation speed with the frame rate');
+    });
+    sfcheckbox.mouseOut(function () {
+        setHelpText('');
+    });
 
     //Upper left
 
     // Activates the edit mode
-    modifierModeButton = createButton('<i class="fa fa-pen"></i> Edit');
-    modifierModeButton.position(152, 3);
+    modifierModeButton = createButton('<i class="fa fa-pen icon"></i> Edit');
+    modifierModeButton.position(232, 3);
     modifierModeButton.mousePressed(function () {
         enterModifierMode();
     });
     modifierModeButton.elt.className = 'button active';
+    modifierModeButton.mouseOver(function () {
+        setHelpText('Draws wires and changes element properties');
+    });
+    modifierModeButton.mouseOut(function () {
+        setHelpText('');
+    });
 
 
     // Activates the delete mode (objects and wires)
-    deleteButton = createButton('<i class="far fa-trash-alt"></i> Delete');
-    deleteButton.position(226, 3);
+    deleteButton = createButton('<i class="far fa-trash-alt icon"></i> Delete');
+    deleteButton.position(306, 3);
     deleteButton.mousePressed(deleteClicked);
     deleteButton.elt.className = 'button';
+    deleteButton.mouseOver(function () {
+        setHelpText('Deletes wires and elements');
+    });
+    deleteButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Starts and stops the simulation
-    simButton = createButton('<i class="fa fa-play"></i> Start');
-    simButton.elt.style.width = '52px';
-    simButton.position(316, 3);
+    simButton = createButton('<i class="fa fa-play icon"></i> Start');
+    simButton.position(396, 3);
     simButton.mousePressed(simClicked);
     simButton.elt.className = 'button';
+    simButton.mouseOver(function () {
+        setHelpText('Starts and stops the simulation');
+    });
+    simButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Undos the last action
-    undoButton = createButton('<i class="fa fa-undo"></i> Undo');
-    undoButton.position(396, 3);
+    undoButton = createButton('<i class="fa fa-undo icon"></i> Undo');
+    undoButton.position(476, 3);
     undoButton.mousePressed(() => {
         previewSymbol = null;
         undo();
@@ -781,8 +939,8 @@ function setup() { // jshint ignore:line
     undoButton.elt.className = 'button';
 
     // Redos the last action
-    redoButton = createButton('<i class="fa fa-redo"></i> Redo');
-    redoButton.position(481, 3);
+    redoButton = createButton('<i class="fa fa-redo icon"></i> Redo');
+    redoButton.position(561, 3);
     redoButton.mousePressed(() => {
         previewSymbol = null;
         redo();
@@ -791,14 +949,16 @@ function setup() { // jshint ignore:line
     redoButton.elt.className = 'button';
 
     // Activates the mode for area selecting
-    selectButton = createButton('<i class="fas fa-object-group"></i> Select');
-    selectButton.position(564, 3);
+    selectButton = createButton('<i class="fas fa-object-group icon"></i> Select');
+    selectButton.position(644, 3);
     selectButton.mousePressed(startSelect);
+    selectButton.elt.style.cursor = 'default';
     selectButton.elt.className = 'button';
+    selectButton.elt.title = 'Coming soon!';
 
     moduleNameInput = createInput('');
     moduleNameInput.attribute('placeholder', 'MODULE NAME');
-    moduleNameInput.position(windowWidth / 2 - 278, windowHeight / 2 - 104);
+    moduleNameInput.position(windowWidth / 2 - 238, windowHeight / 2 - 104);
     moduleNameInput.elt.style.fontFamily = 'Open Sans';
     moduleNameInput.elt.className = 'textInput saveInput';
     moduleNameInput.size(180, 27);
@@ -807,10 +967,16 @@ function setup() { // jshint ignore:line
         reDraw();
     };
     moduleNameInput.hide();
+    moduleNameInput.mouseOver(function () {
+        setHelpText('This is the text written on the module');
+    });
+    moduleNameInput.mouseOut(function () {
+        setHelpText('');
+    });
 
     sketchNameInput = createInput('');
     sketchNameInput.attribute('placeholder', 'SKETCH NAME');
-    sketchNameInput.position(windowWidth / 2 - 63, windowHeight / 2 - 104);
+    sketchNameInput.position(windowWidth / 2 - 23, windowHeight / 2 - 104);
     sketchNameInput.elt.style.fontFamily = 'Open Sans';
     sketchNameInput.elt.className = 'textInput saveInput';
     sketchNameInput.elt.onkeyup = function () {
@@ -820,11 +986,17 @@ function setup() { // jshint ignore:line
         reDraw();
     };
     sketchNameInput.hide();
+    sketchNameInput.mouseOver(function () {
+        setHelpText('This is the file name of the sketch');
+    });
+    sketchNameInput.mouseOut(function () {
+        setHelpText('');
+    });
 
     descInput = createElement('textarea');
     descInput.attribute('placeholder', 'SKETCH DESCRIPTION');
-    descInput.position(windowWidth / 2 - 43, windowHeight / 2 - 25);
-    descInput.size(280, 122);
+    descInput.position(windowWidth / 2 - 3, windowHeight / 2 - 25);
+    descInput.size(280, 114);
     descInput.elt.style.fontFamily = 'Open Sans';
     descInput.elt.style.fontSize = '15px';
     descInput.elt.className = 'textInput descInput';
@@ -833,31 +1005,58 @@ function setup() { // jshint ignore:line
         descInput.elt.disabled = true;
     }
     descInput.hide();
+    descInput.mouseOver(function () {
+        setHelpText('This is the description displayed in the dashboard');
+    });
+    descInput.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Clears the canvas and resets the view
-    newButton = createButton('<i class="fas fa-file"></i> New');
-    newButton.position(windowWidth - 280, 3);
+    newButton = createButton('<i class="fas fa-file icon"></i> New');
+    newButton.position(windowWidth - 290, 3);
     newButton.elt.style.width = '50px';
     newButton.mousePressed(function () {
         if (newButton.html() === 'SURE?') {
-            newButton.html('<i class="fas fa-file"></i> New');
+            newButton.elt.className = "button";
+            newButton.html('<i class="fas fa-file icon"></i> New');
             newClicked();
         } else {
+            newButton.elt.className = "button active";
             newButton.html('SURE?');
-            setTimeout(function () { newButton.html('<i class="fas fa-file"></i> New'); }, 3000);
+            setTimeout(function () { newButton.html('<i class="fas fa-file icon"></i> New'); newButton.elt.className = "button"; }, 3000);
         }
     });
     newButton.elt.className = 'button';
+    newButton.mouseOver(function () {
+        setHelpText('Clears the sketch');
+    });
+    newButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     // Button to save the sketch
-    saveButton = createButton('Save');
-    saveButton.position(windowWidth / 2 + 102, windowHeight / 2 + 118);
+    if (getCookieValue('access_token') !== '') {
+        saveButton = createButton('SAVE');
+        saveButton.mouseOver(function () {
+            setHelpText('Save this sketch to the dashboard');
+        });
+    } else {
+        saveButton = createButton('DOWNLOAD');
+        saveButton.mouseOver(function () {
+            setHelpText('Download this sketch as a JSON file');
+        });
+    }
+    saveButton.position(windowWidth / 2 + 142, windowHeight / 2 + 110);
     saveButton.mousePressed(saveClicked);
     saveButton.elt.className = 'btn btn-lg btn-red';
     saveButton.hide();
+    saveButton.mouseOut(function () {
+        setHelpText('');
+    });
 
-    cancelButton = createButton('Cancel');
-    cancelButton.position(windowWidth / 2 - 53, windowHeight / 2 + 118);
+    cancelButton = createButton('CANCEL');
+    cancelButton.position(windowWidth / 2 - 13, windowHeight / 2 + 110);
     cancelButton.mousePressed(cancelClicked);
     cancelButton.elt.className = 'btn btn-lg btn-red';
     cancelButton.hide();
@@ -892,42 +1091,62 @@ function setup() { // jshint ignore:line
     pageDownButton.elt.className = 'btn btn-lg btn-red';
     pageDownButton.hide();
 
-    // Button to load a sketch
-    loadButton = createButton('Load');
-    loadButton.position(windowWidth - 138, 3);
-    loadButton.mousePressed(loadClicked);
-    loadButton.elt.className = 'button';
-    loadButton.hide();
-
-    saveDialogButton = createButton('<i class="fas fa-save"></i> Save');
-    saveDialogButton.position(windowWidth - 202, 3);
+    saveDialogButton = createButton('<i class="fas fa-save icon"></i> Save');
+    saveDialogButton.position(windowWidth - 216, 3);
     saveDialogButton.mousePressed(saveDialogClicked);
     saveDialogButton.elt.className = 'button';
+    saveDialogButton.mouseOver(function () {
+        setHelpText('Saves the sketch');
+    });
+    saveDialogButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     if (getCookieValue('access_token') !== '') {
-        dashboardButton = createButton('<i class="fas fa-th"></i> Dashboard');
+        dashboardButton = createButton('<i class="fas fa-th icon"></i> Dashboard');
+        dashboardButton.mouseOver(function () {
+            setHelpText('Get back to the dashboard');
+        });
+        dashboardButton.mouseOut(function () {
+            setHelpText('');
+        });
     } else {
-        dashboardButton = createButton('<i class="fa fa-sign-in-alt"></i> Login');
+        dashboardButton = createButton('<i class="fa fa-sign-in-alt icon"></i> Login');
+        dashboardButton.mouseOver(function () {
+            setHelpText('Log into your LogiJS account');
+        });
+        dashboardButton.mouseOut(function () {
+            setHelpText('');
+        });
     }
-    dashboardButton.elt.style.width = '98px';
+    dashboardButton.elt.style.width = '110px';
     dashboardButton.mousePressed(function () {
         if (dashboardButton.html() === 'SURE?') {
             window.location = '/dashboard';
         } else {
+            dashboardButton.elt.className = "button active";
             dashboardButton.html('SURE?');
-            setTimeout(function () { if (getCookieValue('access_token') !== '') { dashboardButton.html('<i class="fas fa-th"></i> Dashboard'); } else { dashboardButton.html('<i class="fa fa-sign-in-alt"></i> Login'); } }, 3000);
+            setTimeout(function () { if (getCookieValue('access_token') !== '') { dashboardButton.html('<i class="fas fa-th icon"></i> Dashboard'); } else { dashboardButton.html('<i class="fa fa-sign-in-alt icon"></i> Login'); } dashboardButton.elt.className = "button"; }, 3000);
         }
     });
-    dashboardButton.position(windowWidth - 124, 3);
+    dashboardButton.position(windowWidth - 142, 3);
     dashboardButton.elt.className = 'button';
 
-    saveDialogText = createP('Save Sketch');
+    saveDialogText = createP('SAVE SKETCH');
     saveDialogText.hide();
     saveDialogText.elt.style.color = 'white';
     saveDialogText.elt.style.fontFamily = 'Open Sans';
     saveDialogText.elt.style.margin = '3px 0px 0px 0px';
-    saveDialogText.position(windowWidth / 2 - 105, windowHeight / 2 - 160);
+    saveDialogText.position(windowWidth / 2 - 65, windowHeight / 2 - 160);
     saveDialogText.style('font-size', '36px');
+
+    customDialogText = createP('IMPORT OWN ELEMENT');
+    customDialogText.hide();
+    customDialogText.elt.style.color = 'white';
+    customDialogText.elt.style.fontFamily = 'Open Sans';
+    customDialogText.elt.style.margin = '3px 0px 0px 0px';
+    customDialogText.position(windowWidth / 2 - 100, 120);
+    customDialogText.style('font-size', '36px');
 
     createModifierElements();
 
@@ -945,7 +1164,11 @@ function setup() { // jshint ignore:line
 
     let loadfile = urlParam('sketch');
     if (loadfile !== '') {
-        sketchNameInput.value(loadfile);
+        if (loadfile.indexOf('lib') === 0) {
+            sketchNameInput.value(loadfile.substring(10));
+        } else {
+            sketchNameInput.value(loadfile);
+        }
         setLoading(true);
         loadSketch(loadfile + '.json');
         //socket.emit('getDescription', { file: loadfile, access_token: getCookieValue('access_token') });
@@ -1001,8 +1224,11 @@ function importCustom(filename) {
         } else {
             addType = 10; // internal custom
         }
-        directionSelect.show();
         labelDirection.show();
+        labelDirection.style('display', 'inline-block');
+        directionSelect.show();
+        directionSelect.style('display', 'inline-block');
+        labelOptions.show();
         custFile = filename;
     }
 }
@@ -1032,10 +1258,15 @@ function counterClicked() {
     hideAllOptions();
     setControlMode('addObject');
     addType = 10;
-    directionSelect.show();
     labelDirection.show();
-    counterBitSelect.show();
+    labelDirection.style('display', 'inline-block');
+    directionSelect.show();
+    directionSelect.style('display', 'inline-block');
     labelOutputWidth.show();
+    labelOutputWidth.style('display', 'inline-block');
+    counterBitSelect.show();
+    counterBitSelect.style('display', 'inline-block');
+    labelOptions.show();
     custFile = counterBitWidth + '-counter.json';
 }
 
@@ -1043,10 +1274,15 @@ function decoderClicked() {
     hideAllOptions();
     setControlMode('addObject');
     addType = 10;
-    directionSelect.show();
     labelDirection.show();
-    decoderBitSelect.show();
+    labelDirection.style('display', 'inline-block');
+    directionSelect.show();
+    directionSelect.style('display', 'inline-block');
     labelInputWidth.show();
+    labelInputWidth.style('display', 'inline-block');
+    decoderBitSelect.show();
+    decoderBitSelect.style('display', 'inline-block');
+    labelOptions.show();
     custFile = decoderBitWidth + '-decoder.json';
 }
 
@@ -1054,10 +1290,15 @@ function muxClicked() {
     hideAllOptions();
     setControlMode('addObject');
     addType = 10;
-    directionSelect.show();
     labelDirection.show();
-    multiplexerBitSelect.show();
+    labelDirection.style('display', 'inline-block');
+    directionSelect.show();
+    directionSelect.style('display', 'inline-block');
     labelInputWidth.show();
+    labelInputWidth.style('display', 'inline-block');
+    multiplexerBitSelect.show();
+    multiplexerBitSelect.style('display', 'inline-block');
+    labelOptions.show();
     custFile = muxBitWidth + '-mux.json';
 }
 
@@ -1065,22 +1306,27 @@ function demuxClicked() {
     hideAllOptions();
     setControlMode('addObject');
     addType = 10;
-    directionSelect.show();
     labelDirection.show();
-    multiplexerBitSelect.show();
+    labelDirection.style('display', 'inline-block');
+    directionSelect.show();
+    directionSelect.style('display', 'inline-block');
     labelInputWidth.show();
+    labelInputWidth.style('display', 'inline-block');
+    multiplexerBitSelect.show();
+    multiplexerBitSelect.style('display', 'inline-block');
+    labelOptions.show();
     custFile = muxBitWidth + '-demux.json';
 }
 
 // Triggered when a sketch should be saved
 function saveClicked() {
     if (sketchNameInput.value().includes(' ')) {
-        saveDialogText.position(windowWidth / 2 - 165, windowHeight / 2 - 160);
+        saveDialogText.position(windowWidth / 2 - 105, windowHeight / 2 - 160);
         saveDialogText.elt.style.color = 'red';
         saveDialogText.html('No spaces allowed!');
         setTimeout(function () {
             saveDialogText.elt.style.color = '#fff';
-            saveDialogText.position(windowWidth / 2 - 105, windowHeight / 2 - 160);
+            saveDialogText.position(windowWidth / 2 - 65, windowHeight / 2 - 160);
             saveDialogText.html('Save Sketch');
         }, 3000);
         return;
@@ -1128,6 +1374,7 @@ function closeCustomDialog() {
     pageUpButton.hide();
     pageDownButton.hide();
     cancelButton.hide();
+    customDialogText.hide();
     justClosedMenu = true;
 }
 
@@ -1150,7 +1397,7 @@ function saveDialogClicked() {
     reDraw();
     saveDialog = true;
     saveButton.show();
-    cancelButton.position(windowWidth / 2 - 53, windowHeight / 2 + 118);
+    cancelButton.position(windowWidth / 2 - 13, windowHeight / 2 + 110);
     cancelButton.show();
     sketchNameInput.show();
     moduleNameInput.show();
@@ -1180,6 +1427,7 @@ function newClicked() {
     clearActionStacks();
     hideAllOptions();
     closeCustomDialog();
+    closeSaveDialog();
     transform = new Transformation(0, 0, 1);
     currentGridSize = GRIDSIZE;
     gateInputCount = 2;
@@ -1209,18 +1457,16 @@ function hideAllOptions() {
     decoderBitSelect.hide();
     multiplexerBitSelect.hide();
     labelInputWidth.hide();
+    labelOptions.hide();
 }
 
 /*
     Deletes all items that are drawn on screen
-    and also the wire segments that are no longer
-    drawn individually
 */
 function clearItems() {
     gates = [];
     outputs = [];
     inputs = [];
-    segments = [];
     conpoints = [];
     customs = [];
     diodes = [];
@@ -1239,7 +1485,7 @@ function clearActionStacks() {
 
 function pushMoveSelectionAction(dx, dy, x1, y1, x2, y2) {
     if ((Math.abs(dx) >= GRIDSIZE || Math.abs(dy) >= GRIDSIZE) && selection.length > 0) {
-        pushUndoAction('moveSel', [dx, dy, x1, y1, x2, y2], [_.cloneDeep(selection), _.cloneDeep(selectionConpoints), _.cloneDeep(selectionWires), _.cloneDeep(selectionSegments)]);
+        pushUndoAction('moveSel', [dx, dy, x1, y1, x2, y2], [_.cloneDeep(selection), _.cloneDeep(selectionConpoints), _.cloneDeep(selectionWires)]);
     }
 }
 
@@ -1263,17 +1509,17 @@ function setUnactive() {
     buttonButton.elt.className = 'previewButton';
     clockButton.elt.className = 'previewButton';
     outputButton.elt.className = 'previewButton';
-    labelButton.elt.className = 'buttonLeft';
+    labelButton.elt.className = 'previewButton';
     segDisplayButton.elt.className = 'previewButton';
-    counterButton.elt.className = 'buttonLeft';
-    decoderButton.elt.className = 'buttonLeft';
-    dFlipFlopButton.elt.className = 'buttonLeft';
-    rsFlipFlopButton.elt.className = 'buttonLeft';
-    reg4Button.elt.className = 'buttonLeft';
-    muxButton.elt.className = 'buttonLeft';
-    demuxButton.elt.className = 'buttonLeft';
-    halfaddButton.elt.className = 'buttonLeft';
-    fulladdButton.elt.className = 'buttonLeft';
+    counterButton.elt.className = 'previewButton';
+    decoderButton.elt.className = 'previewButton';
+    dFlipFlopButton.elt.className = 'previewButton';
+    rsFlipFlopButton.elt.className = 'previewButton';
+    reg4Button.elt.className = 'previewButton';
+    muxButton.elt.className = 'previewButton';
+    demuxButton.elt.className = 'previewButton';
+    halfaddButton.elt.className = 'previewButton';
+    fulladdButton.elt.className = 'previewButton';
     customButton.elt.className = 'buttonLeft';
 
     deleteButton.elt.className = 'button';
@@ -1294,7 +1540,6 @@ function deleteClicked() {
         let delLabels = [[], []];
         let delOutputs = [[], []];
         let delWires = [[], []];
-        let delSegments = [[], []];
         let delSegDisplays = [[], []];
         for (let i = 0; i < selection.length; i++) {
             /*if (selection[i] instanceof LogicGate) {
@@ -1366,11 +1611,12 @@ function deleteClicked() {
         for (let j = delSegDisplays[1].length - 1; j >= 0; j--) {
             segDisplays.splice(delSegDisplays[1][j], 1);
         }
-        pwSegments = [];
+        pwWireX = null;
+        pwWireY = null;
         wireMode = 'none';
         lockElements = false;
         if (selection.length > 0) {
-            pushUndoAction('delSel', 0, [_.cloneDeep(delGates), _.cloneDeep(delCustoms), _.cloneDeep(diodes), _.cloneDeep(delInputs), _.cloneDeep(delLabels), _.cloneDeep(delOutputs), _.cloneDeep(delWires), _.cloneDeep(delSegDisplays), _.cloneDeep(conpoints), _.cloneDeep(delSegments)]);
+            pushUndoAction('delSel', 0, [_.cloneDeep(delGates), _.cloneDeep(delCustoms), _.cloneDeep(diodes), _.cloneDeep(delInputs), _.cloneDeep(delLabels), _.cloneDeep(delOutputs), _.cloneDeep(delWires), _.cloneDeep(delSegDisplays), _.cloneDeep(conpoints)]);
         }
         doConpoints();
     } else {
@@ -1571,10 +1817,14 @@ function andClicked(dontToggle = false) {
         addType = 1; // and
         setPreviewElement(false, {}, 'and');
         gateInputSelect.show();
+        gateInputSelect.style('display', 'inline-block');
         labelGateInputs.show();
+        labelGateInputs.style('display', 'inline-block');
         directionSelect.show();
+        directionSelect.style('display', 'inline-block');
         labelDirection.show();
-        previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'and', '&'));
+        labelDirection.style('display', 'inline-block');
+        labelOptions.show();
     }
 }
 
@@ -1588,10 +1838,14 @@ function orClicked(dontToggle = false) {
         addType = 2; // or
         setPreviewElement(false, {}, 'or');
         gateInputSelect.show();
+        gateInputSelect.style('display', 'inline-block');
         labelGateInputs.show();
+        labelGateInputs.style('display', 'inline-block');
         directionSelect.show();
+        directionSelect.style('display', 'inline-block');
         labelDirection.show();
-        previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'or', '≥1'));
+        labelDirection.style('display', 'inline-block');
+        labelOptions.show();
     }
 }
 
@@ -1605,10 +1859,14 @@ function xorClicked(dontToggle = false) {
         addType = 3; // xor
         setPreviewElement(false, {}, 'xor');
         gateInputSelect.show();
+        gateInputSelect.style('display', 'inline-block');
         labelGateInputs.show();
+        labelGateInputs.style('display', 'inline-block');
         directionSelect.show();
+        directionSelect.style('display', 'inline-block');
         labelDirection.show();
-        previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'xor', '=1'));
+        labelDirection.style('display', 'inline-block');
+        labelOptions.show();
     }
 }
 
@@ -1679,8 +1937,9 @@ function segDisplayClicked(dontToggle = false) {
         addType = 8; // segDisplay
         setPreviewElement(false, {}, '7-segment');
         bitSelect.show();
+        bitSelect.style('display', 'inline-block');
         labelBits.show();
-        previewSymbol = new CreatePreviewSymbol(new SegmentDisplay(mouseX, mouseY, transform, 4));
+        labelBits.style('display', 'inline-block');
     }
 }
 
@@ -1730,9 +1989,8 @@ function setSelectMode(mode) {
             selection = [];
             selectionConpoints = [];
             selectionWires = [];
-            selectionSegments = [];
             showSelectionBox = false;
-        break;
+            break;
         case 'start':
             showSelectionBox = false;
             break;
@@ -1749,35 +2007,101 @@ function setSelectMode(mode) {
 
 function addWires() {
     let pushed = false;
-    for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
-        if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
-            pushed = true;
-        }
-    }
-    if (pushed) {
-        let newSegments = [];
-        let newSegmentIndices = [];
-        for (let i = 0; i < pwSegments.length; i++) { // Push all preview segments to the existing segments
-            if (segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY) < 0) {
-                segments.push(pwSegments[i]);
-                newSegmentIndices.push(segments.length - 1);
-                newSegments.push(pwSegments[i]);
+
+    let xIndex = -1;
+    let yIndex = -1;
+
+    let deletedIndices = [];
+
+    let editLog = [];
+
+    if (pwWireX !== null) {
+        for (let i = 0; i < wires.length; i++) {
+            let overlap = wireOverlap(pwWireX, wires[i]);
+            if ((overlap[0] !== overlap[2] || overlap[1] !== overlap[3]) || (wires[i].direction === 0 && pwWireX.startY === wires[i].startY &&
+                (pwWireX.startX == wires[i].endX || pwWireX.startX == wires[i].startX || pwWireX.endX == wires[i].startX || pwWireX.endX == wires[i].endX))) { //jshint ignore:line
+                if (xIndex >= 0) {
+                    let newWire = new Wire(0, Math.min(wires[xIndex].startX, wires[i].startX), wires[xIndex].startY, false, transform);
+                    newWire.endX = Math.max(wires[xIndex].endX, wires[i].endX);
+                    newWire.endY = wires[xIndex].startY;
+                    editLog.push(['r', xIndex, wires[xIndex], newWire]);
+                    wires.splice(xIndex, 1, newWire);
+                    pushed = true;
+                    deletedIndices.push(i);
+                } else {
+                    let newWire = new Wire(0, Math.min(pwWireX.startX, wires[i].startX), pwWireX.startY, false, transform);
+                    newWire.endX = Math.max(pwWireX.endX, wires[i].endX);
+                    newWire.endY = pwWireX.startY;
+                    editLog.push(['r', i, wires[i], newWire]);
+                    wires.splice(i, 1, newWire);
+                    pushed = true;
+                    xIndex = i;
+                }
             }
         }
 
+        if (xIndex < 0) {
+            let newWire = new Wire(0, pwWireX.startX, pwWireX.startY, false, transform);
+            newWire.endX = pwWireX.endX;
+            newWire.endY = pwWireX.startY;
+            editLog.push(['a', wires.length, newWire]);
+            wires.push(newWire);
+            pushed = true;
+        }
+    }
+
+    if (pwWireY !== null) {
+        for (let i = 0; i < wires.length; i++) {
+            let overlap = wireOverlap(pwWireY, wires[i]);
+            if ((overlap[0] !== overlap[2] || overlap[1] !== overlap[3]) || (wires[i].direction === 1 && pwWireY.startX === wires[i].startX &&
+                (pwWireY.startY == wires[i].endY || pwWireY.startY == wires[i].startY || pwWireY.endY == wires[i].startY || pwWireY.endY == wires[i].endY))) { //jshint ignore:line
+                if (yIndex >= 0) {
+                    let newWire = new Wire(1, wires[yIndex].startX, Math.min(wires[yIndex].startY, wires[i].startY), false, transform);
+                    newWire.endX = wires[yIndex].startX;
+                    newWire.endY = Math.max(wires[yIndex].endY, wires[i].endY);
+                    editLog.push(['r', yIndex, wires[yIndex], newWire]);
+                    wires.splice(yIndex, 1, newWire);
+                    pushed = true;
+                    deletedIndices.push(i);
+                } else {
+                    let newWire = new Wire(1, pwWireY.startX, Math.min(pwWireY.startY, wires[i].startY), false, transform);
+                    newWire.endX = pwWireY.startX;
+                    newWire.endY = Math.max(pwWireY.endY, wires[i].endY);
+                    editLog.push(['r', i, wires[i], newWire]);
+                    wires.splice(i, 1, newWire);
+                    pushed = true;
+                    yIndex = i;
+                }
+            }
+        }
+
+        if (yIndex < 0) {
+            let newWire = new Wire(1, pwWireY.startX, pwWireY.startY, false, transform);
+            newWire.endX = pwWireY.startX;
+            newWire.endY = pwWireY.endY;
+            editLog.push(['a', wires.length, newWire]);
+            wires.push(newWire);
+            pushed = true;
+        }
+    }
+
+    for (let i = deletedIndices.length - 1; i >= 0; i--) {
+        editLog.push(['d', deletedIndices[i], wires.splice(deletedIndices[i], 1)[0]]);
+    }
+
+    if (pushed) {
         let conpointsBefore = _.cloneDeep(conpoints);
-        findLines();
         doConpoints();
         let conpointsAfter = _.cloneDeep(conpoints);
-        pushUndoAction('addWire', [newSegmentIndices], [newSegments, conpointsBefore, conpointsAfter]); // push the action for undoing
-    }
-    if (pushed) {
+        pushUndoAction('addWire', [], [_.cloneDeep(editLog), conpointsBefore, conpointsAfter]); // push the action for undoing
         wireMode = 'hold';
     } else {
         wireMode = 'none';
     }
+
     lockElements = false;
-    pwSegments = []; // delete the preview segments
+    pwWireX = null;
+    pwWireY = null;
 }
 
 /*
@@ -1920,52 +2244,102 @@ function addLabel() {
 }
 
 function deleteWires() {
-    let segmentsExist = false;
     let deletedDiodesIndices = [];
     let deletedDiodes = [];
-    let deletedSegmentsIndices = [];
-    let deletedSegments = [];
-    for (let i = pwSegments.length - 1; i >= 0; i--) {
-        let exists = segmentExists(pwSegments[i].startX, pwSegments[i].startY, pwSegments[i].endX, pwSegments[i].endY);
-        if (exists >= 0) {
-            let startDiode = isDiode(pwSegments[i].startX, pwSegments[i].startY);
-            let endDiode = isDiode(pwSegments[i].endX, pwSegments[i].endY);
-            if ((startDiode >= 0)) {
-                if (!deletedDiodesIndices.includes(startDiode)) {
-                    deletedDiodesIndices.push(startDiode);
+
+    let changes = false;
+
+    let newWiresList = [];
+    let replaceIndices = [];
+    let deletedIndices = [];
+
+    let editLog = [];
+
+    if (pwWireX !== null) {
+        for (let i = 0; i < wires.length; i++) {
+            let overlap = wireOverlap(pwWireX, wires[i]);
+            let newWires = removeFromWire(wires[i], overlap, i);
+            if (newWires !== false) {
+                deletedIndices.push(i);
+                changes = true;
+                if (newWires.length >= 1) {
+                    newWiresList.push(newWires);
+                    replaceIndices.push(i);
                 }
             }
-            if ((endDiode >= 0)) {
-                if (!deletedDiodesIndices.includes(endDiode)) {
-                    deletedDiodesIndices.push(endDiode);
-                }
-            }
-            segmentsExist = true;
-            deletedSegmentsIndices.push(exists);
         }
     }
-    if (segmentsExist) {
-        deletedDiodesIndices.sort(function (a, b) {
+
+    if (pwWireY !== null) {
+        for (let i = 0; i < wires.length; i++) {
+            let overlap = wireOverlap(pwWireY, wires[i]);
+            let newWires = removeFromWire(wires[i], overlap, i);
+            if (newWires !== false) {
+                deletedIndices.push(i);
+                changes = true;
+                if (newWires.length >= 1) {
+                    newWiresList.push(newWires);
+                    replaceIndices.push(i);
+                }
+            }
+        }
+    }
+
+    /*
+        delete all wires that should be removed
+    */
+    for (let i = wires.length - 1; i >= 0; i--) {
+        if (deletedIndices.indexOf(i) >= 0) {
+            editLog.push(['d', i, wires.splice(i, 1)[0]]);
+        }
+    }
+
+    /*
+        Add all newly created wires
+    */
+    for (let i = wires.length - 1; i >= 0; i--) {
+        if (deletedIndices.indexOf(i) >= 0) {
+            if (replaceIndices.indexOf(i) >= 0) {
+                let newWires = newWiresList.pop();
+                for (let j = 0; j < newWires.length; j++) {
+                    if (newWires[j].startX !== newWires[j].endX || newWires[j].startY !== newWires[j].endY) {
+                        editLog.push(['a', i + j, newWires[j]]);
+                        wires.splice(i + j, 0, newWires[j]);
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+        Note all indices of diodes that are placed on the preview wires
+    */
+    if (pwWireX !== null) {
+        deletedDiodesIndices = deletedDiodesIndices.concat(diodesOnWire(pwWireX));
+    }
+
+    if (pwWireY !== null) {
+        deletedDiodesIndices = deletedDiodesIndices.concat(diodesOnWire(pwWireY));
+    }
+
+
+    if (changes) { // only push an undo action when changes have been made to the wires
+        deletedDiodesIndices.sort(function (a, b) { // sort the diode indices to remove them in the right order
             return a - b;
         });
+        deletedDiodesIndices = _.uniq(deletedDiodesIndices); // Remove duplicate indices in case a diode is on both wires
         for (let i = deletedDiodesIndices.length - 1; i >= 0; i--) {
-            deletedDiodes.push(diodes.splice(deletedDiodesIndices[i], 1));
+            deletedDiodes.push(diodes.splice(deletedDiodesIndices[i], 1)); // remove the diodes and save them in an array
         }
         deletedDiodes.reverse();
-        deletedSegmentsIndices.sort(function (a, b) {
-            return a - b;
-        });
-        for (let i = deletedSegmentsIndices.length - 1; i >= 0; i--) {
-            deletedSegments.push(segments.splice(deletedSegmentsIndices[i], 1));
-        }
-        deletedSegments.reverse();
         let conpointsBefore = _.cloneDeep(conpoints);
-        findLines();
         doConpoints();
         let conpointsAfter = _.cloneDeep(conpoints);
-        pushUndoAction('delWire', [deletedSegmentsIndices, deletedDiodesIndices], [deletedSegments, conpointsBefore, conpointsAfter, deletedDiodes]); // Push the action, if more than 0 segments were deleted
+        pushUndoAction('delWire', [deletedDiodesIndices], [editLog, conpointsBefore, conpointsAfter, deletedDiodes]);
     }
-    pwSegments = [];
+
+    pwWireX = null; // reset the preview wires
+    pwWireY = null;
     wireMode = 'none';
     lockElements = false;
 }
@@ -2033,7 +2407,7 @@ function startSimulation() {
         updater = setInterval(updateTick, 0);
     }
 
-    setSimButtonText('<i class="fa fa-stop"></i> Stop'); // Alter the caption of the Start/Stop button
+    setSimButtonText('<i class="fa fa-stop icon"></i> Stop'); // Alter the caption of the Start/Stop button
     setControlMode('modify');
     setActive(simButton, true);
     disableButtons(true);
@@ -2054,6 +2428,7 @@ function startSimulation() {
         customs[i].setSimRunning(true);
     }
 
+    labelOptions.show();
     sfcheckbox.show();
 
     // Start the simulation and exit the modifier mode
@@ -2069,8 +2444,9 @@ function startSimulation() {
 */
 function endSimulation() {
     clearInterval(updater); // Stop the unsynced simulation updater
-    setSimButtonText('<i class="fa fa-play"></i> Start'); // Set the button caption to 'Start'
+    setSimButtonText('<i class="fa fa-play icon"></i> Start'); // Set the button caption to 'Start'
     updateUndoButtons();
+    labelOptions.hide();
     sfcheckbox.hide();
 
     groups = []; // Reset the groups, as they are regenerated when starting again
@@ -2127,23 +2503,25 @@ function updateUndoButtons() {
 */
 function disableButtons(status) {
     if (status) {
-        andButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/and-gate.png">';
-        orButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/or-gate.png">';
-        xorButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/xor-gate.png">';
-        inputButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/switch.png">';
-        outputButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/output.png">';
-        segDisplayButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/segments.png">';
-        buttonButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/button.png">';
-        clockButton.elt.innerHTML = '<img style="filter: brightness(50%);" src="views/images/clock.png">';
+        /*andButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/and-gate.png">';
+        orButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/or-gate.png">';
+        xorButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/xor-gate.png">';
+        inputButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/switch.png">';
+        outputButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/output.png">';
+        segDisplayButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/segments.png">';
+        buttonButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/button.png">';
+        clockButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/clock.png">';*/
+        undoButton.elt.disabled = true;
+        redoButton.elt.disabled = true;
     } else {
-        andButton.elt.innerHTML = '<img src="views/images/and-gate.png">';
-        orButton.elt.innerHTML = '<img src="views/images/or-gate.png">';
-        xorButton.elt.innerHTML = '<img src="views/images/xor-gate.png">';
-        inputButton.elt.innerHTML = '<img src="views/images/switch.png">';
-        outputButton.elt.innerHTML = '<img src="views/images/output.png">';
-        segDisplayButton.elt.innerHTML = '<img src="views/images/segments.png">';
-        buttonButton.elt.innerHTML = '<img src="views/images/button.png">';
-        clockButton.elt.innerHTML = '<img src="views/images/clock.png">';
+        /*andButton.elt.innerHTML = '<img class="preview" src="images/and-gate.png">';
+        orButton.elt.innerHTML = '<img class="preview" src="images/or-gate.png">';
+        xorButton.elt.innerHTML = '<img class="preview" src="images/xor-gate.png">';
+        inputButton.elt.innerHTML = '<img class="preview" src="images/switch.png">';
+        outputButton.elt.innerHTML = '<img class="preview" src="images/output.png">';
+        segDisplayButton.elt.innerHTML = '<img class="preview" src="images/segments.png">';
+        buttonButton.elt.innerHTML = '<img class="preview" src="images/button.png">';
+        clockButton.elt.innerHTML = '<img class="preview" src="images/clock.png">';*/
         updateUndoButtons();
     }
     andButton.elt.disabled = status;
@@ -2155,7 +2533,7 @@ function disableButtons(status) {
     buttonButton.elt.disabled = status;
     clockButton.elt.disabled = status;
     deleteButton.elt.disabled = status;
-    selectButton.elt.disabled = status;
+    selectButton.elt.disabled = true; // !!!
     reg4Button.elt.disabled = status;
     decoderButton.elt.disabled = status;
     counterButton.elt.disabled = status;
@@ -2171,13 +2549,13 @@ function disableButtons(status) {
     modifierModeButton.elt.disabled = status;
     labelButton.elt.disabled = status;
     // Sets the colors of the labels
-    if (status) {
+    /*if (status) {
         labelBasic.elt.style.color = '#969696';
         labelAdvanced.elt.style.color = '#969696';
     } else {
-        labelBasic.elt.style.color = 'white';
-        labelAdvanced.elt.style.color = 'white';
-    }
+        labelBasic.elt.style.color = '#969696';
+        labelAdvanced.elt.style.color = '#969696';
+    }*/
 }
 
 /*
@@ -2189,8 +2567,8 @@ function draw() {
         reDraw(); // Redraw all elements of the sketch
     } else {
         if ((wireMode === 'preview' || wireMode === 'delete') && !mouseOverGUI() && !modifierMenuDisplayed()) {
-            generateSegmentSet(wirePreviewStartX, wirePreviewStartY, Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
-                Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE, false);
+            generatePreviewWires(wirePreviewStartX, wirePreviewStartY, Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
+                Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
             reDraw();
         } else if (controlMode === 'select' || controlMode === 'addObject' && !mouseIsPressed && !modifierMenuDisplayed()) {
             reDraw();
@@ -2275,8 +2653,12 @@ function reDraw() {
 
     // Display the preview wire segment set
     if (wireMode === 'preview' || wireMode === 'delete') {
-        for (const elem of pwSegments) { // Display preview segments
-            elem.show(wireMode === 'delete');
+        if (pwWireX !== null) {
+            pwWireX.show(wireMode === 'delete');
+        }
+
+        if (pwWireY !== null) {
+            pwWireY.show(wireMode === 'delete');
         }
     }
 
@@ -2314,7 +2696,7 @@ function reDraw() {
     }
 
     if (loading && !showCustomDialog) {
-        showMessage('Loading...', loadFile.split('.json')[0]);
+        showMessage('LOADING...', loadFile.split('.json')[0]);
     }
 
     if (error !== '') {
@@ -2345,38 +2727,33 @@ function showMessage(msg, subline = '') {
     noStroke();
     rect(0, 0, window.width, window.height);
 
-    fill(200, 50, 50);
+    fill(50);
     noStroke();
-    rect(window.width / 2 - 300, window.height / 2 - 75, 600, 150);
-    stroke(0);
-    strokeWeight(4);
-    strokeCap(SQUARE);
-    line(window.width / 2 - 300, window.height / 2 + 75, window.width / 2 + 300, window.height / 2 + 75);
-    strokeCap(ROUND);
+    rect(window.width / 2 - 250, window.height / 2 - 75, 500, 150, 10);
     fill(255);
-    noStroke();
     textSize(30);
     textAlign(CENTER, CENTER);
-    text(msg, window.width / 2, window.height / 2);
+    text(msg, window.width / 2, window.height / 2 - 20);
     textSize(20);
     text(subline, window.width / 2, window.height / 2 + 30);
 }
 
 function showSaveDialog() {
-    fill('rgba(50, 50, 50, 0.95)');
+    fill('rgba(50, 50, 50, 1)');
     noStroke();
-    rect(window.width / 2 - 365, window.height / 2 - 208, 580, 400);
+    rect(window.width / 2 - 365, window.height / 2 - 208, 580, 385, 10);
     showPreviewImage();
 }
 
 function displayCustomDialog() {
-    pageUpButton.position(Math.round(window.width / 8) + customDialogColumns * 240 + 180, customDialogRows * 240 - 85);
-    pageDownButton.position(Math.round(window.width / 8) + customDialogColumns * 240 + 180, customDialogRows * 240 - 30);
-    fill('rgba(50, 50, 50, 0.95)');
+    pageUpButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 - 10);
+    pageDownButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 + 50);
+    fill(50, 50, 50);
     noStroke();
-    rect(Math.round(window.width / 8), 50, customDialogColumns * 240 + 220, customDialogRows * 240 + 40);
-    cancelButton.position(Math.round(window.width / 8) + customDialogColumns * 240 + 180, customDialogRows * 240 + 25);
+    rect(Math.round(window.width / 8), 50, customDialogColumns * 220 + 220, customDialogRows * 220 + 90, 10);
+    cancelButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 + 110);
     cancelButton.show();
+    customDialogText.show();
     for (let i = 0; i < importSketchData.sketches.length; i++) {
         showCustomItem(i + 1, importSketchData.views/images[i], importSketchData.sketches[i], importSketchData.looks[i]);
     }
@@ -2393,9 +2770,9 @@ function displayCustomDialog() {
 }
 
 function fetchImportData() {
-    customDialogColumns = Math.floor((window.width - window.width / 4) / 240);
-    customDialogRows = Math.floor((window.height - window.height / 10) / 240);
     /*
+    customDialogColumns = Math.floor((window.width - 150 - window.width / 4) / 220);
+    customDialogRows = Math.floor((window.height - window.height / 10) / 220);
     socket.emit('getImportSketches', { access_token: getCookieValue('access_token') });
     socket.on('importSketches', (data) => {
         socket.off('importSketches'); 
@@ -2407,8 +2784,8 @@ function fetchImportData() {
 
 function showCustomItem(place, img, caption, look) {
     let row = Math.ceil(place / customDialogColumns - 1) - (customDialogPage * customDialogRows);
-    let x = ((place - 1) % customDialogColumns) * 240 + Math.round(window.width / 8) + 40;
-    let y = (row * 240) + 90;
+    let x = ((place - 1) % customDialogColumns) * 220 + Math.round(window.width / 8) + 40;
+    let y = (row * 220) + 140;
     if (row >= customDialogRows || row < 0) {
         return;
     }
@@ -2424,13 +2801,16 @@ function showCustomItem(place, img, caption, look) {
             normal_img.drawingContext.drawImage(raw, 0, 0);
             normal_img.drawingContext.drawImage(gradientRaw, 0, 0);
             fill(0);
-            rect(x - 4, y - 4, 208, 208);
             image(normal_img, x, y);
             if (look.hasOwnProperty('outputs')) {
                 if (look.outputs > 0) {
                     showImportPreview(look, x, y);
                 }
             }
+            fill('rgba(0, 0, 0, 0)');
+            strokeWeight(10);
+            stroke(50, 50, 50);
+            rect(x, y, 200, 200, 10);
             noStroke();
             fill(255);
             textSize(16);
@@ -2471,7 +2851,7 @@ function showElements() {
             }
         } else {
             for (let i = 0; i < wires.length; i++) {
-                wires[i].show();
+                wires[i].show(false, i);
             }
         }
     }
@@ -2565,7 +2945,8 @@ function keyPressed() {
                 simClicked();
                 break;
             case CONTROL:
-                startSelect();
+                //startSelect();
+                console.log(wires.length);
                 break;
             case 32: // Space
                 if (controlMode !== 'delete') {
@@ -2599,6 +2980,16 @@ function keyPressed() {
         }
     } else if (keyCode === RETURN) { // Load the sketch when the textInput is active
         loadClicked();
+    }
+}
+
+function setHelpText(str) {
+    if (str !== '') {
+        helpLabel.elt.innerHTML = '<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i> ' + str;
+        helpLabel.style('font-size', '15px');
+        helpLabel.show();
+    } else {
+        helpLabel.hide();
     }
 }
 

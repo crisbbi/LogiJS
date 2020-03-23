@@ -195,7 +195,7 @@ function updateCursors() {
         }
     }
     if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, customDialogRows, customDialogColumns);
+        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 140, customDialogRows, customDialogColumns);
         let place = customDialogColumns * pos.row + pos.col + customDialogPage * customDialogColumns * customDialogRows;
         if (pos.col >= 0 && pos.row >= 0 && place < importSketchData.sketches.length) {
             hand = true;
@@ -330,7 +330,7 @@ function mousePressed() {
 
 function mouseClicked() {
     if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, customDialogRows, customDialogColumns);
+        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 140, customDialogRows, customDialogColumns);
         if (pos.row >= 0 && pos.col >= 0) {
             importItemClicked(pos.row, pos.col);
         }
@@ -600,7 +600,8 @@ function mouseReleased() {
         redoButton.elt.disabled = (actionRedo.length === 0);
         undoButton.elt.disabled = (actionUndo.length === 0);
     } else {
-        pwSegments = [];
+        pwWireX = null;
+        pwWireY = null;
         wireMode = 'none';
         lockElements = false;
     }
@@ -692,14 +693,14 @@ function mouseOverSegDisplay() {
 function mouseOverImport(baseX, baseY, rows, cols) {
     let mx = mouseX - baseX;
     let my = mouseY - baseY;
-    if (mx % 240 > 200 || my % 240 > 200) {
+    if (mx % 220 > 200 || my % 220 > 200) {
         return {
             row: -1,
             col: -1
         };
     }
-    mx = Math.floor(mx / 240);
-    my = Math.floor(my / 240);
+    mx = Math.floor(mx / 220);
+    my = Math.floor(my / 220);
     if (my >= rows || mx >= cols || mx < 0 || my < 0) {
         return {
             row: -1,
@@ -718,7 +719,7 @@ function mouseOverGUI() {
         return true;
     }*/
     if (controlMode === 'modify' && inputToModify + outputToModify + labelToModify >= -2) {
-        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 250 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 150;
+        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 300 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 170;
     }
     return (mouseY < 0) || (mouseX < 0);
 }
