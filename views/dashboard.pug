@@ -1,18 +1,26 @@
 doctype html
+<html lang="en">
 head
+  |   <!-- Google Tag Manager -->
+  |   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  |   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  |   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  |   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  |   })(window,document,'script','dataLayer','GTM-WKSH2RQ');</script>
+  |   <!-- End Google Tag Manager -->
   title LogiJS: Dashboard
   meta(name='keywords', content='LogiJS, logic, circuit, simulation, simulator, editor, free, open, source, gate, input, output, sketch, electronics, physics, informatics, it, \
   computer, chip, pcb, design, creator, creation, processor, cpu, logi, js, javascript')
-  meta(name='description', content='LogiJS is a logic circuit simulator built for educational use. Easy to use, yet powerful.')
+  meta(name='description', content='LogiJS is a web-based logic circuit simulator for educational use. Discover the world of logic circuits.')
   meta(charset='UTF-8')
   meta(name='viewport', content='width=device-width, initial-scale=1.0')
-  link(rel='shortcut icon', href='images/favicon.ico')
+  link(rel='shortcut icon', href='images/favi.png')
   style
     include css/bootstrap.css
     include css/index_style.css
   link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300', rel='stylesheet', type='text/css')
   link(rel='stylesheet', type='text/css', href='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css')
-  link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css")
+  link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
   script(src='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js')
   script.
     window.addEventListener("load", function () {
@@ -29,93 +37,141 @@ head
     }
     })
     });
-.top-menu
-  .container
-    .navbar.navbar-default.navbar-fixed-top(style='background: rgb(50, 50, 50);', role='navigation')
-      .container
-        .navbar-header
-          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-            span.sr-only Toggle navigation
-            span.icon-bar
-            span.icon-bar
-            span.icon-bar
-          a.navbar-brand(href='/')
-            img(src='images/logo_index.png', style='width: 200px;', alt='LogiJS', title='LogiJS')
-        #nav-bar.navbar-collapse.collapse
-          ul.nav.navbar-nav.navbar-right(style='margin-top: 40px;')
+body
+  |   <!-- Google Tag Manager (noscript) -->
+  |   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WKSH2RQ"
+  |   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  |   <!-- End Google Tag Manager (noscript) -->
+  .top-menu#top
+    .container
+      .navbar.navbar-default.navbar-fixed-top(role='navigation')
+        .container
+          ul.nav.navbar-nav.navbar-left
             li
-              a.internal-link(rel='nofollow', href='/', target='_parent') HOME
+              a.internal-link(rel='nofollow', href='/#features', target='_parent') Features
             li
-              a.internal-link(rel='nofollow', href='/library', target='_parent') LIBRARY
-            //li
-              //a.internal-link(rel='nofollow', href='/features', target='_parent') FEATURES
+              a.internal-link(rel='nofollow', href='/#samples', target='_parent') Samples
             li
-              a.external-link(rel='nofollow', href='https://www.github.com/SimonBuxx/LogiJS', target='_parent') GITHUB
-            li.active
-              a.user-button(href='#') #{user.toUpperCase()}
-#blur
-#dashboard_wc_back.carousel
-  form.Logout
-    button.btn.btn-lg.btn-orange(type='submit', role='button' style="margin: 15px; float:left; position: absolute;")
-      <i class="fa fa-sign-out"></i> LOGOUT
-  button.btn.btn-lg.btn-orange(type='submit', onclick="window.location.href='/editor'", role='button' style="margin: 15px; float:right; position: absolute; right: 0;")
-    <i class="fa fa-plus-square"></i> NEW SKETCH
-  h1(style="padding: 15px;") Welcome, #{user}!
-if sketchData.sketches.length === 0
-  #dashboard_item_back.carousel(style={height: 180 + 'px', 'margin-bottom': '100px'})
-    h1(style="padding: 10px; font-size: 24px;") You don't have any sketches.
-    div(style="text-align: center;")
-      button.btn.btn-lg.btn-orange(type='submit', onclick="window.location.href='/editor'", role='button' style="margin: 5px;")
-        <i class="fa fa-plus-square"></i> NEW SKETCH
-      button.btn.btn-lg.btn-green(disabled="true", type='submit', onclick="window.location.href='/editor'", role='button' style="margin: 5px;")
-        <i class="fa fa-graduation-cap"></i> COMING SOON!
-else
-  #dashboard_item_back.carousel(style={height: Math.ceil(sketchData.sketches.length / 4) * 250 + 50 + 'px', 'margin-bottom': '65px'})
-    - var r = 0;
-    while r < Math.ceil(sketchData.sketches.length / 4)
-      - var n = 0;
-      while n < 4
-        if r*4+n < sketchData.sketches.length
+              a.internal-link(rel='nofollow', href='/#about', target='_parent') About
+          .navbar-header
+            button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href='/#top')
+              img#top_logo_small(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
+          .navbar-collapse.collapse
+            ul.nav.navbar-nav.navbar-right
+              li
+                a.user-button.internal-link(rel='nofollow', href='#', target='_parent') <i class="fa fa-user" style="color: #c83232;"></i> #{user}
+              li
+                a.Logout.internal-link(rel='nofollow', href='#', target='_parent') <i class="fa fa-sign-out-alt" style="color: #c83232;"></i> Logout
+  if sketchData.sketches.length === 0
+    .slogan-container
+      h1.background-text(style="top: 50%; transform: translate(0, 50%);") discover the world
+    .outer-dashboard-container(style="min-height: calc(100vh - 260px);")
+      #nosketches_back
+        p#nosketches_message You don't have any sketches
+          span(style="color: #c83232;") .
+        #nosketch_buttons
+          button.btn.btn-lg.btn-orange(type='submit', rel="nofollow", onclick="window.location.href='/#samples'", role='button')
+            <i class="fas fa-stream"></i> View Samples
+          button.btn.btn-lg.btn-orange.hide-in-mobile(type='submit', rel="nofollow", onclick="window.location.href='/editor'", role='button')
+            <i class="fa fa-plus-circle"></i> New Sketch
+      .sidebar.db-sidebar.hide-in-mobile
+          .sticky-bar
+            button#editor-button.btn.btn-lg.btn-orange(type='submit', rel="nofollow", onclick="window.location.href='/editor'", role='button')
+              <i class="fa fa-plus-circle"></i> New Sketch
+            h1 You're new here?
+            p Welcome! This is your dashboard, the place where you'll save all your beautiful creations.
+            p If you're new to the topic of logic circuits, please have a look at our 
+              a(href="/#samples", rel="nofollow", target='_parent') Samples 
+              | and other sources. If you feel ready to explore on your own, create a new sketch by clicking the button above.
+            p We wish you many fun and enjoyable learning experiences!
+  else
+    .outer-dashboard-container(style="min-height: calc(100vh - 260px);")
+      .sidebar.db-sidebar.hide-in-mobile
+          .sticky-bar
+            button#editor-button.btn.btn-lg.btn-orange(type='submit', rel="nofollow", onclick="window.location.href='/editor'", role='button')
+              <i class="fa fa-plus-circle"></i> New Sketch
+            p#click_name #{sketchData.sketches[0]}
+              span(style="color: #c83232;") .
+            img#click_image(src='data:image/png;base64,' + images[0], alt=sketchData.sketches[r])
+            p#click_desc #{descriptions[0]}
+            p#click_date
+            a.click_download.download(rel="nofollow") 
+                <span style="color: #c83232"><i class="fa fa-file-download"></i></span> Download
+            if (user !== 'demouser')
+              a.del.delete.click_delete(rel="nofollow")
+                <span style="color: #c83232"><i class="fa fa-trash-alt"></i></span> Delete
+            else 
+              a.del.click_delete(onclick="alert('Error: This is a demo account!');", rel="nofollow")
+                <span style="color: #c83232"><i class="fa fa-trash-alt"></i></span> Delete
+            button#open-button.click_open.btn.btn-lg.btn-orange(rel="nofollow") 
+                <i class="fa fa-chevron-right"></i> Open
+      .item-container
+        - var r = 0;
+        while r < sketchData.sketches.length
           .sketch_item
-            img.shadow_layer(src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', style={position: 'absolute', left: (n*250+50) + 'px', top: (r*250+50) + 'px', height: '200px', width: '200px'}, alt='')
-            img.normal(src='data:image/png;base64,' + images[r*4+n], style={position: 'absolute', left: (n*250 + 50) + 'px', top: (r*250+50) + 'px', height: '200px', width: '200px'}, alt=sketchData.sketches[r*4+n])
-            .ease_in
-              img.darker(src='data:image/png;base64,' + images[r*4+n], style={position: 'absolute', left: (n*250 + 50) + 'px', top: (r*250+50) + 'px', height: '200px', width: '200px'}, alt=sketchData.sketches[r*4+n])
-            .ease_out
-              p(style={'text-align': 'left', position: 'absolute', left: (n*250 + 60) + 'px', top: (r*250+220) + 'px', 'white-space': 'nowrap', 'padding-right': '10px'}) #{sketchData.sketches[r*4+n].toUpperCase()}
-            .ease_in
-              a(href='/editor?sketch='+sketchData.sketches[r*4+n], style={'text-align': 'center', width: '200px', position: 'absolute', left: (n*250+50) + 'px', top: (r*250+80) + 'px', 'font-size': '16px', 'white-space': 'nowrap', 'padding-left': '10px', 'padding-right': '10px'}) #{sketchData.sketches[r*4+n].slice(0, 20).toUpperCase()} 
-              a(href='/editor?sketch='+sketchData.sketches[r*4+n], style={'text-align': 'left', width: '200px', position: 'absolute', left: (n*250+60) + 'px', top: (r*250+220) + 'px', 'font-size': '14px'}) #{sketchData.modified[r*4+n]}
-              a(href='/editor?sketch='+sketchData.sketches[r*4+n], style={'text-align': 'right', width: '50px', position: 'absolute', left: (n*250+190) + 'px', top: (r*250+220) + 'px', 'font-size': '14px'}) #{sketchData.sizes[r*4+n]} KB
-              if (descriptions[r*4+n].length <= 120)
-                a(href='/editor?sketch='+sketchData.sketches[r*4+n], style={'text-align': 'center', padding: '10px', width: '200px', position: 'absolute', left: (n*250+50) + 'px', top: (r*250+100) + 'px', 'font-size': '14px'}) #{descriptions[r*4+n].slice(0, 120)}
-              else
-                a(href='/editor?sketch='+sketchData.sketches[r*4+n], style={'text-align': 'center', padding: '10px', width: '200px', position: 'absolute', left: (n*250+50) + 'px', top: (r*250+100) + 'px', 'font-size': '14px'}) #{descriptions[r*4+n].slice(0, 120) + '...'}
-            img.top_layer(src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', style={position: 'absolute', left: (n*250+50) + 'px', top: (r*250+50) + 'px', height: '200px', width: '200px'}, alt='', id='tl' + sketchData.sketches[r*4+n])
-            .ease_in
-              //button.btn.btn-lg.rename(type='submit', id='rn' + sketchData.sketches[r*4+n], role='button', style={color: 'white','background-color': 'transparent', position: 'absolute', left: (n*250+85) + 'px', top: (r*250+196) + 'px', padding: '10px', margin: '10px', float: 'left', border: 'none', width: '46px', height: '46px'})
-                i(class="fa fa-pencil")
-              button.btn.btn-lg.download(type='submit', id='dl' + sketchData.sketches[r*4+n], role='button', style={color: 'white','background-color': 'transparent', position: 'absolute', left: (n*250+115) + 'px', top: (r*250+198) + 'px', padding: '10px', margin: '10px', float: 'left', border: 'none', width: '46px', height: '46px'}) 
-                i(class="fa fa-download")
-              if (user !== 'demouser')
-                button.btn.btn-lg.delete(type='submit', id=sketchData.sketches[r*4+n], role='button', style={color: 'white','background-color': 'transparent', position: 'absolute', left: (n*250+145) + 'px', top: (r*250+198) + 'px', padding: '10px', margin: '10px', float: 'left', border: 'none', width: '46px'})
-                  i(class="fa fa-trash-o")
-              else 
-                button.btn.btn-lg(type='submit', onclick="alert('Error: This is a demo account!');", id=sketchData.sketches[r*4+n], role='button', style={color: 'white','background-color': 'transparent', position: 'absolute', left: (n*250+145) + 'px', top: (r*250+198) + 'px', padding: '10px', margin: '10px', float: 'left', border: 'none', width: '46px'})
-                  i(class="fa fa-trash-o")
-        - n++;
-      - r++;
-.footer_bottom
-  .text-center
-    .footer_bottom_content
-      span#footer-line
-        | Copyright &copy; 2020 
-        a(href='https://www.github.com/SimonBuxx') Simon Buchholz
-        |  | 
-      span(style="text-align: right;")
-        a.internal-link(rel='nofollow', href='/legal', target='_parent') Legal Notice
-<script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js'></script>
-script
-  include ../libraries/jquery.min.js
-  include ../libraries/bootstrap.min.js
-  include ../site_scripts/dashboard.js
+            .preview_image
+              img(src='data:image/png;base64,' + images[r], alt=sketchData.sketches[r])
+              span.overlay(onclick='sketch_click(' + r + ')')
+                span.preview-span(id='span' + sketchData.sketches[r]) <i class="fa fa-search"></i> Details
+            p.sketch_name #{sketchData.sketches[r]}
+              span(style="color: #c83232;") .
+          -r++;
+  .footer_bottom
+      .footer_bottom_content
+        .footer_box
+          a.internal-link(rel='nofollow', href='/terms-of-service', target='_parent') Terms of Service
+          a.internal-link(rel='nofollow', href='/legal', target='_parent') Legal Notice
+        .footer_box
+          p(style="text-align: center; display: inline-block; width: 100%;")
+            a(href='https://twitter.com/logi_js', target='_blank', style="margin-right: 5px;")
+              img(src="images/twitter.png" style="width: 40px; margin-top: -20px;")
+            a(href='https://github.com/SimonBuxx/logijs', target='_blank', style="margin-left: 5px;")
+              img(src="images/github_dark.png" style="width: 40px; margin-top: -20px;")
+        .footer_box
+          p(style="text-align: right;") Made with <i class="fas fa-heart" style="color: #c83232;"></i> in Lübeck
+            span(style="color: #c83232;") .
+  script
+    include ../libraries/jquery.min.js
+    include ../libraries/bootstrap.min.js
+    include ../site_scripts/dashboard.js
+  script.
+    if (!{JSON.stringify(sketchData.sketches)}.length > 0) {
+      let date = "!{sketchData.modified}".split(',')[0];
+      let sketch_name = "!{sketchData.sketches}".split(',')[0];
+      sketch_date = new Date(date);
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      document.getElementById('click_date').innerHTML = 'Last edited on ' + sketch_date.toLocaleDateString('en-US', options) + '<span style="color: #c83232;">.</span>';
+      document.getElementsByClassName('click_download')[0].id = 'dl' + sketch_name;
+      document.getElementsByClassName('click_delete')[0].id = sketch_name;
+      document.getElementsByClassName('click_open')[0].onclick = function() {window.location.href='/editor?sketch=' + sketch_name;};
+      document.getElementById('span' + sketch_name).innerHTML = '<i class="fa fa-chevron-right"></i> Open';
+    }
+    function sketch_click(r) {
+      let sketch_name = "!{sketchData.sketches}".split(',')[r];
+      if (document.getElementById('span' + sketch_name).innerHTML === '<i class="fa fa-chevron-right"></i> Open') {
+        window.location.href='/editor?sketch=' + sketch_name;
+      } else {
+        let date = "!{sketchData.modified}".split(',')[r];
+        sketch_date = new Date(date);
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        let sketch_desc = !{JSON.stringify(descriptions)}[r];
+        document.getElementById('click_name').innerHTML = sketch_name + '<span style="color: #c83232;">.</span>';
+        document.getElementById('click_desc').innerHTML = sketch_desc;
+        document.getElementById('click_date').innerHTML = 'Last edited on ' + sketch_date.toLocaleDateString('en-US', options) + '<span style="color: #c83232;">.</span>';
+        document.getElementById('click_image').src = 'data:image/png;base64,' + !{JSON.stringify(images)}[r];
+        document.getElementById('click_image').alt = sketch_name;
+        document.getElementsByClassName('click_download')[0].id = 'dl' + sketch_name;
+        document.getElementsByClassName('click_delete')[0].id = sketch_name;
+        document.getElementsByClassName('click_open')[0].onclick = function() {window.location.href='/editor?sketch=' + sketch_name;};
+        let preview_spans = document.getElementsByClassName('preview-span');
+        for (let i = 0; i < preview_spans.length; i++) {
+          document.getElementsByClassName('preview-span')[i].innerHTML = '<i class="fa fa-search"></i> Details';
+        }
+        document.getElementById('span' + sketch_name).innerHTML = '<i class="fa fa-chevron-right"></i> Open';
+      }
+    }

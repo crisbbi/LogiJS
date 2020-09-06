@@ -24,10 +24,9 @@ module.exports = {
     },
     authenticate({ username, password }) {
         console.log(`Authenticating user ${username}`);
-
         return knex('user').where({ username })
             .then(([user]) => {
-                if (!user) {
+                if (!user || user.username !== username) {
                     return { success: false };
                 }
                 const { hash } = saltHashPassword({
@@ -41,6 +40,12 @@ module.exports = {
                 return { success: false };
             });
     },
+    getEmail(user) {
+        return knex('user').where({ 'username': user }).select('email')
+            .then(data => {
+                return data[0].email;
+            });
+    }
 };
 
 function saltHashPassword({

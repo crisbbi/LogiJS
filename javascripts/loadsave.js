@@ -60,6 +60,7 @@ function loadSketch(file) {
         socket.emit('getUserSketch', { file: file.split('.')[0], access_token: getCookieValue('access_token') });
         socket.on('userSketchData', (data) => {
             if (data.success === true) {
+                setSketchNameLabel(file.split('.')[0]);
                 load(data.data);
             } else {
                 fileNotFoundError();
@@ -75,6 +76,7 @@ function loadSketchFromJSON(data, file) {
     loading = true;
     loadFile = file;
     document.title = 'LogiJS: ' + file;
+    setSketchNameLabel(file);
     load(data);
 }
 
@@ -99,9 +101,6 @@ function load(loadData) {
     currentGridSize = GRIDSIZE;
     actionUndo = []; // Clear Undo / Redo stacks
     actionRedo = [];
-    endSimulation(); // End ongoing simulations
-    disableButtons(true);
-    simButton.elt.disabled = true;
     moduleNameInput.value(loadData.caption);
     // Load all gate parameters and create new gates based on that information
     for (let i = 0; i < loadData.gates.length; i++) {
@@ -351,4 +350,36 @@ function getThisLook() {
         look.outputLabels.push(outputs[i].lbl);
     }
     return look;
+}
+
+function loadURLSketch() {
+    let loadfile = urlParam('sketch');
+    if (loadfile !== '') {
+        if (loadfile.indexOf('lib') === 0) {
+            sketchNameInput.value(loadfile.substring(10));
+        } else {
+            sketchNameInput.value(loadfile);
+        }
+        setLoading(true);
+        loadSketch(loadfile + '.json');
+        socket.emit('getDescription', { file: loadfile, access_token: getCookieValue('access_token') });
+        socket.on('sketchDescription', (data) => {
+            try {
+                let d = JSON.parse(data.data);
+                if (data.success === true) {
+                    descInput.value(d.desc);
+                    moduleNameInput.value(d.caption);
+                }
+            } catch (e) {
+                if (data.success === true) {
+                    descInput.value(data.data);
+                }
+            }
+            socket.off('sketchDescription');
+        });
+    }
+}
+
+function setSketchNameLabel(name) {
+    sketchNameLabel.elt.innerHTML = name;
 }

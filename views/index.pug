@@ -1,18 +1,26 @@
 doctype html
+<html lang="en">
 head
-  title LogiJS: Logic Circuit Simulation
+  |   <!-- Google Tag Manager -->
+  |   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  |   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  |   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  |   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  |   })(window,document,'script','dataLayer','GTM-WKSH2RQ');</script>
+  |   <!-- End Google Tag Manager -->
+  title LogiJS: Logic Circuit Simulator
   meta(name='keywords', content='LogiJS, logic, circuit, simulation, simulator, editor, free, open, source, gate, input, output, sketch, electronics, physics, informatics, it, \
   computer, chip, pcb, design, creator, creation, processor, cpu, logi, js, javascript')
-  meta(name='description', content='LogiJS is a logic circuit simulator built for educational use. Easy to use, yet powerful.')
+  meta(name='description', content='LogiJS is a web-based logic circuit simulator for educational use. Discover the world of logic circuits.')
   meta(charset='UTF-8')
   meta(name='viewport', content='width=device-width, initial-scale=1.0')
-  link(rel='shortcut icon', href='images/favicon.ico')
+  link(rel='shortcut icon', href='images/favi.png')
   link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300', rel='stylesheet', type='text/css')
   style
     include css/bootstrap.css
     include css/index_style.css
   link(rel='stylesheet', type='text/css', href='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css')
-  link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css")
+  link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
   script(src='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js')
   script.
     window.addEventListener("load", function () {
@@ -29,67 +37,215 @@ head
     }
     })
     });
-.top-menu
-  .container
-    .navbar.navbar-default.navbar-fixed-top(style='background: rgb(50, 50, 50);', role='navigation')
-      .container
-        .navbar-header
-          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-            span.sr-only Toggle navigation
-            span.icon-bar
-            span.icon-bar
-            span.icon-bar
-          a.navbar-brand(href='#')
-            img(src='images/logo_index.png', style='width: 200px;', alt='LogiJS', title='LogiJS')
-        #nav-bar.navbar-collapse.collapse
-          ul.nav.navbar-nav.navbar-right(style='margin-top: 40px;')
-            li.active
-              a(href='#') HOME
+body
+  |   <!-- Google Tag Manager (noscript) -->
+  |   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WKSH2RQ"
+  |   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  |   <!-- End Google Tag Manager (noscript) -->
+  .top-menu#top
+    .container
+      .navbar.navbar-default.navbar-fixed-top(role='navigation')
+        .container
+          ul.nav.navbar-nav.navbar-left
             li
-              a.internal-link(rel='nofollow', href='/library', target='_parent') LIBRARY
-            //li
-              //a.internal-link(rel='nofollow', href='/features', target='_parent') FEATURES
+              a.internal-link(rel='nofollow', href='#features', target='_parent') Features
             li
-              a.external-link(rel='nofollow', href='https://www.github.com/SimonBuxx/LogiJS', target='_parent') GITHUB
+              a.internal-link(rel='nofollow', href='#samples', target='_parent') Samples
             li
+              a.internal-link(rel='nofollow', href='#about', target='_parent') About
+          .navbar-header
+            button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href='#top')
+              img#top_logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
+          .navbar-collapse.collapse
+            ul.nav.navbar-nav.navbar-right
               if user !== ''
-                a.internal-link.user-button(rel='nofollow', href='/dashboard', target='_parent') #{user.toUpperCase()}
+                li
+                  a.user-button.internal-link(rel='nofollow', href='/dashboard', target='_parent') <i class="fa fa-user" style="color: #c83232;"></i> #{user}
+                li
+                  a.Logout.internal-link(rel='nofollow', href='#', target='_parent') <i class="fa fa-sign-out-alt" style="color: #c83232;"></i> Logout
               else
-                a.internal-link(rel='nofollow', href='/login', target='_parent', style="margin-left: 60px;") LOGIN
-            if user == ''
-              li
-                a.internal-link(rel='nofollow', href='/signup', target='_parent') REGISTER
-#blur
-#carousel.carousel
-  #caption
+                li
+                  a.login-button.internal-link(rel='nofollow', href='/login', target='_parent') <i class="fa fa-sign-in-alt" style="color: #c83232;"></i> Login
+                li
+                  a.internal-link(rel='nofollow', href='/signup', target='_parent') <i class="fa fa-user-plus" style="color: #c83232;"></i> Register
+  .slogan-container
+    h1.background-text discover the world
     if user !== ''
-      h1 WELCOME, #{user.toUpperCase()}!
+      h1.slogan
+        | Hello, #{user}!
     else
-      h1 WELCOME TO LOGIJS
-    p Logic circuit simulation. Easy to use, yet powerful.
-  p
-    a.btn.btn-lg.btn-orange(href='/editor', role='button' style="margin-right: 6px;") 
-      <i class="fa fa-plus-square"></i> NEW SKETCH
+      h1.slogan
+        | Discover the world
+        br
+        | of logic circuits
+        span(style="color: #c83232;") .
+  .get_started
     if user !== ''
-      a.btn.btn-lg.btn-green(href='/dashboard', role='button')
-        <i class="fa fa-th"></i> DASHBOARD
+      //a.btn.btn-lg.btn-orange(href='/dashboard', rel="nofollow", role='button')
+              <i class="fa fa-th"></i> Dashboard
+      a.btn.btn-lg.btn-orange(href='/editor', rel="nofollow", role='button')
+              <i class="fa fa-plus-circle"></i> New Sketch
     else
-      a.btn.btn-lg.btn-green(href='/signup', role='button')
-        <i class="fa fa-sign-in"></i> REGISTER
-a(href='/editor?sketch=first_steps')
-  img(title='Click here to open this sketch in LogiJS!', src='images/circuit.png', alt='Circuit example', id='demopic')
-.text-center(style='margin: 20px auto; position: fixed; bottom: 30px; width: 100%; display: block;')
-  a(href="https://twitter.com/logi_js?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-screen-name="true" data-show-count="true") Follow @logi_js
-.footer_bottom
-  .text-center
-    .footer_bottom_content
-      span#footer-line
-        | Copyright &copy; 2020 
-        a(href='https://www.github.com/SimonBuxx') Simon Buchholz
-        |  | 
-      span(style="text-align: right;")
-        a.internal-link(rel='nofollow', href='/legal', target='_parent') Legal Notice
-script(async src="https://platform.twitter.com/widgets.js" charset="utf-8")
-script
-  include ../libraries/jquery.min.js
-  include ../libraries/bootstrap.min.js
+      a.btn.btn-lg.btn-orange(href='/editor', rel="nofollow", role='button') 
+            <i class="fa fa-magic"></i> Get started
+  .scroll_down
+    a(href="#features" title="Scroll down") <i class="fa fa-chevron-down fa-4x"></i>
+  #features
+  img#front_teaser(src='images/front_teaser_alt.png', alt='LogiJS Editor', title='LogiJS Editor')
+  .carousel#main-carousel
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+          <ol class="carousel-indicators">
+            <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+            <li data-target="#myCarousel" data-slide-to="1"></li>
+            <li data-target="#myCarousel" data-slide-to="2"></li>
+          </ol>
+          <div class="carousel-inner">
+            <div class="item active">
+              <span class="carousel-text"><h2 class="carousel-caption">Learn the basics of logic<br>gates and circuits<span style="color: #c83232;">.</span></h2>
+                <div class="carousel-button">
+                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                </div>
+              </span> 
+              <img class="carousel-image" src="images/carousel_1_new.png" alt="A LogiJS example sketch showing a traffic light simulation">
+            </div>
+
+            <div class="item">
+              <span class="carousel-text"><h2 class="carousel-caption">Import your circuits as<br>custom components<span style="color: #c83232;">.</span></h2>
+                <div class="carousel-button">
+                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                </div>
+              </span> 
+              <img class="carousel-image" src="images/carousel_2_new.png" alt="A LogiJS example sketch showing a basic cpu structure">
+            </div>
+
+            <div class="item">
+              <span class="carousel-text"><h2 class="carousel-caption">Save and access your<br>circuits online<span style="color: #c83232;">.</span></h2>
+                <div class="carousel-button">
+                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                </div>
+              </span>
+              <img class="carousel-image" src="images/carousel_3_new.png" alt="A LogiJS example sketch showing a more complex cpu structure">
+            </div>
+          </div>
+          <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+            <i class="fa fa-chevron-left fa-3x"></i>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" data-slide="next">
+            <i class="fa fa-chevron-right fa-3x"></i>
+            <span class="sr-only">Next</span>
+          </a>
+        </div>
+  #samples(style="display: block; position: relative; top: -150px; visibility: hidden;")
+  h2.normal-caption Samples
+  .sample-element.left-elem
+    .sample-description
+      a(href="/editor?sketch=library__0gates", rel="nofollow")
+        .image-stack
+          img(src='librarySketches/library__0gates_frame.png', alt="A LogiJS example sketch showing the three basic logic gates")
+        .image-stack
+          img.top-image(src='librarySketches/library__hover.png', alt="A LogiJS example sketch showing the three basic logic gates")
+      .sample-content
+        h3
+          span.red_circle #1
+          |  Basic Gates 
+        p.clear This sketch demonstrates the three basic logic gates, AND, OR and XOR. It also shows the usage of input and output elements. Logic gates are the fundamentals of every logic circuit.
+  .sample-element.right-elem
+    .sample-description
+      a(href="/editor?sketch=library__1halfadder", rel="nofollow")
+        .image-stack
+          img(src='librarySketches/library__1halfadder_frame.png', alt="A LogiJS example sketch showing a half adder")
+        .image-stack
+          img.top-image(src='librarySketches/library__hover.png', alt="A LogiJS example sketch showing a half adder")
+      .sample-content
+        h3
+          span.red_circle #2
+          |  Half Adder
+        p.clear This sketch implements a half adder that is used to add two single binary digits. Half adders can be combined to form full adders, used to add binary numbers.
+  .sample-element.left-elem
+    .sample-description
+      a(href="/editor?sketch=library__2fulladder", rel="nofollow")
+        .image-stack
+          img(src='librarySketches/library__2fulladder_frame.png', alt="A LogiJS example sketch showing a full adder")
+        .image-stack
+          img.top-image(src='librarySketches/library__hover.png', alt="A LogiJS example sketch showing a full adder")
+      .sample-content
+        h3 
+          span.red_circle #3
+          |  Full Adder
+        p.clear This sketch implements a full adder that is used to add two single binary digits. Full adders constist of two half adders, taking two binary digits and a carry bit as inputs. Full adders can be combined to build integer adders of any size.
+  .collapsible
+    .sample-element.right-elem
+      .sample-description
+        a(href="/editor?sketch=library__3traffic", rel="nofollow")
+          .image-stack
+            img(src='librarySketches/library__3traffic_frame.png', alt="A LogiJS example sketch showing a traffic light simulation")
+          .image-stack
+            img.top-image(src='librarySketches/library__hover.png', alt="A LogiJS example sketch showing a traffic light simulation")
+        .sample-content
+          h3 
+            span.red_circle #4
+            |  Traffic Lights
+          p.clear This sketch simulates traffic lights using a 4-bit counter (see example #5) and a diode matrix. There are lights for road traffic and for crossing pedestrians. This example shows the usage of diodes, elements that connect wires in one direction only.
+    .sample-element.left-elem
+      .sample-description
+        a(href="/editor?sketch=library__44BitCounter", rel="nofollow")
+          .image-stack
+            img(src='librarySketches/library__44BitCounter_frame.png', alt="A LogiJS example sketch showing a 4 bit counter")
+          .image-stack
+            img.top-image(src='librarySketches/library__hover.png', alt="A LogiJS example sketch showing a 4 bit counter")
+        .sample-content
+          h3 
+            span.red_circle #5
+            |  4-Bit Counter
+          p.clear This sketch implements a simple counter made using D gates. It is connected to a clock, permanently increasing the binary output value. When the value passes the biggest possible value (fifteen in this case), the counter restarts from zero.
+  .show_all
+    a.btn.btn-lg.btn-orange.all-samples-button
+      <i class="fas fa-stream"></i> Show all
+  #about(style="display: block; position: relative; top: -150px; visibility: hidden;")
+  h2.normal-caption
+    | Who whe are
+    span(style="color: #c83232;") .
+  .justify(style="margin: 0 30% 60px 30%;")
+    p
+      | LogiJS is an open source logic circuit simulator. Logic circuits are everywhere these days and therefore taught at universities worldwide. 
+    p
+      | Our goal is to offer a software 
+      | that isn't only free for everybody, but also encourages students to get creative with logic circuits and develop a deep understanding of the basic concepts. Our goal is not to
+      | build a software for production use or for learning advanced techniques. Instead, we focus on simplicity to create an experimenting playground free of distractions and frustrations.
+    p
+      | Please note that LogiJS is currently in active development. Changes may come rapidly and unanounced. Also, we can't guarantee for possible data loss or damage done trough use of our software.
+  h2.normal-caption
+    | What's in the future
+    span(style="color: #c83232;") .
+  .justify(style="margin: 0 30% 0 30%;")
+    ul
+      li First things first, we will finally complete the selection feature so that you can move, copy and delete sketch parts.
+      li We'd like to have a showroom for user-built circuits, where you can view other user's circuits and edit them as copies in your own dashboards. For this, we need to find a way to handle sketch dependencies (custom elements used in the sketch).
+      li VHDL and Verilog are the most common hardware description languages. We want to support export to at least one of them. This is useful for exporting circuits to FPGAs and other applications.
+      li Users should be able to edit sketches with multiple users at the same time. Users should also get the possibility to share sketches via unique links.
+    p If you have feature suggestions or want to report problems or bugs, please feel free to open an issue in our <a href="https://www.github.com/SimonBuxx/LogiJS">GitHub</a>.
+
+  .footer_bottom
+      .footer_bottom_content
+        .footer_box
+          a.internal-link(rel='nofollow', href='/terms-of-service', target='_parent') Terms of Service
+          a.internal-link(rel='nofollow', href='/legal', target='_parent') Legal Notice
+        .footer_box
+          p(style="text-align: center; display: inline-block; width: 100%;")
+            a(href='https://twitter.com/logi_js', target='_blank', style="margin-right: 5px;")
+              img(src="images/twitter.png" style="width: 40px; margin-top: -20px;")
+            a(href='https://github.com/SimonBuxx/logijs', target='_blank', style="margin-left: 5px;")
+              img(src="images/github_dark.png" style="width: 40px; margin-top: -20px;")
+        .footer_box
+          p(style="text-align: right;") Made with <i class="fas fa-heart" style="color: #c83232;"></i> in Lübeck
+            span(style="color: #c83232;") .
+  script
+    include ../libraries/jquery.min.js
+    include ../libraries/bootstrap.min.js
+    include ../site_scripts/index_page.js

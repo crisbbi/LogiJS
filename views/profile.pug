@@ -1,0 +1,110 @@
+doctype html
+<html lang="en">
+head
+  |   <!-- Google Tag Manager -->
+  |   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  |   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  |   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  |   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  |   })(window,document,'script','dataLayer','GTM-WKSH2RQ');</script>
+  |   <!-- End Google Tag Manager -->
+  title LogiJS: Profile
+  meta(name='keywords', content='LogiJS, logic, circuit, simulation, simulator, editor, free, open, source, gate, input, output, sketch, electronics, physics, informatics, it, \
+  computer, chip, pcb, design, creator, creation, processor, cpu, logi, js, javascript')
+  meta(name='description', content='LogiJS is a web-based logic circuit simulator for educational use. Discover the world of logic circuits.')
+  meta(charset='UTF-8')
+  meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  link(rel='shortcut icon', href='images/favicon.ico')
+  style
+    include css/bootstrap.css
+    include css/index_style.css
+  link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300', rel='stylesheet', type='text/css')
+  link(rel='stylesheet', type='text/css', href='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css')
+  link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js')
+  script.
+    window.addEventListener("load", function () {
+    window.cookieconsent.initialise({
+    "palette": {
+    "popup": {
+    "background": "#323232",
+    "text": "#ffffff"
+    },
+    "button": {
+    "background": "#c83232",
+    "text": "#ffffff"
+    }
+    }
+    })
+    });
+body
+  |   <!-- Google Tag Manager (noscript) -->
+  |   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WKSH2RQ"
+  |   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  |   <!-- End Google Tag Manager (noscript) -->
+  .top-menu
+    .container
+      .navbar.navbar-default.navbar-fixed-top(role='navigation')
+        .container
+          .navbar-header
+            button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href='/')
+              img(src='images/logo_index.png', alt='LogiJS logo', title='LogiJS')
+          .navbar-collapse.collapse
+            ul.nav.navbar-nav.navbar-right
+              li
+                a.internal-link(rel='nofollow', href='/', target='_parent') HOME
+              li
+                a.internal-link(rel='nofollow', href='/samples', target='_parent') SAMPLES
+              li
+                a.external-link(rel='nofollow', href='https://www.github.com/SimonBuxx/LogiJS', target='_parent') GITHUB
+              li
+                a.user-button(href='/dashboard') #{user.toUpperCase()}
+  #blurred-background
+  .profile-mobile-bar.show-in-mobile
+    form#import-button.Import(title="Coming soon!")
+      button.btn.btn-lg.btn-orange(disabled="true", type='submit', role='button')
+        <i class="fa fa-file-upload"></i> IMPORT FILE
+      button#profile-button.btn.btn-lg.btn-orange(type='submit', role='button', onclick="window.location.href='#'")
+        <i class="fa fa-user-circle"></i> PROFILE
+    form#logout-button.Logout
+      button.btn.btn-lg.btn-orange(type='submit', role='button')
+        <i class="fa fa-sign-out-alt"></i> LOGOUT
+  #info-card.card.profile_card
+    img.profile-pic(src="images/default-profile.svg", alt="Profile picture")
+    .profile-data
+      h2 #{user}
+      h3 #{email}
+      h3 Maybe a member since date
+  #password-card.profile_card
+    .profile-data
+      h2 Change Password
+      h3 Here should be two password inputs and one button to change the password.
+  .sidebar.profile-sidebar.hide-in-mobile
+      .sticky-bar
+        button#editor-button.btn.btn-lg.btn-orange(type='submit', rel="nofollow", onclick="window.location.href='/editor'", role='button')
+          <i class="fa fa-plus-circle"></i> NEW SKETCH
+        form#import-button.Import(title="Coming soon!")
+          button.btn.btn-lg.btn-orange(disabled="true", type='submit', role='button')
+            <i class="fa fa-file-upload"></i> IMPORT FILE
+          button#profile-button.btn.btn-lg.btn-orange(type='submit', role='button', onclick="window.location.href='#'")
+            <i class="fa fa-user-circle"></i> PROFILE
+        form#logout-button.Logout
+          button.btn.btn-lg.btn-orange(type='submit', role='button')
+            <i class="fa fa-sign-out-alt"></i> LOGOUT
+  .footer_bottom
+    .text-center
+      .footer_bottom_content
+        span#footer-line
+          a.internal-link(rel='nofollow', href='/terms-of-service', target='_parent') Terms of Service
+          |  | 
+          a.internal-link(rel='nofollow', href='/legal', target='_parent') Legal Notice
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js'></script>
+  script
+    include ../libraries/jquery.min.js
+    include ../libraries/bootstrap.min.js
+    include ../site_scripts/dashboard.js

@@ -14,7 +14,7 @@ let previewSymbol = null;
     Triggers when the mouse wheel is used
 */
 function mouseWheel(event) {
-    if (loading || saveDialog || mouseOverGUI() || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || showCustomDialog || mouseOverGUI() || modifierMenuDisplayed()) { return; }
     if (keyIsDown(18) && !simRunning) { // If the alt key is pressed => scroll trough basic elements
         wheel = Math.sign(event.deltaY);
         addType = Math.max(1, Math.min(9, addType + wheel));
@@ -44,7 +44,7 @@ function mouseWheel(event) {
                 segDisplayClicked(true);
                 break;
             case 9:
-                labelButtonClicked(true);
+                labelButtonClicked(true);          
                 break;
             default:
                 console.log('Invalid object type!');
@@ -194,18 +194,6 @@ function updateCursors() {
             }
         }
     }
-    if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 140, customDialogRows, customDialogColumns);
-        let place = customDialogColumns * pos.row + pos.col + customDialogPage * customDialogColumns * customDialogRows;
-        if (pos.col >= 0 && pos.row >= 0 && place < importSketchData.sketches.length) {
-            hand = true;
-            cursor(HAND);
-            if (importSketchData.looks[place].outputs === 0) {
-                hand = true;
-                cursor('not-allowed');
-            }
-        }
-    }
     if (controlMode === 'select' && selectionBox.mouseOver() && showSelectionBox) {
         hand = true;
         cursor(MOVE);
@@ -329,14 +317,7 @@ function mousePressed() {
 }
 
 function mouseClicked() {
-    if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 140, customDialogRows, customDialogColumns);
-        if (pos.row >= 0 && pos.col >= 0) {
-            importItemClicked(pos.row, pos.col);
-        }
-        return;
-    }
-    if (loading || saveDialog || modifierMenuDisplayed()) {
+    if (loading || saveDialog || justClosedMenu || modifierMenuDisplayed() || mouseOverGUI()) {
         return;
     }
     if (!simRunning && !mouseOverGUI()) {
@@ -388,8 +369,7 @@ function mouseClicked() {
             default:
                 break;
         }
-        redoButton.elt.disabled = (actionRedo.length === 0);
-        undoButton.elt.disabled = (actionUndo.length === 0);
+        updateUndoButtons();
     } else {
         // Buttons should be operateable during simulation
         if (mouseButton === LEFT) {
@@ -409,7 +389,7 @@ function mouseClicked() {
           Finishing the selection process by invoking handleSelection
 */
 function mouseReleased() {
-    if (loading || showCustomDialog || saveDialog) { return; }
+    if (loading || showCustomDialog || saveDialog || mouseOverGUI()) { return; }
     if (modifierMenuDisplayed()) {
         if (!mouseOverGUI() && clickedOutOfGUI) {
             closeModifierMenu();
@@ -596,9 +576,7 @@ function mouseReleased() {
                     console.log('Control mode not supported!');
             }
         }
-        // Enable or disable the Undo-Redo buttons
-        redoButton.elt.disabled = (actionRedo.length === 0);
-        undoButton.elt.disabled = (actionUndo.length === 0);
+        updateUndoButtons();
     } else {
         pwWireX = null;
         pwWireY = null;
@@ -729,7 +707,7 @@ function mouseOverGUI() {
     by calculating dx and dy
 */
 function handleDragging() {
-    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed() || mouseOverGUI()) { return; }
     if (mouseIsPressed && mouseButton === RIGHT && mouseX > 0 && mouseY > 0) {
         if (lastX !== 0) {
             transform.dx += Math.round((mouseX - lastX) * dragSpeed);

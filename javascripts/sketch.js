@@ -153,26 +153,6 @@ let saveDialog = false;
 */
 let showCustomDialog = false;
 
-/*
-    The number of columns for the sketch previews in the custom module dialog
-*/
-let customDialogColumns = 0;
-
-/*
-    The number of rows for the sketch previews in the custom module dialog
-*/
-let customDialogRows = 0;
-
-/*
-    The current page displayed in the custom module dialog
-*/
-let customDialogPage = 0;
-
-/*
-    The number of pages in the custom module dialog
-*/
-let customDialogPages = 0;
-
 let error = '';
 let errordesc = '';
 
@@ -265,10 +245,12 @@ let labelTextBox; // Label elements
 */
 let sequencer;
 
+let leftSideButtons, topLeftButtons, topRightButtons, topButtonsContainer;
+
 let sketchNameInput, moduleNameInput, saveButton, saveDialogText;
-let helpLabel, customDialogText, saveDialogButton, dashboardButton, cancelButton, descInput, newButton, pageUpButton, pageDownButton;
-let deleteButton, simButton, labelBasic, labelAdvanced, labelOptions,
-    andButton, orButton, xorButton, inputButton, buttonButton, clockButton,
+let helpLabel, sketchNameLabel, saveDialogButton, dashboardButton, cancelButton, descInput;
+let deleteButton, simButton, labelBasic, labelAdvanced, labelOptions, labelSimulation,
+    andButton, orButton, xorButton, bufferButton, notButton, inputButton, buttonButton, clockButton,
     outputButton, clockspeedSlider, undoButton, redoButton, modifierModeButton, labelButton, segDisplayButton;
 
 let counterButton, decoderButton, dFlipFlopButton, rsFlipFlopButton, reg4Button,
@@ -279,6 +261,8 @@ let updater, sfcheckbox;
 let gateInputSelect, labelGateInputs, directionSelect, bitSelect, labelDirection, labelBits, counterBitSelect, labelOutputWidth,
     decoderBitSelect, labelInputWidth, multiplexerBitSelect;
 
+let tickTimeSlider, tickTimeLabel, bpTickTimeCB, tickTimeMsLabel;
+
 /*
     This is the socket element used for socket communication with the server
 */
@@ -287,7 +271,12 @@ let socket;
 /*
     This is the main HTML5 canvas variable for the sketch area
 */
-let mainCanvas;
+let mainCanvas, pwCanvas;
+
+let PWp5; // The p5 element for the preview canvas
+
+let lastTickTime = 0;
+let tickTime = 10;
 
 /*
     Disable some error messages from p5
@@ -303,9 +292,24 @@ document.addEventListener('contextmenu', event => event.preventDefault());
     Sets up the canvas and caps the framerate
 */
 function setup() { // jshint ignore:line
-    mainCanvas = createCanvas(windowWidth - 230, windowHeight - 50);     // Creates the canvas in full window size
-    mainCanvas.position(230, 50);
+    topButtonsContainer = createDiv('');
+    topButtonsContainer.elt.className = 'topButtonsContainer';
+
+    //Div for the Top Left Buttons
+    topLeftButtons = createDiv('');
+    topLeftButtons.elt.className = 'topLeftButtons';
+    topLeftButtons.parent(topButtonsContainer);
+
+    //Div for the Top Right Buttons
+    topRightButtons = createDiv('');
+    topRightButtons.elt.className = 'topRightButtons';
+    topRightButtons.parent(topButtonsContainer);
+
+    mainCanvas = createCanvas(windowWidth - 240, windowHeight - 50);     // Creates the canvas in full window size
+    mainCanvas.position(240, 50);
     mainCanvas.id('mainCanvas');
+
+    initPreviewCanvas();
 
     // Prevents the input field from being focused when clicking in the canvas
     document.addEventListener('mousedown', function (event) {
@@ -316,837 +320,28 @@ function setup() { // jshint ignore:line
 
     document.title = 'LogiJS: New Sketch';
 
+    leftSideContainer = createDiv('');
+    //leftSideContainer.elt.style.height = (windowHeight - 74 - 32 - 15).toString() + 'px';
+    leftSideContainer.elt.className = 'scrollContainerLeft';
+    //leftSideContainer.elt.style.margin = '20px 0px';
+
     //Div for the Left Side Buttons
-    let leftSideButtons = createDiv('');
+    leftSideButtons = createDiv('');
     leftSideButtons.elt.className = 'scrollBoxLeft';
-    let height = (windowHeight - 74 - 32 - 15);
-    leftSideButtons.elt.style.height = height.toString() + 'px';
-    leftSideButtons.elt.style.margin = '55px 0px';
+    leftSideButtons.parent(leftSideContainer);
+    leftSideButtons.elt.style.height = Math.min(500, windowHeight - 300) + 'px';
 
-    // Adds text 'Basic'
-    labelBasic = createP('BASIC ELEMENTS');
-    labelBasic.elt.className = 'label';
-    labelBasic.parent(leftSideButtons);
+    createTopButtons();
 
-    // Left Side Buttons
-    // Adds and-gates
-    andButton = createButton('');
-    andButton.mousePressed(function () { andClicked(false); });
-    andButton.elt.className = 'previewButton';
-    andButton.elt.innerHTML = '<img class="preview" src="./views/images/and-gate.png">';
-    andButton.mouseOver(function () {
-        setHelpText('AND-Gate');
-    });
-    andButton.mouseOut(function () {
-        setHelpText('');
-    });
-    andButton.parent(leftSideButtons);
+    createBasicElements();
+    createAdvancedElements();
 
-    // Adds or-gates
-    orButton = createButton('');
-    orButton.mousePressed(function () { orClicked(false); });
-    orButton.elt.className = 'previewButton';
-    orButton.elt.innerHTML = '<img class="preview" src="./views/images/or-gate.png">';
-    orButton.mouseOver(function () {
-        setHelpText('OR-Gate');
-    });
-    orButton.mouseOut(function () {
-        setHelpText('');
-    });
-    orButton.parent(leftSideButtons);
+    createCustomImportButton();
+    createElementOptions();
 
-    // Adds xor-gates
-    xorButton = createButton('');
-    xorButton.mousePressed(function () { xorClicked(false); });
-    xorButton.elt.className = 'previewButton';
-    xorButton.elt.innerHTML = '<img class="preview" src="./views/images/xor-gate.png">';
-    xorButton.mouseOver(function () {
-        setHelpText('XOR-Gate');
-    });
-    xorButton.mouseOut(function () {
-        setHelpText('');
-    });
-    xorButton.parent(leftSideButtons);
+    createDialogElements();
 
-    // Adds switches
-    inputButton = createButton('');
-    inputButton.mousePressed(function () { inputClicked(false); });
-    inputButton.elt.className = 'previewButton';
-    inputButton.elt.innerHTML = '<img class="preview" src="./views/images/switch.png">';
-    inputButton.mouseOver(function () {
-        setHelpText('Switch');
-    });
-    inputButton.mouseOut(function () {
-        setHelpText('');
-    });
-    inputButton.parent(leftSideButtons);
-
-    // Adds buttons (short impulse)
-    buttonButton = createButton('');
-    buttonButton.mousePressed(function () { buttonClicked(false); });
-    buttonButton.elt.className = 'previewButton';
-    buttonButton.elt.innerHTML = '<img class="preview" src="./views/images/button.png">';
-    buttonButton.mouseOver(function () {
-        setHelpText('Button');
-    });
-    buttonButton.mouseOut(function () {
-        setHelpText('');
-    });
-    buttonButton.parent(leftSideButtons);
-
-    // Adds clocks (variable impulse)
-    clockButton = createButton('');
-    clockButton.mousePressed(function () { clockClicked(false); });
-    clockButton.elt.className = 'previewButton';
-    clockButton.elt.innerHTML = '<img class="preview" src="./views/images/clock.png">';
-    clockButton.mouseOver(function () {
-        setHelpText('Clock');
-    });
-    clockButton.mouseOut(function () {
-        setHelpText('');
-    });
-    clockButton.parent(leftSideButtons);
-
-    // Adds outputs (lamps)
-    outputButton = createButton('');
-    outputButton.mousePressed(function () { outputClicked(false); });
-    outputButton.elt.className = 'previewButton';
-    outputButton.elt.innerHTML = '<img class="preview" src="./views/images/output.png">';
-    outputButton.mouseOver(function () {
-        setHelpText('Lamp');
-    });
-    outputButton.mouseOut(function () {
-        setHelpText('');
-    });
-    outputButton.parent(leftSideButtons);
-
-    // Adds 7-segment displays
-    segDisplayButton = createButton('');
-    segDisplayButton.mousePressed(function () { segDisplayClicked(false); });
-    segDisplayButton.elt.className = 'previewButton';
-    segDisplayButton.elt.innerHTML = '<img class="preview" src="./views/images/segments.png">';
-    segDisplayButton.mouseOver(function () {
-        setHelpText('7-Segment Display');
-    });
-    segDisplayButton.mouseOut(function () {
-        setHelpText('');
-    });
-    segDisplayButton.parent(leftSideButtons);
-
-    // Adds labels
-    labelButton = createButton('');
-    labelButton.mousePressed(function () { labelButtonClicked(false); });
-    labelButton.elt.className = 'previewButton';
-    labelButton.elt.innerHTML = '<img class="preview" src="./views/images/label.png">';
-    labelButton.mouseOver(function () {
-        setHelpText('Text Label');
-    });
-    labelButton.mouseOut(function () {
-        setHelpText('');
-    });
-    labelButton.parent(leftSideButtons);
-
-    // Adds text 'Advanced Elements'
-    labelAdvanced = createP('ADVANCED ELEMENTS');
-    labelAdvanced.elt.className = 'label';
-    labelAdvanced.parent(leftSideButtons);
-
-    // Adds an rs-flipflop
-    rsFlipFlopButton = createButton('RS Flip-Flop');
-    rsFlipFlopButton.mousePressed(function () {
-        setActive(rsFlipFlopButton, true);
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ['S', 'R'],
-            outputLabels: ['Q', ''],
-            caption: 'RS-FF',
-            inputs: 2,
-            outputs: 2
-        });
-        return importCustom('rs-flipflop.json');
-    });
-    rsFlipFlopButton.elt.className = 'previewButton';
-    rsFlipFlopButton.elt.innerHTML = '<img class="preview" src="./views/images/rs-flipflop.png">';
-    rsFlipFlopButton.mouseOver(function () {
-        setHelpText('RS Flip-Flop');
-    });
-    rsFlipFlopButton.mouseOut(function () {
-        setHelpText('');
-    });
-    rsFlipFlopButton.parent(leftSideButtons);
-    // Adds a d-flipflop
-    dFlipFlopButton = createButton('D Flip-Flop');
-    dFlipFlopButton.mousePressed(function () {
-        setActive(dFlipFlopButton, true);
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ['D', '>'],
-            outputLabels: ['Q', ''],
-            caption: 'D-FF',
-            inputs: 2,
-            outputs: 2
-        });
-        return importCustom('d-flipflop.json');
-    });
-    dFlipFlopButton.elt.className = 'previewButton';
-    dFlipFlopButton.elt.innerHTML = '<img class="preview" src="./views/images/d-flipflop.png">';
-    dFlipFlopButton.mouseOver(function () {
-        setHelpText('D Flip-Flop');
-    });
-    dFlipFlopButton.mouseOut(function () {
-        setHelpText('');
-    });
-    dFlipFlopButton.parent(leftSideButtons);
-    // Adds a counter
-    counterButton = createButton('Counter');
-    counterButton.mousePressed(function () {
-        setActive(counterButton, true);
-        let opLabels = new Array(counterBitWidth).fill('');
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ['>'],
-            outputLabels: opLabels,
-            caption: 'Counter',
-            inputs: 1,
-            outputs: counterBitWidth
-        });
-        return counterClicked();
-    });
-    counterButton.elt.className = 'previewButton';
-    counterButton.elt.innerHTML = '<img class="preview" src="./views/images/counter.png">';
-    counterButton.mouseOver(function () {
-        setHelpText('Counter');
-    });
-    counterButton.mouseOut(function () {
-        setHelpText('');
-    });
-    counterButton.parent(leftSideButtons);
-    // Adds a decoder
-    decoderButton = createButton('Decoder');
-    decoderButton.mousePressed(function () {
-        setActive(decoderButton, true);
-        let opLabels = [];
-        for (let i = 0; i < Math.pow(2, decoderBitWidth); i++) {
-            opLabels.push(i);
-        }
-        let ipLabels = new Array(decoderBitWidth).fill('');
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ipLabels,
-            outputLabels: opLabels,
-            caption: 'Decoder',
-            inputs: decoderBitWidth,
-            outputs: Math.pow(2, decoderBitWidth)
-        });
-        return decoderClicked();
-    });
-    decoderButton.elt.className = 'previewButton';
-    decoderButton.elt.innerHTML = '<img class="preview" src="./views/images/decoder.png">';
-    decoderButton.mouseOver(function () {
-        setHelpText('Decoder');
-    });
-    decoderButton.mouseOut(function () {
-        setHelpText('');
-    });
-    decoderButton.parent(leftSideButtons);
-    // Adds a multiplexer
-    muxButton = createButton('Multiplexer');
-    muxButton.mousePressed(function () {
-        setActive(muxButton, true);
-        let ipLabels = [];
-        switch (muxBitWidth) {
-            case 1:
-                ipLabels.push('2º');
-                break;
-            case 2:
-                ipLabels.push('2¹');
-                ipLabels.push('2º');
-                break;
-            case 3:
-                ipLabels.push('2²');
-                ipLabels.push('2¹');
-                ipLabels.push('2º');
-                break;
-        }
-        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
-            ipLabels.push(i);
-        }
-        let tops = [];
-        for (let i = 0; i < muxBitWidth; i++) {
-            tops.push(i);
-        }
-        setPreviewElement(true, {
-            tops: tops,
-            inputLabels: ipLabels,
-            outputLabels: [''],
-            caption: 'MUX',
-            inputs: Math.pow(2, muxBitWidth) + muxBitWidth,
-            outputs: 1
-        });
-        return muxClicked();
-    });
-    muxButton.elt.className = 'previewButton';
-    muxButton.elt.innerHTML = '<img class="preview" src="./views/images/mux.png">';
-    muxButton.mouseOver(function () {
-        setHelpText('Multiplexer');
-    });
-    muxButton.mouseOut(function () {
-        setHelpText('');
-    });
-    muxButton.parent(leftSideButtons);
-    // Adds a demultiplexer
-    demuxButton = createButton('Demultiplexer');
-    demuxButton.mousePressed(function () {
-        setActive(demuxButton, true);
-        let ipLabels = [];
-        switch (muxBitWidth) {
-            case 1:
-                ipLabels.push('2º');
-                break;
-            case 2:
-                ipLabels.push('2¹');
-                ipLabels.push('2º');
-                break;
-            case 3:
-                ipLabels.push('2²');
-                ipLabels.push('2¹');
-                ipLabels.push('2º');
-                break;
-        }
-        ipLabels.push('');
-        let tops = [];
-        for (let i = 0; i < muxBitWidth; i++) {
-            tops.push(i);
-        }
-        let opLabels = [];
-        for (let i = 0; i < Math.pow(2, muxBitWidth); i++) {
-            opLabels.push(i);
-        }
-        setPreviewElement(true, {
-            tops: tops,
-            inputLabels: ipLabels,
-            outputLabels: opLabels,
-            caption: 'DEMUX',
-            inputs: 1 + muxBitWidth,
-            outputs: Math.pow(2, muxBitWidth)
-        });
-        return demuxClicked();
-    });
-    demuxButton.elt.className = 'previewButton';
-    demuxButton.elt.innerHTML = '<img class="preview" src="./views/images/demux.png">';
-    demuxButton.mouseOver(function () {
-        setHelpText('Demultiplexer');
-    });
-    demuxButton.mouseOut(function () {
-        setHelpText('');
-    });
-    demuxButton.parent(leftSideButtons);
-    // Adds a register (4Bit)
-    reg4Button = createButton('4Bit-Register');
-    reg4Button.mousePressed(function () {
-        setActive(reg4Button, true);
-        setPreviewElement(true, {
-            tops: [0, 1],
-            inputLabels: ['L', '>', '2³', '2²', '2¹', '2º'],
-            outputLabels: ['2³', '2²', '2¹', '2º'],
-            caption: 'Register',
-            inputs: 6,
-            outputs: 4
-        });
-        return importCustom('4-register.json');
-    });
-    reg4Button.elt.className = 'previewButton';
-    reg4Button.elt.innerHTML = '<img class="preview" src="./views/images/register.png">';
-    reg4Button.mouseOver(function () {
-        setHelpText('4-bit Register');
-    });
-    reg4Button.mouseOut(function () {
-        setHelpText('');
-    });
-    reg4Button.parent(leftSideButtons);
-    // Adds a Half Adder
-    halfaddButton = createButton('Half Adder');
-    halfaddButton.mousePressed(function () {
-        setActive(halfaddButton, true);
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ['', ''],
-            outputLabels: ['', ''],
-            caption: 'HA',
-            inputs: 2,
-            outputs: 2
-        });
-        return importCustom('half_add.json');
-    });
-    halfaddButton.elt.className = 'previewButton';
-    halfaddButton.elt.innerHTML = '<img class="preview" src="./views/images/halfadd.png">';
-    halfaddButton.mouseOver(function () {
-        setHelpText('Half Adder');
-    });
-    halfaddButton.mouseOut(function () {
-        setHelpText('');
-    });
-    halfaddButton.parent(leftSideButtons);
-
-    // Adds a Full Adder
-    fulladdButton = createButton('Full Adder');
-    fulladdButton.mousePressed(function () {
-        setActive(fulladdButton, true);
-        setPreviewElement(true, {
-            tops: [],
-            inputLabels: ['', '', ''],
-            outputLabels: ['', ''],
-            caption: 'FA',
-            inputs: 3,
-            outputs: 2
-        });
-        return importCustom('full_add.json');
-    });
-    fulladdButton.elt.className = 'previewButton';
-    fulladdButton.elt.innerHTML = '<img class="preview" src="./views/images/fulladd.png">';
-    fulladdButton.mouseOver(function () {
-        setHelpText('Full Adder');
-    });
-    fulladdButton.mouseOut(function () {
-        setHelpText('');
-    });
-    fulladdButton.parent(leftSideButtons);
-
-    customButton = createButton('<i class="fa fa-file-import icon"></i> Import own element');
-    customButton.mousePressed(function () { customDialogPage = 0; customClicked(); });
-    customButton.elt.className = 'buttonLeft';
-    customButton.mouseOver(function () {
-        setHelpText('Import your own sketches as custom elements');
-    });
-    customButton.mouseOut(function () {
-        setHelpText('');
-    });
-    customButton.parent(leftSideButtons);
-    if (getCookieValue('access_token') === '') {
-        customButton.elt.disabled = true;
-    }
-
-    // Adds text 'Options'
-    labelOptions = createP('OPTIONS');
-    labelOptions.elt.className = 'label';
-    labelOptions.parent(leftSideButtons);
-    labelOptions.hide();
-
-    helpLabel = createP('<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i>');
-    helpLabel.elt.className = 'label';
-    helpLabel.elt.style.color = 'white';
-    helpLabel.position(745, 5);
-    helpLabel.hide();
-
-    // Adds text 'Gate inputs'
-    labelGateInputs = createP('GATE INPUTS');
-    labelGateInputs.hide();
-    labelGateInputs.elt.className = 'optionLabel';
-    labelGateInputs.parent(leftSideButtons);
-
-    gateInputSelect = createSelect();
-    gateInputSelect.hide();
-    for (let i = 1; i <= 10; i++) {
-        gateInputSelect.option(i);
-    }
-    gateInputSelect.changed(newGateInputNumber);
-    gateInputSelect.elt.className = 'selectLeft';
-    gateInputSelect.parent(leftSideButtons);
-    gateInputSelect.value('2');
-    gateInputSelect.mouseOver(function () {
-        setHelpText('Define the number of gate inputs');
-    });
-    gateInputSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Adds text 'Direction'
-    labelDirection = createP('DIRECTION');
-    labelDirection.hide();
-    labelDirection.elt.className = 'optionLabel';
-    labelDirection.parent(leftSideButtons);
-
-    directionSelect = createSelect();
-    directionSelect.hide();
-    directionSelect.option('Right');
-    directionSelect.option('Up');
-    directionSelect.option('Left');
-    directionSelect.option('Down');
-    directionSelect.changed(newDirection);
-    directionSelect.elt.className = 'selectLeft';
-    directionSelect.parent(leftSideButtons);
-    directionSelect.value('Right');
-    directionSelect.mouseOver(function () {
-        setHelpText('Define the direction of the element');
-    });
-    directionSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Adds text 'Input width'
-    labelBits = createP('INPUT WIDTH');
-    labelBits.hide();
-    labelBits.elt.className = 'optionLabel';
-    labelBits.parent(leftSideButtons);
-
-    // Adds text 'Output width'
-    labelOutputWidth = createP('OUTPUT WIDTH');
-    labelOutputWidth.hide();
-    labelOutputWidth.elt.className = 'optionLabel';
-    labelOutputWidth.parent(leftSideButtons);
-
-    // Adds text 'Input width'
-    labelInputWidth = createP('INPUT WIDTH');
-    labelInputWidth.hide();
-    labelInputWidth.elt.className = 'optionLabel';
-    labelInputWidth.parent(leftSideButtons);
-
-
-    bitSelect = createSelect();
-    bitSelect.hide();
-    for (let i = 1; i <= 8; i++) {
-        bitSelect.option(i);
-    }
-    bitSelect.option('16');
-    bitSelect.option('32');
-    bitSelect.changed(newBitLength);
-    bitSelect.elt.className = 'selectLeft';
-    bitSelect.parent(leftSideButtons);
-    bitSelect.value('4');
-    bitSelect.mouseOver(function () {
-        setHelpText('Define the number of input bits');
-    });
-    bitSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    counterBitSelect = createSelect();
-    counterBitSelect.hide();
-    for (let i = 2; i <= 5; i++) {
-        counterBitSelect.option(i);
-    }
-    counterBitSelect.changed(newCounterBitLength);
-    counterBitSelect.elt.className = 'selectLeft';
-    counterBitSelect.parent(leftSideButtons);
-    counterBitSelect.value('4');
-    counterBitSelect.mouseOver(function () {
-        setHelpText('Define the number of output bits');
-    });
-    counterBitSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    decoderBitSelect = createSelect();
-    decoderBitSelect.hide();
-    for (let i = 2; i <= 5; i++) {
-        decoderBitSelect.option(i);
-    }
-    decoderBitSelect.changed(newDecoderBitLength);
-    decoderBitSelect.elt.className = 'selectLeft';
-    decoderBitSelect.parent(leftSideButtons);
-    decoderBitSelect.value('2');
-    decoderBitSelect.mouseOver(function () {
-        setHelpText('Define the number of input bits');
-    });
-    decoderBitSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    multiplexerBitSelect = createSelect();
-    multiplexerBitSelect.hide();
-    for (let i = 1; i <= 3; i++) {
-        multiplexerBitSelect.option(i);
-    }
-    multiplexerBitSelect.changed(newMuxBitLength);
-    multiplexerBitSelect.elt.className = 'selectLeft';
-    multiplexerBitSelect.parent(leftSideButtons);
-    multiplexerBitSelect.value('1');
-    multiplexerBitSelect.mouseOver(function () {
-        setHelpText('Define the address width of the element');
-    });
-    multiplexerBitSelect.mouseOut(function () {
-        setHelpText('');
-    });
-
-    sfcheckbox = createCheckbox('SYNC TICKS TO FRAMES', true);
-    sfcheckbox.hide();
-    sfcheckbox.changed(function () {
-        syncFramerate = sfcheckbox.checked();
-        if (!sfcheckbox.checked() && simRunning) {
-            updater = setInterval(updateTick, 1);
-        } else {
-            clearInterval(updater);
-        }
-    });
-    sfcheckbox.elt.className = 'checkbox';
-    sfcheckbox.parent(leftSideButtons);
-    sfcheckbox.mouseOver(function () {
-        setHelpText('Synchronize the simulation speed with the frame rate');
-    });
-    sfcheckbox.mouseOut(function () {
-        setHelpText('');
-    });
-
-    //Upper left
-
-    // Activates the edit mode
-    modifierModeButton = createButton('<i class="fa fa-pen icon"></i> Edit');
-    modifierModeButton.position(232, 3);
-    modifierModeButton.mousePressed(function () {
-        enterModifierMode();
-    });
-    modifierModeButton.elt.className = 'button active';
-    modifierModeButton.mouseOver(function () {
-        setHelpText('Draws wires and changes element properties');
-    });
-    modifierModeButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-
-    // Activates the delete mode (objects and wires)
-    deleteButton = createButton('<i class="far fa-trash-alt icon"></i> Delete');
-    deleteButton.position(306, 3);
-    deleteButton.mousePressed(deleteClicked);
-    deleteButton.elt.className = 'button';
-    deleteButton.mouseOver(function () {
-        setHelpText('Deletes wires and elements');
-    });
-    deleteButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Starts and stops the simulation
-    simButton = createButton('<i class="fa fa-play icon"></i> Start');
-    simButton.position(396, 3);
-    simButton.mousePressed(simClicked);
-    simButton.elt.className = 'button';
-    simButton.mouseOver(function () {
-        setHelpText('Starts and stops the simulation');
-    });
-    simButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Undos the last action
-    undoButton = createButton('<i class="fa fa-undo icon"></i> Undo');
-    undoButton.position(476, 3);
-    undoButton.mousePressed(() => {
-        previewSymbol = null;
-        undo();
-    });
-    undoButton.elt.disabled = true;
-    undoButton.elt.className = 'button';
-
-    // Redos the last action
-    redoButton = createButton('<i class="fa fa-redo icon"></i> Redo');
-    redoButton.position(561, 3);
-    redoButton.mousePressed(() => {
-        previewSymbol = null;
-        redo();
-    });
-    redoButton.elt.disabled = true;
-    redoButton.elt.className = 'button';
-
-    // Activates the mode for area selecting
-    selectButton = createButton('<i class="fas fa-object-group icon"></i> Select');
-    selectButton.position(644, 3);
-    selectButton.mousePressed(startSelect);
-    selectButton.elt.style.cursor = 'default';
-    selectButton.elt.className = 'button';
-    selectButton.elt.title = 'Coming soon!';
-
-    moduleNameInput = createInput('');
-    moduleNameInput.attribute('placeholder', 'MODULE NAME');
-    moduleNameInput.position(windowWidth / 2 - 238, windowHeight / 2 - 104);
-    moduleNameInput.elt.style.fontFamily = 'Open Sans';
-    moduleNameInput.elt.className = 'textInput saveInput';
-    moduleNameInput.size(180, 27);
-    moduleNameInput.elt.onkeyup = function () {
-        moduleNameChanged = true;
-        reDraw();
-    };
-    moduleNameInput.hide();
-    moduleNameInput.mouseOver(function () {
-        setHelpText('This is the text written on the module');
-    });
-    moduleNameInput.mouseOut(function () {
-        setHelpText('');
-    });
-
-    sketchNameInput = createInput('');
-    sketchNameInput.attribute('placeholder', 'SKETCH NAME');
-    sketchNameInput.position(windowWidth / 2 - 23, windowHeight / 2 - 104);
-    sketchNameInput.elt.style.fontFamily = 'Open Sans';
-    sketchNameInput.elt.className = 'textInput saveInput';
-    sketchNameInput.elt.onkeyup = function () {
-        if (!moduleNameInput.elt.disabled && !moduleNameChanged) {
-            moduleNameInput.value(sketchNameInput.value());
-        }
-        reDraw();
-    };
-    sketchNameInput.hide();
-    sketchNameInput.mouseOver(function () {
-        setHelpText('This is the file name of the sketch');
-    });
-    sketchNameInput.mouseOut(function () {
-        setHelpText('');
-    });
-
-    descInput = createElement('textarea');
-    descInput.attribute('placeholder', 'SKETCH DESCRIPTION');
-    descInput.position(windowWidth / 2 - 3, windowHeight / 2 - 25);
-    descInput.size(280, 114);
-    descInput.elt.style.fontFamily = 'Open Sans';
-    descInput.elt.style.fontSize = '15px';
-    descInput.elt.className = 'textInput descInput';
-    if (getCookieValue('access_token') === '') {
-        descInput.attribute('placeholder', 'SKETCH DESCRIPTION\n(LOG IN TO GIVE A DESCRIPTION)');
-        descInput.elt.disabled = true;
-    }
-    descInput.hide();
-    descInput.mouseOver(function () {
-        setHelpText('This is the description displayed in the dashboard');
-    });
-    descInput.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Clears the canvas and resets the view
-    newButton = createButton('<i class="fas fa-file icon"></i> New');
-    newButton.position(windowWidth - 290, 3);
-    newButton.elt.style.width = '50px';
-    newButton.mousePressed(function () {
-        if (newButton.html() === 'SURE?') {
-            newButton.elt.className = "button";
-            newButton.html('<i class="fas fa-file icon"></i> New');
-            newClicked();
-        } else {
-            newButton.elt.className = "button active";
-            newButton.html('SURE?');
-            setTimeout(function () { newButton.html('<i class="fas fa-file icon"></i> New'); newButton.elt.className = "button"; }, 3000);
-        }
-    });
-    newButton.elt.className = 'button';
-    newButton.mouseOver(function () {
-        setHelpText('Clears the sketch');
-    });
-    newButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-    // Button to save the sketch
-    if (getCookieValue('access_token') !== '') {
-        saveButton = createButton('SAVE');
-        saveButton.mouseOver(function () {
-            setHelpText('Save this sketch to the dashboard');
-        });
-    } else {
-        saveButton = createButton('DOWNLOAD');
-        saveButton.mouseOver(function () {
-            setHelpText('Download this sketch as a JSON file');
-        });
-    }
-    saveButton.position(windowWidth / 2 + 142, windowHeight / 2 + 110);
-    saveButton.mousePressed(saveClicked);
-    saveButton.elt.className = 'btn btn-lg btn-red';
-    saveButton.hide();
-    saveButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-    cancelButton = createButton('CANCEL');
-    cancelButton.position(windowWidth / 2 - 13, windowHeight / 2 + 110);
-    cancelButton.mousePressed(cancelClicked);
-    cancelButton.elt.className = 'btn btn-lg btn-red';
-    cancelButton.hide();
-
-    pageUpButton = createButton('<i class="fas fa-arrow-up"></i> Up');
-    pageUpButton.position(window.width - 545, window.height - window.height / 5);
-    pageUpButton.style('padding-left', '10px');
-    pageUpButton.style('padding-right', '10px');
-    pageUpButton.mousePressed(function () {
-        if (customDialogPage <= 0) {
-            return;
-        }
-        customDialogPage--;
-        showCustomDialog = false;
-        customClicked();
-    });
-    pageUpButton.elt.className = 'btn btn-lg btn-red';
-    pageUpButton.hide();
-
-    pageDownButton = createButton('<i class="fas fa-arrow-down"></i> Down');
-    pageDownButton.position(window.width - 335, window.height - window.height / 5 + 50);
-    pageDownButton.style('padding-left', '10px');
-    pageDownButton.style('padding-right', '10px');
-    pageDownButton.mousePressed(function () {
-        if (customDialogPage >= customDialogPages) {
-            return;
-        }
-        customDialogPage++;
-        showCustomDialog = false;
-        customClicked();
-    });
-    pageDownButton.elt.className = 'btn btn-lg btn-red';
-    pageDownButton.hide();
-
-    saveDialogButton = createButton('<i class="fas fa-save icon"></i> Save');
-    saveDialogButton.position(windowWidth - 216, 3);
-    saveDialogButton.mousePressed(saveDialogClicked);
-    saveDialogButton.elt.className = 'button';
-    saveDialogButton.mouseOver(function () {
-        setHelpText('Saves the sketch');
-    });
-    saveDialogButton.mouseOut(function () {
-        setHelpText('');
-    });
-
-    if (getCookieValue('access_token') !== '') {
-        dashboardButton = createButton('<i class="fas fa-th icon"></i> Dashboard');
-        dashboardButton.mouseOver(function () {
-            setHelpText('Get back to the dashboard');
-        });
-        dashboardButton.mouseOut(function () {
-            setHelpText('');
-        });
-    } else {
-        dashboardButton = createButton('<i class="fa fa-sign-in-alt icon"></i> Login');
-        dashboardButton.mouseOver(function () {
-            setHelpText('Log into your LogiJS account');
-        });
-        dashboardButton.mouseOut(function () {
-            setHelpText('');
-        });
-    }
-    dashboardButton.elt.style.width = '110px';
-    dashboardButton.mousePressed(function () {
-        if (dashboardButton.html() === 'SURE?') {
-            window.location = '/dashboard';
-        } else {
-            dashboardButton.elt.className = "button active";
-            dashboardButton.html('SURE?');
-            setTimeout(function () { if (getCookieValue('access_token') !== '') { dashboardButton.html('<i class="fas fa-th icon"></i> Dashboard'); } else { dashboardButton.html('<i class="fa fa-sign-in-alt icon"></i> Login'); } dashboardButton.elt.className = "button"; }, 3000);
-        }
-    });
-    dashboardButton.position(windowWidth - 142, 3);
-    dashboardButton.elt.className = 'button';
-
-    saveDialogText = createP('SAVE SKETCH');
-    saveDialogText.hide();
-    saveDialogText.elt.style.color = 'white';
-    saveDialogText.elt.style.fontFamily = 'Open Sans';
-    saveDialogText.elt.style.margin = '3px 0px 0px 0px';
-    saveDialogText.position(windowWidth / 2 - 65, windowHeight / 2 - 160);
-    saveDialogText.style('font-size', '36px');
-
-    customDialogText = createP('IMPORT OWN ELEMENT');
-    customDialogText.hide();
-    customDialogText.elt.style.color = 'white';
-    customDialogText.elt.style.fontFamily = 'Open Sans';
-    customDialogText.elt.style.margin = '3px 0px 0px 0px';
-    customDialogText.position(windowWidth / 2 - 100, 120);
-    customDialogText.style('font-size', '36px');
+    createTopRightButtons();
 
     createModifierElements();
 
@@ -1154,54 +349,35 @@ function setup() { // jshint ignore:line
 
     enterModifierMode();
 
-    //sets font-size for all label elements
-    let guiLabels = document.getElementsByClassName('label');
-    for (let i = 0; i < guiLabels.length; i++) {
-        guiLabels[i].style.fontSize = '16px';
-    }
+    socket = io.connect();
+    loadURLSketch();
 
-    //socket = io.connect();
-
-    let loadfile = urlParam('sketch');
-    if (loadfile !== '') {
-        if (loadfile.indexOf('lib') === 0) {
-            sketchNameInput.value(loadfile.substring(10));
-        } else {
-            sketchNameInput.value(loadfile);
-        }
-        setLoading(true);
-        loadSketch(loadfile + '.json');
-        //socket.emit('getDescription', { file: loadfile, access_token: getCookieValue('access_token') });
-        /*
-        socket.on('sketchDescription', (data) => {
-            try {
-                let d = JSON.parse(data.data);
-                if (data.success === true) {
-                    descInput.value(d.desc);
-                    moduleNameInput.value(d.caption);
-                }
-            } catch (e) {
-                if (data.success === true) {
-                    descInput.value(data.data);
-                }
-            }
-            //socket.off('sketchDescription');
-        });
-        */
-    }
-    /*
     socket.on('demousererror', function () {
         error = 'Saving failed: No permissions!';
         errordesc = 'This is a demo account.';
         reDraw();
         setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
     });
-    */
+
+    socket.on('regexerror', function () {
+        error = 'Saving failed: Forbidden characters!';
+        errordesc = 'Please use only letters and numbers.';
+        reDraw();
+        setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
+    });
+
+    socket.on('nametoolongerror', function () {
+        error = 'Saving failed: Sketch name too long!';
+        errordesc = 'Please keep your file names shorter than 50 characters.';
+        reDraw();
+        setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
+    });
 
     fetchImportData();
 
     reDraw();
     setTimeout(reDraw, 100); // Redraw after 100ms in case fonts weren't loaded on first redraw
+    justClosedMenu = false;
 }
 
 // Credits to https://stackoverflow.com/questions/2405355/how-to-pass-a-parameter-to-a-javascript-through-a-url-and-display-it-on-a-page (Mic)
@@ -1240,17 +416,8 @@ function customClicked() {
     }
     showCustomDialog = true;
     setPreviewElement(false, {}, 'none');
-    setUnactive();
-    disableButtons(true);
-    simButton.elt.disabled = true;
-    saveDialogButton.elt.disabled = true;
-    //closeTutorialButton.elt.disabled = true;
-    //nextStepButton.elt.disabled = true;
-    customButton.elt.disabled = false;
-
     setActive(customButton, true);
     setControlMode('modify');
-    reDraw();
     displayCustomDialog();
 }
 
@@ -1320,18 +487,7 @@ function demuxClicked() {
 
 // Triggered when a sketch should be saved
 function saveClicked() {
-    if (sketchNameInput.value().includes(' ')) {
-        saveDialogText.position(windowWidth / 2 - 105, windowHeight / 2 - 160);
-        saveDialogText.elt.style.color = 'red';
-        saveDialogText.html('No spaces allowed!');
-        setTimeout(function () {
-            saveDialogText.elt.style.color = '#fff';
-            saveDialogText.position(windowWidth / 2 - 65, windowHeight / 2 - 160);
-            saveDialogText.html('Save Sketch');
-        }, 3000);
-        return;
-    }
-
+    setSketchNameLabel(sketchNameInput.value());
     saveSketch(sketchNameInput.value() + '.json', function (look) {
         closeSaveDialog();
         look.desc = descInput.value();
@@ -1349,102 +505,6 @@ function cancelClicked() {
     }
 }
 
-function closeSaveDialog() {
-    saveDialog = false;
-    saveButton.hide();
-    sketchNameInput.hide();
-    moduleNameInput.hide();
-    descInput.hide();
-    saveDialogText.hide();
-    cancelButton.hide();
-    disableButtons(false);
-    simButton.elt.disabled = false;
-    saveDialogButton.elt.disabled = false;
-    justClosedMenu = true;
-}
-
-function closeCustomDialog() {
-    showCustomDialog = false;
-    disableButtons(false);
-    simButton.elt.disabled = false;
-    saveDialogButton.elt.disabled = false;
-    if (controlMode === 'modify') {
-        setActive(modifierModeButton, true);
-    }
-    pageUpButton.hide();
-    pageDownButton.hide();
-    cancelButton.hide();
-    customDialogText.hide();
-    justClosedMenu = true;
-}
-
-// Triggered when a sketch should be loaded
-function loadClicked() {
-    closeModifierMenu();
-    enterModifierMode();
-    document.title = 'LogiJS: ' + sketchNameInput.value();
-    loadSketch(sketchNameInput.value() + '.json');
-    reDraw();
-}
-
-function saveDialogClicked() {
-    endSimulation();
-    if (modifierMenuDisplayed()) {
-        closeModifierMenu();
-        unmarkPropTargets();
-    }
-    enterModifierMode();
-    reDraw();
-    saveDialog = true;
-    saveButton.show();
-    cancelButton.position(windowWidth / 2 - 13, windowHeight / 2 + 110);
-    cancelButton.show();
-    sketchNameInput.show();
-    moduleNameInput.show();
-    descInput.show();
-    saveDialogText.show();
-    previewImg = document.getElementById('mainCanvas').toDataURL('image/png');
-    disableButtons(true);
-    simButton.elt.disabled = true;
-    saveDialogButton.elt.disabled = true;
-    customButton.elt.disabled = true;
-
-    moduleNameChanged = (moduleNameInput.value() !== sketchNameInput.value()) && (moduleNameInput.value() !== '');
-
-    moduleNameInput.elt.disabled = (outputs.length <= 0);
-    if (outputs.length <= 0) {
-        moduleNameInput.value('');
-    } else if (!moduleNameChanged) {
-        moduleNameInput.value(sketchNameInput.value());
-    }
-
-    reDraw();
-}
-
-// Resets the canvas and the view / transformation
-function newClicked() {
-    clearItems();
-    clearActionStacks();
-    hideAllOptions();
-    closeCustomDialog();
-    closeSaveDialog();
-    transform = new Transformation(0, 0, 1);
-    currentGridSize = GRIDSIZE;
-    gateInputCount = 2;
-    gateInputSelect.value('2');
-    gateDirection = 0;
-    directionSelect.value('Right');
-    setLoading(false);
-    endSimulation(); // End the simulation, if started
-    leaveModifierMode();
-    enterModifierMode();
-    wireMode = 'none';
-    document.title = 'LogiJS: New Sketch';
-    sketchNameInput.value('');
-    moduleNameInput.value('');
-    reDraw();
-}
-
 function hideAllOptions() {
     bitSelect.hide();
     labelBits.hide();
@@ -1458,6 +518,7 @@ function hideAllOptions() {
     multiplexerBitSelect.hide();
     labelInputWidth.hide();
     labelOptions.hide();
+    labelSimulation.hide();
 }
 
 /*
@@ -1505,6 +566,8 @@ function setUnactive() {
     andButton.elt.className = 'previewButton';
     orButton.elt.className = 'previewButton';
     xorButton.elt.className = 'previewButton';
+    bufferButton.elt.className = 'previewButton';
+    notButton.elt.className = 'previewButton';
     inputButton.elt.className = 'previewButton';
     buttonButton.elt.className = 'previewButton';
     clockButton.elt.className = 'previewButton';
@@ -1542,45 +605,6 @@ function deleteClicked() {
         let delWires = [[], []];
         let delSegDisplays = [[], []];
         for (let i = 0; i < selection.length; i++) {
-            /*if (selection[i] instanceof LogicGate) {
-                delGates[0].push(selection[i]);
-                delGates[1].push(gates.indexOf(selection[i]));
-            } else if (selection[i] instanceof CustomSketch) {
-                for (const elem of selection[i].responsibles) {
-                    customs.splice(customs.indexOf(elem), 1);
-                }
-                delCustoms[0].push(selection[i]);
-                delCustoms[1].push(customs.indexOf(selection[i]));
-            }
-            else if (selection[i] instanceof Input) {
-                delInputs[0].push(selection[i]);
-                delInputs[1].push(inputs.indexOf(selection[i]));
-            }
-            else if (selection[i] instanceof Label) {
-                delLabels[0].push(selection[i]);
-                delLabels[1].push(labels.indexOf(selection[i]));
-            }
-            else if (selection[i] instanceof Output) {
-                delOutputs[0].push(selection[i]);
-                delOutputs[1].push(outputs.indexOf(selection[i]));
-            }
-            else if (selection[i] instanceof SegmentDisplay) {
-                delSegDisplays[0].push(selection[i]);
-                delSegDisplays[1].push(segDisplays.indexOf(selection[i]));
-            }
-            // Filtering out wires and segments and pushing them into their arrays
-            /*else if (selection[i] instanceof Wire) {
-                // The last selection[] element is the # of wires, therefore
-                // all elements before that index are wires, the rest are segments
-                if (i < selection[selection.length - 1]) {
-                    delWires[0].push(selection[i]);
-                    // Find the index of the wire and push it
-                    delWires[1].push(wireIndizees.pop());
-                } else {
-                    delSegments[0].push(selection[i]);
-                    delSegments[1].push(segIndices.pop());
-                }
-            }*/
             error = 'This feature is coming soon!';
             errordesc = '';
             setTimeout(function () { error = ''; }, 3000); //jshint ignore:line
@@ -1600,14 +624,6 @@ function deleteClicked() {
         for (let j = delOutputs[1].length - 1; j >= 0; j--) {
             outputs.splice(delOutputs[1][j], 1);
         }
-        /*for (let j = delWires[1].length - 1; j >= 0; j--) {
-            //console.log('Deleting wire No. ' + delWires[1][j]);
-            wires.splice(delWires[1][j], 1);
-        }
-        for (let j = delSegments[1].length - 1; j >= 0; j--) {
-            //console.log('Deleting segment No. ' + delSegments[1][j]);
-            segments.splice(delSegments[1][j], 1);
-        }*/
         for (let j = delSegDisplays[1].length - 1; j >= 0; j--) {
             segDisplays.splice(delSegDisplays[1][j], 1);
         }
@@ -1633,6 +649,8 @@ function deleteClicked() {
     This triggers when a label text was altered
 */
 function labelChanged() {
+    textFont('Gudea');
+    textSize(20);
     labels[labelToModify].alterText(labelTextBox.value()); // Alter the text of the selected label
     reDraw();
     positionModifierElements();
@@ -1660,7 +678,10 @@ function newCounterBitLength() {
     counterBitWidth = parseInt(counterBitSelect.value());
     custFile = counterBitWidth + '-counter.json';
     if (isActive(counterButton)) {
-        let opLabels = new Array(counterBitWidth).fill('');
+        let opLabels = [];
+        for (let i = 0; i < counterBitWidth; i++) {
+            opLabels.push(i);
+        }
         setPreviewElement(true, {
             tops: [],
             inputLabels: ['>'],
@@ -1680,7 +701,7 @@ function newDecoderBitLength() {
         for (let i = 0; i < Math.pow(2, decoderBitWidth); i++) {
             opLabels.push(i);
         }
-        let ipLabels = new Array(decoderBitWidth).fill('');
+        let ipLabels = ['2⁴', '2³', '2²', '2¹', '2º'].slice(5 - decoderBitWidth, 5);
         setPreviewElement(true, {
             tops: [],
             inputLabels: ipLabels,
@@ -1785,8 +806,14 @@ function newClockspeed() {
     if (inputToModify >= 0) {
         if (inputs[inputToModify].clock) {
             inputs[inputToModify].speed = 60 - clockspeedSlider.value();
+            console.log(inputs[inputToModify].speed);
         }
     }
+}
+
+function newTickTime() {
+    tickTime = tickTimeSlider.value();
+    tickTimeMsLabel.elt.innerHTML = tickTimeSlider.value() + 'ms';
 }
 
 /* 
@@ -1940,6 +967,7 @@ function segDisplayClicked(dontToggle = false) {
         bitSelect.style('display', 'inline-block');
         labelBits.show();
         labelBits.style('display', 'inline-block');
+        labelOptions.show();
     }
 }
 
@@ -2006,7 +1034,11 @@ function setSelectMode(mode) {
 }
 
 function addWires() {
-    let pushed = false;
+    let pushed = false; // True, when wires have been changed in any way
+
+    // These are set true when a preview wire in that direction is 100% part of the existing wire
+    let overlapOverAllX = false;
+    let overlapOverAllY = false;
 
     let xIndex = -1;
     let yIndex = -1;
@@ -2024,23 +1056,31 @@ function addWires() {
                     let newWire = new Wire(0, Math.min(wires[xIndex].startX, wires[i].startX), wires[xIndex].startY, false, transform);
                     newWire.endX = Math.max(wires[xIndex].endX, wires[i].endX);
                     newWire.endY = wires[xIndex].startY;
-                    editLog.push(['r', xIndex, wires[xIndex], newWire]);
-                    wires.splice(xIndex, 1, newWire);
-                    pushed = true;
-                    deletedIndices.push(i);
+                    if (newWire.startX !== wires[i].startX || newWire.endX !== wires[i].endX) {
+                        editLog.push(['r', xIndex, wires[xIndex], newWire]);
+                        wires.splice(xIndex, 1, newWire);
+                        pushed = true;
+                        deletedIndices.push(i);
+                    } else {
+                        overlapOverAllX = true;
+                    }
                 } else {
                     let newWire = new Wire(0, Math.min(pwWireX.startX, wires[i].startX), pwWireX.startY, false, transform);
                     newWire.endX = Math.max(pwWireX.endX, wires[i].endX);
                     newWire.endY = pwWireX.startY;
-                    editLog.push(['r', i, wires[i], newWire]);
-                    wires.splice(i, 1, newWire);
-                    pushed = true;
-                    xIndex = i;
+                    if (newWire.startX !== wires[i].startX || newWire.endX !== wires[i].endX) {
+                        editLog.push(['r', i, wires[i], newWire]);
+                        wires.splice(i, 1, newWire);
+                        pushed = true;
+                        xIndex = i;
+                    } else {
+                        overlapOverAllX = true;
+                    }
                 }
             }
         }
 
-        if (xIndex < 0) {
+        if (xIndex < 0 && !overlapOverAllX) {
             let newWire = new Wire(0, pwWireX.startX, pwWireX.startY, false, transform);
             newWire.endX = pwWireX.endX;
             newWire.endY = pwWireX.startY;
@@ -2053,29 +1093,38 @@ function addWires() {
     if (pwWireY !== null) {
         for (let i = 0; i < wires.length; i++) {
             let overlap = wireOverlap(pwWireY, wires[i]);
+            // If there's an overlap or the wires are adjacent
             if ((overlap[0] !== overlap[2] || overlap[1] !== overlap[3]) || (wires[i].direction === 1 && pwWireY.startX === wires[i].startX &&
                 (pwWireY.startY == wires[i].endY || pwWireY.startY == wires[i].startY || pwWireY.endY == wires[i].startY || pwWireY.endY == wires[i].endY))) { //jshint ignore:line
                 if (yIndex >= 0) {
                     let newWire = new Wire(1, wires[yIndex].startX, Math.min(wires[yIndex].startY, wires[i].startY), false, transform);
                     newWire.endX = wires[yIndex].startX;
                     newWire.endY = Math.max(wires[yIndex].endY, wires[i].endY);
-                    editLog.push(['r', yIndex, wires[yIndex], newWire]);
-                    wires.splice(yIndex, 1, newWire);
-                    pushed = true;
-                    deletedIndices.push(i);
+                    if (newWire.startY !== wires[i].startY || newWire.endY !== wires[i].endY) {
+                        editLog.push(['r', yIndex, wires[yIndex], newWire]);
+                        wires.splice(yIndex, 1, newWire);
+                        pushed = true;
+                        deletedIndices.push(i);
+                    } else {
+                        overlapOverAllY = true;
+                    }
                 } else {
                     let newWire = new Wire(1, pwWireY.startX, Math.min(pwWireY.startY, wires[i].startY), false, transform);
                     newWire.endX = pwWireY.startX;
                     newWire.endY = Math.max(pwWireY.endY, wires[i].endY);
-                    editLog.push(['r', i, wires[i], newWire]);
-                    wires.splice(i, 1, newWire);
-                    pushed = true;
-                    yIndex = i;
+                    if (newWire.startY !== wires[i].startY || newWire.endY !== wires[i].endY) {
+                        editLog.push(['r', i, wires[i], newWire]);
+                        wires.splice(i, 1, newWire);
+                        pushed = true;
+                        yIndex = i;
+                    } else {
+                        overlapOverAllY = true;
+                    }
                 }
             }
         }
 
-        if (yIndex < 0) {
+        if (yIndex < 0 && !overlapOverAllY) {
             let newWire = new Wire(1, pwWireY.startX, pwWireY.startY, false, transform);
             newWire.endX = pwWireY.startX;
             newWire.endY = pwWireY.endY;
@@ -2404,15 +1453,22 @@ function deleteSegDisplay(segDisNumber) {
 */
 function startSimulation() {
     if (!sfcheckbox.checked()) {
-        updater = setInterval(updateTick, 0);
+        updater = setInterval(updateTick, 1);
     }
 
     setSimButtonText('<i class="fa fa-stop icon"></i> Stop'); // Alter the caption of the Start/Stop button
-    setControlMode('modify');
-    setActive(simButton, true);
-    disableButtons(true);
-    hideAllOptions();
 
+    // Go to modify mode to hide previews etc.
+    setControlMode('modify');
+
+    // Configure the DOMs for simulation mode
+    setActive(simButton, true);
+    configureButtons('simulation');
+    hideAllOptions();
+    leftSideButtons.hide();
+    customButton.hide();
+
+    // Parse all wire groups and attach the components
     parseGroups();
     integrateElements();
 
@@ -2428,8 +1484,15 @@ function startSimulation() {
         customs[i].setSimRunning(true);
     }
 
-    labelOptions.show();
+    labelSimulation.show();
+
+    // Show the frame sync checkbox
     sfcheckbox.show();
+
+    tickTimeLabel.show();
+    tickTimeMsLabel.show();
+    tickTimeSlider.show();
+    bpTickTimeCB.show();
 
     // Start the simulation and exit the modifier mode
     simRunning = true;
@@ -2445,9 +1508,21 @@ function startSimulation() {
 function endSimulation() {
     clearInterval(updater); // Stop the unsynced simulation updater
     setSimButtonText('<i class="fa fa-play icon"></i> Start'); // Set the button caption to 'Start'
-    updateUndoButtons();
-    labelOptions.hide();
+    configureButtons('edit');
+
+    // Hide the checkbox
+    labelSimulation.hide();
     sfcheckbox.hide();
+
+    // Hide the tick time slider
+    tickTimeLabel.hide();
+    tickTimeMsLabel.hide();
+    tickTimeSlider.hide();
+
+    bpTickTimeCB.hide();
+
+    leftSideButtons.show();
+    customButton.show();
 
     groups = []; // Reset the groups, as they are regenerated when starting again
     for (const elem of gates) {
@@ -2473,8 +1548,9 @@ function endSimulation() {
         elem.setState(false);
     }
     for (const elem of wires) {
-        elem.state = false;
+        elem.setState(false);
     }
+
     simRunning = false;
     reDraw();
 }
@@ -2488,82 +1564,102 @@ function setSimButtonText(text) {
     depending on the state of the stack
 */
 function updateUndoButtons() {
-    redoButton.elt.disabled = (actionRedo.length === 0);
-    undoButton.elt.disabled = (actionUndo.length === 0);
     if (loading) {
         redoButton.elt.disabled = true;
         undoButton.elt.disabled = true;
+    } else {
+        redoButton.elt.disabled = (actionRedo.length === 0);
+        undoButton.elt.disabled = (actionUndo.length === 0);
     }
 }
 
-/*
-    Enables or disables all buttons that should not be
-    clickable during simulation
-    Also alters the color of the labels on the left
-*/
-function disableButtons(status) {
-    if (status) {
-        /*andButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/and-gate.png">';
-        orButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/or-gate.png">';
-        xorButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/xor-gate.png">';
-        inputButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/switch.png">';
-        outputButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/output.png">';
-        segDisplayButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/segments.png">';
-        buttonButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/button.png">';
-        clockButton.elt.innerHTML = '<img style="filter: brightness(50%);" class="preview" src="images/clock.png">';*/
+function configureButtons(mode) {
+    let toolbox, modifiers, simulation, customimport, savedialog;
+    if (mode === 'edit') {
+        toolbox = false;
+        modifiers = false;
+        savedialog = false;
+        simulation = false;
+        customimport = false;
+    } else if (mode === 'simulation') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = false;
+        simulation = false;
+        customimport = true;
+        //leftSideButtons.style('display', 'none');
+    } else if (mode === 'savedialog') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = true;
+        simulation = true;
+        customimport = true;
+    } else if (mode === 'customdialog') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = true;
+        simulation = true;
+        customimport = false;
+    } else if (mode === 'loading') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = true;
+        simulation = true;
+        customimport = true;
+    } else {
+        toolbox = false;
+        modifiers = false;
+        savedialog = false;
+        simulation = false;
+        customimport = false;
+    }
+    andButton.elt.disabled = toolbox;
+    orButton.elt.disabled = toolbox;
+    xorButton.elt.disabled = toolbox;
+    bufferButton.elt.disabled = toolbox;
+    notButton.elt.disabled = toolbox;
+    inputButton.elt.disabled = toolbox;
+    outputButton.elt.disabled = toolbox;
+    segDisplayButton.elt.disabled = toolbox;
+    labelButton.elt.disabled = toolbox;
+    buttonButton.elt.disabled = toolbox;
+    clockButton.elt.disabled = toolbox;
+
+    reg4Button.elt.disabled = toolbox;
+    decoderButton.elt.disabled = toolbox;
+    counterButton.elt.disabled = toolbox;
+    muxButton.elt.disabled = toolbox;
+    demuxButton.elt.disabled = toolbox;
+    dFlipFlopButton.elt.disabled = toolbox;
+    rsFlipFlopButton.elt.disabled = toolbox;
+    halfaddButton.elt.disabled = toolbox;
+    fulladdButton.elt.disabled = toolbox;
+
+    customButton.elt.disabled = (customimport || (getCookieValue('access_token') === ''));
+
+    modifierModeButton.elt.disabled = modifiers;
+    deleteButton.elt.disabled = modifiers;
+    selectButton.elt.disabled = true;
+    if (!modifiers) {
+        updateUndoButtons();
+    } else {
         undoButton.elt.disabled = true;
         redoButton.elt.disabled = true;
-    } else {
-        /*andButton.elt.innerHTML = '<img class="preview" src="images/and-gate.png">';
-        orButton.elt.innerHTML = '<img class="preview" src="images/or-gate.png">';
-        xorButton.elt.innerHTML = '<img class="preview" src="images/xor-gate.png">';
-        inputButton.elt.innerHTML = '<img class="preview" src="images/switch.png">';
-        outputButton.elt.innerHTML = '<img class="preview" src="images/output.png">';
-        segDisplayButton.elt.innerHTML = '<img class="preview" src="images/segments.png">';
-        buttonButton.elt.innerHTML = '<img class="preview" src="images/button.png">';
-        clockButton.elt.innerHTML = '<img class="preview" src="images/clock.png">';*/
-        updateUndoButtons();
     }
-    andButton.elt.disabled = status;
-    orButton.elt.disabled = status;
-    xorButton.elt.disabled = status;
-    inputButton.elt.disabled = status;
-    outputButton.elt.disabled = status;
-    segDisplayButton.elt.disabled = status;
-    buttonButton.elt.disabled = status;
-    clockButton.elt.disabled = status;
-    deleteButton.elt.disabled = status;
-    selectButton.elt.disabled = true; // !!!
-    reg4Button.elt.disabled = status;
-    decoderButton.elt.disabled = status;
-    counterButton.elt.disabled = status;
-    muxButton.elt.disabled = status;
-    demuxButton.elt.disabled = status;
-    dFlipFlopButton.elt.disabled = status;
-    rsFlipFlopButton.elt.disabled = status;
-    halfaddButton.elt.disabled = status;
-    fulladdButton.elt.disabled = status;
-    if (getCookieValue('access_token') !== '') {
-        customButton.elt.disabled = status;
-    }
-    modifierModeButton.elt.disabled = status;
-    labelButton.elt.disabled = status;
-    // Sets the colors of the labels
-    /*if (status) {
-        labelBasic.elt.style.color = '#969696';
-        labelAdvanced.elt.style.color = '#969696';
-    } else {
-        labelBasic.elt.style.color = '#969696';
-        labelAdvanced.elt.style.color = '#969696';
-    }*/
+    simButton.elt.disabled = simulation;
+    saveDialogButton.elt.disabled = savedialog;
 }
 
 /*
     Executes in every frame, draws everything and updates the sketch logic
 */
 function draw() {
+    //console.log(passedUpdateTime);
     if (simRunning) {
-        updateTick(); // Updates the circuit logic
+        if (!syncFramerate || (syncFramerate && performance.now() - lastTickTime >= tickTime)) {
+            updateTick(); // Updates the circuit logic
+            lastTickTime = performance.now();
+        }
         reDraw(); // Redraw all elements of the sketch
     } else {
         if ((wireMode === 'preview' || wireMode === 'delete') && !mouseOverGUI() && !modifierMenuDisplayed()) {
@@ -2696,7 +1792,7 @@ function reDraw() {
     }
 
     if (loading && !showCustomDialog) {
-        showMessage('LOADING...', loadFile.split('.json')[0]);
+        showMessage('Loading sketch...', loadFile.split('.json')[0]);
     }
 
     if (error !== '') {
@@ -2707,12 +1803,8 @@ function reDraw() {
         showSaveDialog();
     }
 
-    if (showCustomDialog) {
-        textFont('Gudea');
-    }
-
     // Draw the zoom and framerate labels
-    textFont('Gudea');
+    textFont('ArcaMajora3');
     textAlign(LEFT, TOP);
     textSize(12);
     fill(0);
@@ -2721,116 +1813,12 @@ function reDraw() {
     text(Math.round(frameRate()), window.width - 20, window.height - 20); // Framerate label
 }
 
-function showMessage(msg, subline = '') {
-    textFont('Open Sans');
-    fill(0, 0, 0, 80);
-    noStroke();
-    rect(0, 0, window.width, window.height);
-
-    fill(50);
-    noStroke();
-    rect(window.width / 2 - 250, window.height / 2 - 75, 500, 150, 10);
-    fill(255);
-    textSize(30);
-    textAlign(CENTER, CENTER);
-    text(msg, window.width / 2, window.height / 2 - 20);
-    textSize(20);
-    text(subline, window.width / 2, window.height / 2 + 30);
-}
-
-function showSaveDialog() {
-    fill('rgba(50, 50, 50, 1)');
-    noStroke();
-    rect(window.width / 2 - 365, window.height / 2 - 208, 580, 385, 10);
-    showPreviewImage();
-}
-
-function displayCustomDialog() {
-    pageUpButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 - 10);
-    pageDownButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 + 50);
-    fill(50, 50, 50);
-    noStroke();
-    rect(Math.round(window.width / 8), 50, customDialogColumns * 220 + 220, customDialogRows * 220 + 90, 10);
-    cancelButton.position(Math.round(window.width / 8) + customDialogColumns * 220 + 260, customDialogRows * 220 + 110);
-    cancelButton.show();
-    customDialogText.show();
-    for (let i = 0; i < importSketchData.sketches.length; i++) {
-        showCustomItem(i + 1, importSketchData.views/images[i], importSketchData.sketches[i], importSketchData.looks[i]);
-    }
-    if (customDialogPages > 0 && customDialogPage < customDialogPages) {
-        pageDownButton.show();
-    } else {
-        pageDownButton.hide();
-    }
-    if (customDialogPage > 0) {
-        pageUpButton.show();
-    } else {
-        pageUpButton.hide();
-    }
-}
-
 function fetchImportData() {
-    /*
-    customDialogColumns = Math.floor((window.width - 150 - window.width / 4) / 220);
-    customDialogRows = Math.floor((window.height - window.height / 10) / 220);
     socket.emit('getImportSketches', { access_token: getCookieValue('access_token') });
     socket.on('importSketches', (data) => {
         socket.off('importSketches'); 
         importSketchData = data;
-        customDialogPages = Math.ceil(Math.ceil(data.sketches.length / customDialogColumns) / customDialogRows) - 1;
     });
-    */
-}
-
-function showCustomItem(place, img, caption, look) {
-    let row = Math.ceil(place / customDialogColumns - 1) - (customDialogPage * customDialogRows);
-    let x = ((place - 1) % customDialogColumns) * 220 + Math.round(window.width / 8) + 40;
-    let y = (row * 220) + 140;
-    if (row >= customDialogRows || row < 0) {
-        return;
-    }
-    if (img !== '') {
-        img = 'data:image/png;base64,' + img;
-        let raw = new Image(200, 200);
-        raw.src = img;
-        img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAQAAAAHUWYVAAABV0lEQVR4Ae3YBxEAMRADMafwxxwU6RKFHd+XnpKDIIggCCIIggiCIIKwWk8NFoIggiCIIAgiCIIIgiD4dWIhCCIIggiCIILgOwQLEQRBBEEQQRBEEARBEEHwL8tCEEQQBBEEQRDEdwgWIgiCCIIggiAIggiCIH6dYCGCIIggCIIggiCID0MsRBAEEQRBEEQQfIdYCIIIgiCCIAiCCIIggiCIf1lYiCAI8idBBEEQQfAdYiEIIgiCIIggCCIIggiCXycWgiAIIgiCCIIggiCIIAhCDxaChVgIFmIhCOJkYSGC4GRhIRaChQiCk2UhCOJkYSFYiIUgiJOFhVgIFmIhWAiCOFlYiCA4WRaChVgIguBkWQgWYiEI4mRhIRaChSCIk4WFWAgWIghOloUgCE6WhWAhFoIgThYWYiFYCII4WViIhWAhguBkWQgWgoUIgpNlIViIhSDIFwafxgPUTiURLQAAAABJRU5ErkJggg==';
-        let gradientRaw = new Image(200, 200);
-        gradientRaw.src = img;
-        raw.onload = function () {
-            let normal_img = createImage(200, 200);
-            normal_img.drawingContext.drawImage(raw, 0, 0);
-            normal_img.drawingContext.drawImage(gradientRaw, 0, 0);
-            fill(0);
-            image(normal_img, x, y);
-            if (look.hasOwnProperty('outputs')) {
-                if (look.outputs > 0) {
-                    showImportPreview(look, x, y);
-                }
-            }
-            fill('rgba(0, 0, 0, 0)');
-            strokeWeight(10);
-            stroke(50, 50, 50);
-            rect(x, y, 200, 200, 10);
-            noStroke();
-            fill(255);
-            textSize(16);
-            text(caption.toUpperCase(), x + 10, y + 170);
-        };
-    }
-}
-
-/*
-    This is executed when the user clicks on an item in the custom dialog
-    row, col: row and column of the item the user clicked on
-*/
-function importItemClicked(row, col) {
-    let place = customDialogColumns * row + col + customDialogPage * customDialogColumns * customDialogRows; // Calculate the array position of the custom module
-    if (place >= importSketchData.sketches.length || importSketchData.looks[place].outputs === 0) {
-        return; // If the place should be greater than the number of available modules or the module has no outputs, return.
-    }
-    setActive(customButton, true); // Set the custom modules button as activated
-    setPreviewElement(true, importSketchData.looks[place]); // Show a preview of the module at the users mouse position
-    importCustom(importSketchData.sketches[place] + '.json'); // Import the module on mouse click
 }
 
 /*
@@ -2864,7 +1852,7 @@ function showElements() {
     }
 
     if (customs.length > 0) {
-        textFont('Open Sans');
+        textFont('Arial');
         for (const elem of customs) {
             if (elem.visible) {
                 elem.show();
@@ -2947,8 +1935,14 @@ function keyPressed() {
             case CONTROL:
                 //startSelect();
                 console.log(wires.length);
+                // Uncomment to make screenshots
+                //let img  = canvas.toDataURL("image/png");
+                //document.write('<img src="'+img+'"/>');
                 break;
             case 32: // Space
+                if (simRunning) {
+                    return;
+                }
                 if (controlMode !== 'delete') {
                     deleteClicked();
                 } else {
@@ -2978,16 +1972,13 @@ function keyPressed() {
             default:
                 break;
         }
-    } else if (keyCode === RETURN) { // Load the sketch when the textInput is active
-        loadClicked();
     }
 }
 
 function setHelpText(str) {
     if (str !== '') {
         helpLabel.elt.innerHTML = '<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i> ' + str;
-        helpLabel.style('font-size', '15px');
-        helpLabel.show();
+        helpLabel.style('display', 'inline-block');
     } else {
         helpLabel.hide();
     }
@@ -2995,15 +1986,11 @@ function setHelpText(str) {
 
 function setLoading(l) {
     loading = l;
-    disableButtons(l);
-    simButton.elt.disabled = l;
-    saveDialogButton.elt.disabled = l;
-    if (getCookieValue('access_token') !== '') {
-        customButton.elt.disabled = l;
+    if (loading) {
+        configureButtons('loading');
+    } else {
+        configureButtons('edit');
     }
-    //closeTutorialButton.elt.disabled = l;
-    //nextStepButton.elt.disabled = l;
-    updateUndoButtons();
     reDraw();
 }
 
