@@ -2,10 +2,11 @@
 // Contains functions for the modifier mode
 
 function enterModifierMode() {
+    closeCustomDialog();
     setControlMode('modify');
     setSelectMode('none');
     setActive(modifierModeButton, true);
-    disableButtons(false);
+    configureButtons('edit');
     addType = 0;
 }
 
@@ -152,44 +153,46 @@ function showLabelPropMenu() {
 }
 
 function showModifierMenu() {
-    fill('rgba(50, 50, 50, 0.9)');
     noStroke();
+    fill('rgba(0, 0, 0, 0.5)');
+    rect(0, 0, windowWidth, windowHeight);
+    fill(255);
     strokeCap(SQUARE);
     if (inputToModify >= 0) {
         modifierMenuX = (inputs[inputToModify].x + transform.dx - 1) * transform.zoom;
         modifierMenuY = (inputs[inputToModify].y + transform.dy + GRIDSIZE + 2) * transform.zoom;
         if (!inputs[inputToModify].clock) {
-            rect(modifierMenuX, modifierMenuY, 250, 100);
+            rect(modifierMenuX, modifierMenuY, 300, 120, 10);
         } else {
-            rect(modifierMenuX, modifierMenuY, 250, 150);
+            rect(modifierMenuX, modifierMenuY, 300, 170, 10);
         }
     } else if (outputToModify >= 0) {
         modifierMenuX = (outputs[outputToModify].x + transform.dx - GRIDSIZE / 2 - 1) * transform.zoom;
         modifierMenuY = (outputs[outputToModify].y + transform.dy + GRIDSIZE / 2 + 2) * transform.zoom;
-        rect(modifierMenuX, modifierMenuY, 250, 100);
+        rect(modifierMenuX, modifierMenuY, 300, 130, 10);
     } else if (labelToModify >= 0) {
         modifierMenuX = (labels[labelToModify].x + transform.dx - GRIDSIZE / 2 - 1) * transform.zoom;
         modifierMenuY = (labels[labelToModify].y + transform.dy + GRIDSIZE / 2 + GRIDSIZE * (labels[labelToModify].lines.length - 1) + 2) * transform.zoom;
-        rect(modifierMenuX, modifierMenuY, 250, 150);
+        rect(modifierMenuX, modifierMenuY, 300, 170, 10);
     }
     strokeCap(ROUND);
 }
 
 function positionModifierElements() {
-    sequencer.position(modifierMenuX + 332, modifierMenuY + 27);
+    sequencer.position(modifierMenuX + 442, modifierMenuY + 67);
 
-    captionInput.position(modifierMenuX + 150, modifierMenuY + 30);
-    inputIsTopBox.position(modifierMenuX + 160, modifierMenuY + 80);
-    clockspeedSlider.position(modifierMenuX + 190, modifierMenuY + 130);
-    minusLabel.position(modifierMenuX + 168, modifierMenuY + 121);
-    plusLabel.position(modifierMenuX + 365, modifierMenuY + 125);
+    captionInput.position(modifierMenuX + 250, modifierMenuY + 70);
+    inputIsTopBox.position(modifierMenuX + 280, modifierMenuY + 120);
+    clockspeedSlider.position(modifierMenuX + 300, modifierMenuY + 170);
+    minusLabel.position(modifierMenuX + 278, modifierMenuY + 161);
+    plusLabel.position(modifierMenuX + 475, modifierMenuY + 165);
 
-    redButton.position(modifierMenuX + 195, modifierMenuY + 90);
-    yellowButton.position(modifierMenuX + 235, modifierMenuY + 90);
-    greenButton.position(modifierMenuX + 275, modifierMenuY + 90);
-    blueButton.position(modifierMenuX + 315, modifierMenuY + 90);
+    redButton.position(modifierMenuX + 250, modifierMenuY + 130);
+    yellowButton.position(modifierMenuX + 316, modifierMenuY + 130);
+    greenButton.position(modifierMenuX + 382, modifierMenuY + 130);
+    blueButton.position(modifierMenuX + 448, modifierMenuY + 130);
 
-    labelTextBox.position(modifierMenuX + 160, modifierMenuY + 40);
+    labelTextBox.position(modifierMenuX + 240, modifierMenuY + 100);
 }
 
 function newIsTopState() {
@@ -337,66 +340,97 @@ function setColorButtonsUnactive() {
 
 function createColorButtons() {
     redButton = createButton('');
-    redButton.size(40, 25);
+    redButton.size(60, 30);
     redButton.elt.className = 'colorButton redButton';
-    redButton.elt.title = 'Make this output red';
     redButton.mousePressed(function () {
         newOutputColor(0);
     });
+    redButton.mouseOver(function () {
+        setHelpText('Set the output color to red');
+    });
+    redButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     yellowButton = createButton('');
-    yellowButton.size(40, 25);
+    yellowButton.size(60, 30);
     yellowButton.elt.className = 'colorButton yellowButton';
-    yellowButton.elt.title = 'Make this output yellow';
     yellowButton.mousePressed(function () {
         newOutputColor(1);
     });
+    yellowButton.mouseOver(function () {
+        setHelpText('Set the output color to yellow');
+    });
+    yellowButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     greenButton = createButton('');
-    greenButton.size(40, 25);
+    greenButton.size(60, 30);
     greenButton.elt.className = 'colorButton greenButton';
-    greenButton.elt.title = 'Make this output green';
     greenButton.mousePressed(function () {
         newOutputColor(2);
     });
+    greenButton.mouseOver(function () {
+        setHelpText('Set the output color to green');
+    });
+    greenButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     blueButton = createButton('');
-    blueButton.size(40, 25);
+    blueButton.size(60, 30);
     blueButton.elt.className = 'colorButton blueButton';
-    blueButton.elt.title = 'Make this output blue';
     blueButton.mousePressed(function () {
         newOutputColor(3);
+    });
+    blueButton.mouseOver(function () {
+        setHelpText('Set the output color to blue');
+    });
+    blueButton.mouseOut(function () {
+        setHelpText('');
     });
 
     setColorButtonVisibility(false);
 }
 
 function createModifierElements() {
-    inputIsTopBox = createCheckbox('Pin this to the top', false);
+    inputIsTopBox = createCheckbox('Pin to the top', false);
     inputIsTopBox.hide();
     inputIsTopBox.changed(newIsTopState);
     inputIsTopBox.elt.className = 'topBox';
-    inputIsTopBox.elt.title = 'Select this to fix the pin of this input on top of this sketch\'s custom module';
+    inputIsTopBox.mouseOver(function () {
+        setHelpText('On an exported module, this input should appear on top of the element');
+    });
+    inputIsTopBox.mouseOut(function () {
+        setHelpText('');
+    });
 
     minusLabel = createP('-');
     minusLabel.hide();
-    minusLabel.elt.style.color = 'white';
+    minusLabel.elt.style.color = '#323232';
     minusLabel.elt.style.fontFamily = 'Open Sans';
     minusLabel.elt.style.margin = '3px 0px 0px 0px';
     minusLabel.style('font-size', '30px');
 
     captionInput = createInput('');
-    captionInput.elt.style.fontFamily = 'Open Sans';
+    captionInput.elt.style.fontFamily = 'ArcaMajora3';
     captionInput.hide();
     captionInput.size(167, 15);
-    captionInput.attribute('placeholder', 'Pin name');
+    captionInput.attribute('placeholder', 'Pin Name');
     captionInput.input(newCaption);
     captionInput.elt.className = "textInput";
-    captionInput.elt.title = 'This is the name that will appear on the corresponding pin on the custom module.';
+    captionInput.style('font-size', '20px');
+    captionInput.mouseOver(function () {
+        setHelpText('Caption of the corresponding pin on an exported module');
+    });
+    captionInput.mouseOut(function () {
+        setHelpText('');
+    });
 
     plusLabel = createP('+');
     plusLabel.hide();
-    plusLabel.elt.style.color = 'white';
+    plusLabel.elt.style.color = '#323232';
     plusLabel.elt.style.fontFamily = 'Open Sans';
     plusLabel.elt.style.margin = '3px 0px 0px 0px';
     plusLabel.style('font-size', '30px');
@@ -407,22 +441,45 @@ function createModifierElements() {
         newClockspeed();
     });
     clockspeedSlider.elt.className = 'slider';
-    clockspeedSlider.elt.title = 'Clock speed';
+    clockspeedSlider.mouseOver(function () {
+        setHelpText('Sets the toggle speed of this clock element');
+    });
+    clockspeedSlider.mouseOut(function () {
+        setHelpText('');
+    });
+
+    /*labelTextCaption = createP('Label Caption<span style="color: #c83232">.</span>');
+    labelTextCaption.hide();
+    labelTextCaption.elt.style.color = '#323232';
+    labelTextCaption.elt.style.fontFamily = 'Open Sans';
+    labelTextCaption.elt.style.margin = '3px 0px 0px 0px';
+    labelTextCaption.style('font-size', '30px');*/
 
     labelTextBox = createElement('textarea');
     labelTextBox.elt.className = 'labelTextBox';
     labelTextBox.attribute('placeholder', 'New Label');
     labelTextBox.hide();
-    labelTextBox.size(215, 115);
+    labelTextBox.size(260, 90);
     labelTextBox.elt.onkeyup = labelChanged;
+    labelTextBox.mouseOver(function () {
+        setHelpText('Edit the text of this label');
+    });
+    labelTextBox.mouseOut(function () {
+        setHelpText('');
+    });
 
     sequencer = createSelect();
     sequencer.hide();
-    sequencer.size(43, 33);
+    sequencer.size(42, 33);
     sequencer.changed(sequencerChanged);
     fillSequencer(1);
     sequencer.elt.className = 'sequencer';
-    sequencer.elt.title = 'Change order';
+    sequencer.mouseOver(function () {
+        setHelpText('Position of the corresponding pin on an exported module');
+    });
+    sequencer.mouseOut(function () {
+        setHelpText('');
+    });
 
     createColorButtons();
 }

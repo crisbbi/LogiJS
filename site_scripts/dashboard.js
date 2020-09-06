@@ -1,23 +1,13 @@
-let socket = io.connect();
 let confButton = '';
 
-/*let sketchData = [];
-
-sketchData = fetch('/sketches')
-    .then(function (res) {
-        return res.json();
+const Logout = document.querySelectorAll('.Logout');
+for (const button of Logout) {
+    button.addEventListener('click', (e) => { //jshint ignore:line
+        e.preventDefault();
+        setCookie('access_token', '', -1);
+        window.location = '/';
     });
-
-sketchData.then(function (data) {
-    console.log(data);
-});*/
-
-const Logout = document.querySelector('.Logout');
-Logout.addEventListener('submit', (e) => {
-    e.preventDefault();
-    setCookie('access_token', '', -1);
-    window.location = '/';
-});
+}
 
 const openButtons = document.querySelectorAll(".btn.open");
 for (const button of openButtons) {
@@ -26,33 +16,23 @@ for (const button of openButtons) {
     });
 }
 
-const openImages = document.querySelectorAll(".top_layer");
-for (const image of openImages) {
-    image.addEventListener('click', function (event) { //jshint ignore:line
-        window.location = '/editor?sketch=' + event.target.id.substring(2);
-    });
-}
-
-const deleteButtons = document.querySelectorAll(".btn.delete");
+const deleteButtons = document.querySelectorAll(".delete");
 for (const button of deleteButtons) {
     button.addEventListener('click', function (event) { //jshint ignore:line
-        /*if (confButton !== event.target.id) {
-            button.value = 'SURE?';
-            if (confButton !== '') {
-                document.querySelector('.delete#' + confButton).value = 'Delete';
-            }
+        if (confButton !== event.target.id) {
+            button.innerHTML = '<i class="fa fa-exclamation-circle" style="color: #c83232"></i> SURE?';
             confButton = event.target.id;
-        } else {*/
-            //((confButton = '';
+        } else {
+            confButton = '';
             post('/delete', {
                 sketch: event.currentTarget.id
             });
             location.reload();
-        //}
+        }
     });
 }
 
-const downloadButtons = document.querySelectorAll(".btn.download");
+const downloadButtons = document.querySelectorAll(".download");
 for (const button of downloadButtons) {
     button.addEventListener('click', function (event) { //jshint ignore:line
         event.preventDefault();

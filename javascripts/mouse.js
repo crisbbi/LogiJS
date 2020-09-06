@@ -14,7 +14,7 @@ let previewSymbol = null;
     Triggers when the mouse wheel is used
 */
 function mouseWheel(event) {
-    if (loading || saveDialog || mouseOverGUI() || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || showCustomDialog || mouseOverGUI() || modifierMenuDisplayed()) { return; }
     if (keyIsDown(18) && !simRunning) { // If the alt key is pressed => scroll trough basic elements
         wheel = Math.sign(event.deltaY);
         addType = Math.max(1, Math.min(9, addType + wheel));
@@ -44,7 +44,7 @@ function mouseWheel(event) {
                 segDisplayClicked(true);
                 break;
             case 9:
-                labelButtonClicked(true);
+                labelButtonClicked(true);          
                 break;
             default:
                 console.log('Invalid object type!');
@@ -194,18 +194,6 @@ function updateCursors() {
             }
         }
     }
-    if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, customDialogRows, customDialogColumns);
-        let place = customDialogColumns * pos.row + pos.col + customDialogPage * customDialogColumns * customDialogRows;
-        if (pos.col >= 0 && pos.row >= 0 && place < importSketchData.sketches.length) {
-            hand = true;
-            cursor(HAND);
-            if (importSketchData.looks[place].outputs === 0) {
-                hand = true;
-                cursor('not-allowed');
-            }
-        }
-    }
     if (controlMode === 'select' && selectionBox.mouseOver() && showSelectionBox) {
         hand = true;
         cursor(MOVE);
@@ -329,14 +317,7 @@ function mousePressed() {
 }
 
 function mouseClicked() {
-    if (showCustomDialog) {
-        let pos = mouseOverImport(Math.round(window.width / 8) + 40, 90, customDialogRows, customDialogColumns);
-        if (pos.row >= 0 && pos.col >= 0) {
-            importItemClicked(pos.row, pos.col);
-        }
-        return;
-    }
-    if (loading || saveDialog || modifierMenuDisplayed()) {
+    if (loading || saveDialog || justClosedMenu || modifierMenuDisplayed() || mouseOverGUI()) {
         return;
     }
     if (!simRunning && !mouseOverGUI()) {
@@ -388,8 +369,7 @@ function mouseClicked() {
             default:
                 break;
         }
-        redoButton.elt.disabled = (actionRedo.length === 0);
-        undoButton.elt.disabled = (actionUndo.length === 0);
+        updateUndoButtons();
     } else {
         // Buttons should be operateable during simulation
         if (mouseButton === LEFT) {
@@ -409,7 +389,7 @@ function mouseClicked() {
           Finishing the selection process by invoking handleSelection
 */
 function mouseReleased() {
-    if (loading || showCustomDialog || saveDialog) { return; }
+    if (loading || showCustomDialog || saveDialog || mouseOverGUI()) { return; }
     if (modifierMenuDisplayed()) {
         if (!mouseOverGUI() && clickedOutOfGUI) {
             closeModifierMenu();
@@ -596,11 +576,10 @@ function mouseReleased() {
                     console.log('Control mode not supported!');
             }
         }
-        // Enable or disable the Undo-Redo buttons
-        redoButton.elt.disabled = (actionRedo.length === 0);
-        undoButton.elt.disabled = (actionUndo.length === 0);
+        updateUndoButtons();
     } else {
-        pwSegments = [];
+        pwWireX = null;
+        pwWireY = null;
         wireMode = 'none';
         lockElements = false;
     }
@@ -692,14 +671,14 @@ function mouseOverSegDisplay() {
 function mouseOverImport(baseX, baseY, rows, cols) {
     let mx = mouseX - baseX;
     let my = mouseY - baseY;
-    if (mx % 240 > 200 || my % 240 > 200) {
+    if (mx % 220 > 200 || my % 220 > 200) {
         return {
             row: -1,
             col: -1
         };
     }
-    mx = Math.floor(mx / 240);
-    my = Math.floor(my / 240);
+    mx = Math.floor(mx / 220);
+    my = Math.floor(my / 220);
     if (my >= rows || mx >= cols || mx < 0 || my < 0) {
         return {
             row: -1,
@@ -718,7 +697,7 @@ function mouseOverGUI() {
         return true;
     }*/
     if (controlMode === 'modify' && inputToModify + outputToModify + labelToModify >= -2) {
-        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 250 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 150;
+        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 300 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 170;
     }
     return (mouseY < 0) || (mouseX < 0);
 }
@@ -728,7 +707,7 @@ function mouseOverGUI() {
     by calculating dx and dy
 */
 function handleDragging() {
-    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed() || mouseOverGUI()) { return; }
     if (mouseIsPressed && mouseButton === RIGHT && mouseX > 0 && mouseY > 0) {
         if (lastX !== 0) {
             transform.dx += Math.round((mouseX - lastX) * dragSpeed);
