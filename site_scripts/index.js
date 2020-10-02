@@ -14,7 +14,6 @@ const PORT = 8080;
 
 let jwt_handler = require('./jwt_module.js');
 let user_data = require('./user_data.js');
-let library = require('./samples.js');
 
 let server = app.listen(PORT, () => {
     console.log('Server running http://localhost:' + PORT);
@@ -87,6 +86,12 @@ router.get('/', function (req, res) {
     });
 });
 
+router.get('/getstarted', function (req, res) {
+    res.render('getstarted', {
+        user: getUser(req)
+    });
+});
+
 router.get('/editor', function (req, res) {
     let user = getUser(req);
     if (user !== '') {
@@ -148,29 +153,6 @@ router.get('/dashboard', function (req, res) {
             sketchData: data.sketches,
             images: data.images,
             descriptions: data.descriptions
-        });
-    });
-});
-
-router.get('/profile', function (req, res) {
-    let user = getUser(req);
-    store.getEmail(user).then(email => {
-        res.render('profile', {
-            user: user,
-            email: email
-        });
-    });
-});
-
-router.get('/samples', function (req, res) {
-    let user = getUser(req);
-    library.getLibrarySketches(function (data) {
-        res.render('samples', {
-            user: user,
-            sketches: data.sketches,
-            images: data.images,
-            descriptions: data.descriptions,
-            sketchNames: data.sketchNames
         });
     });
 });

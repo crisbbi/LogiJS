@@ -5,9 +5,13 @@ function scrollFunction() {
         document.getElementById("front_teaser").style.opacity = "0";
         document.getElementById("main-carousel").style.opacity = "1";
     } else {
-        document.getElementById("top_logo").style.width = "350px";
         document.getElementById("front_teaser").style.opacity = "1";
-        document.getElementById("main-carousel").style.opacity = "0";
+        if (document.body.clientWidth >= 1024) {
+            document.getElementById("main-carousel").style.opacity = "0";
+            document.getElementById("top_logo").style.width = "350px";
+        } else {
+            document.getElementById("top_logo").style.width = "200px";
+        }
     }
 }
 
@@ -39,6 +43,10 @@ if (currentTheme === 'dark') {
     document.documentElement.classList.toggle('dark-theme');
     document.getElementById('top_logo').src = 'images/logo_index_new_white.png';
     document.getElementById('mode-button').innerHTML = '<i class="fa fa-sun red"></i>';
+    document.getElementById('front_teaser').src = 'images/front_teaser.png';
+    document.getElementById('carousel-1').src = 'images/carousel_1_new_dark.png';
+    document.getElementById('carousel-2').src = 'images/carousel_2_new_dark.png';
+    document.getElementById('carousel-3').src = 'images/carousel_3_new_dark.png';
 }
 
 document.getElementById('mode-button').addEventListener('click', function () {
@@ -48,10 +56,18 @@ document.getElementById('mode-button').addEventListener('click', function () {
         theme = 'dark';
         document.getElementById('top_logo').src = 'images/logo_index_new_white.png';
         document.getElementById('mode-button').innerHTML = '<i class="fa fa-sun red"></i>';
+        document.getElementById('front_teaser').src = 'images/front_teaser.png';
+        document.getElementById('carousel-1').src = 'images/carousel_1_new_dark.png';
+        document.getElementById('carousel-2').src = 'images/carousel_2_new_dark.png';
+        document.getElementById('carousel-3').src = 'images/carousel_3_new_dark.png';
     } else {
         theme = 'light';
         document.getElementById('top_logo').src = 'images/logo_index_new.png';
         document.getElementById('mode-button').innerHTML = '<i class="fa fa-moon red"></i>';
+        document.getElementById('front_teaser').src = 'images/front_teaser_white.png';
+        document.getElementById('carousel-1').src = 'images/carousel_1_new.png';
+        document.getElementById('carousel-2').src = 'images/carousel_2_new.png';
+        document.getElementById('carousel-3').src = 'images/carousel_3_new.png';
     }
     localStorage.setItem('theme', theme);
 });

@@ -6,7 +6,7 @@ function createTopButtons() {
     });
     modifierModeButton.elt.className = 'button active';
     modifierModeButton.mouseOver(function () {
-        setHelpText('Draws wires and changes element properties');
+        setHelpText('Draw wires and change element properties');
     });
     modifierModeButton.mouseOut(function () {
         setHelpText('');
@@ -18,7 +18,7 @@ function createTopButtons() {
     deleteButton.mousePressed(deleteClicked);
     deleteButton.elt.className = 'button';
     deleteButton.mouseOver(function () {
-        setHelpText('Deletes wires and elements');
+        setHelpText('Delete wires and elements');
     });
     deleteButton.mouseOut(function () {
         setHelpText('');
@@ -31,7 +31,7 @@ function createTopButtons() {
     simButton.elt.className = 'button';
     simButton.style('min-width', simButton.width + 10 + 'px');
     simButton.mouseOver(function () {
-        setHelpText('Starts and stops the simulation');
+        setHelpText('Start and stop the Simulation');
     });
     simButton.mouseOut(function () {
         setHelpText('');
@@ -42,6 +42,7 @@ function createTopButtons() {
     undoButton = createButton('<i class="fa fa-undo icon"></i> Undo');
     undoButton.mousePressed(() => {
         undo();
+        moduleButton.elt.disabled = (outputs.length === 0);
     });
     undoButton.elt.disabled = true;
     undoButton.elt.className = 'button';
@@ -51,6 +52,7 @@ function createTopButtons() {
     redoButton = createButton('<i class="fa fa-redo icon"></i> Redo');
     redoButton.mousePressed(() => {
         redo();
+        moduleButton.elt.disabled = (outputs.length === 0);
     });
     redoButton.elt.disabled = true;
     redoButton.elt.className = 'button';
@@ -59,19 +61,41 @@ function createTopButtons() {
     // Activates the mode for area selecting
     selectButton = createButton('<i class="fas fa-object-group icon"></i> Select');
     selectButton.mousePressed(startSelect);
-    selectButton.elt.style.cursor = 'default';
     selectButton.elt.className = 'button';
-    selectButton.elt.title = 'Coming soon!';
     selectButton.parent(topLeftButtons);
+    selectButton.mouseOver(function () {
+        setHelpText('Select an area to move, copy or delete');
+    });
+    selectButton.mouseOut(function () {
+        setHelpText('');
+    });
+
+    moduleButton = createButton('<i class="fas fa-tools icon"></i> Module');
+    moduleButton.mousePressed(function () {
+        if (!moduleOptions) {
+            enterModifierMode();
+            showModuleOptions();
+            setActive(moduleButton, true);
+        } else {
+            hideModuleOptions();
+            enterModifierMode();
+        }
+    });
+    moduleButton.elt.disabled = (outputs.length === 0);
+    moduleButton.elt.className = 'button';
+    moduleButton.parent(topLeftButtons);
+
+    moduleButton.mouseOver(function () {
+        setHelpText('Configure this Sketch as a Custom Module');
+    });
+    moduleButton.mouseOut(function () {
+        setHelpText('');
+    });
 
     helpLabel = createP('<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i>');
     helpLabel.elt.className = 'label inlineLabel';
     helpLabel.parent(topLeftButtons);
     helpLabel.hide();
-
-    sketchNameLabel = createP('Untitled Sketch');
-    sketchNameLabel.elt.className = 'label inlineLabel sketchNameLabel';
-    sketchNameLabel.parent(topRightButtons);
 }
 
 function createBasicElements() {
@@ -527,7 +551,11 @@ function createAdvancedElements() {
     labelButton = createButton('');
     labelButton.mousePressed(function () { labelButtonClicked(false); });
     labelButton.elt.className = 'previewButton';
-    labelButton.elt.innerHTML = '<img class="preview" src="images/label.png">';
+    if (currentTheme === 'dark') {
+        labelButton.elt.innerHTML = '<img class="preview" src="images/label_white.png">';
+    } else {
+        labelButton.elt.innerHTML = '<img class="preview" src="images/label.png">';
+    }
     labelButton.mouseOver(function () {
         setHelpText('Text Label');
     });
@@ -544,7 +572,7 @@ function createCustomImportButton() {
     });
     customButton.elt.className = 'buttonLeft';
     customButton.mouseOver(function () {
-        setHelpText('Import your own sketches as custom modules');
+        setHelpText('Import your own Sketches as Custom Modules');
     });
     customButton.mouseOut(function () {
         setHelpText('');
@@ -588,7 +616,7 @@ function createElementOptions() {
     gateInputSelect.parent(leftSideContainer);
     gateInputSelect.value('2');
     gateInputSelect.mouseOver(function () {
-        setHelpText('Define the number of gate inputs');
+        setHelpText('Define the number of Gate Inputs');
     });
     gateInputSelect.mouseOut(function () {
         setHelpText('');
@@ -647,7 +675,7 @@ function createElementOptions() {
     bitSelect.parent(leftSideContainer);
     bitSelect.value('4');
     bitSelect.mouseOver(function () {
-        setHelpText('Define the number of input bits');
+        setHelpText('Define the number of Input Bits');
     });
     bitSelect.mouseOut(function () {
         setHelpText('');
@@ -663,7 +691,7 @@ function createElementOptions() {
     counterBitSelect.parent(leftSideContainer);
     counterBitSelect.value('4');
     counterBitSelect.mouseOver(function () {
-        setHelpText('Define the number of output bits');
+        setHelpText('Define the number of Output Bits');
     });
     counterBitSelect.mouseOut(function () {
         setHelpText('');
@@ -679,7 +707,7 @@ function createElementOptions() {
     decoderBitSelect.parent(leftSideContainer);
     decoderBitSelect.value('2');
     decoderBitSelect.mouseOver(function () {
-        setHelpText('Define the number of input bits');
+        setHelpText('Define the number of Input Bits');
     });
     decoderBitSelect.mouseOut(function () {
         setHelpText('');
@@ -695,48 +723,54 @@ function createElementOptions() {
     multiplexerBitSelect.parent(leftSideContainer);
     multiplexerBitSelect.value('1');
     multiplexerBitSelect.mouseOver(function () {
-        setHelpText('Define the address width of the element');
+        setHelpText('Define the Address Width of the element');
     });
     multiplexerBitSelect.mouseOut(function () {
         setHelpText('');
     });
 
-    sfcheckbox = createCheckbox('Sync ticks to frames', true);
-    //document.getElementsByTagName('label')[0].innerHTML = 'Sync ticks to frames<span style="color: #c83232">.</span>';
+    sfcheckbox = createCheckbox('Sync Ticks to Frames', true);
     sfcheckbox.hide();
     sfcheckbox.changed(function () {
         syncFramerate = sfcheckbox.checked();
         if (!sfcheckbox.checked() && simRunning) {
-            updater = setInterval(updateTick, 1);
             tickTimeLabel.elt.className = 'label disabledLabel';
             tickTimeMsLabel.elt.className = 'label msLabel disabledLabel';
+            multiplicatorLabel.elt.className = 'label msLabel';
+            multDescLabel.elt.className = 'label leftLabel';
             tickTimeSlider.elt.disabled = true;
+            multiplicatorSlider.elt.disabled = false;
+
             document.getElementsByClassName('tickTimeCB')[0].disabled = true;
             document.getElementsByClassName('tickTimeCB')[1].className = 'tickTimeCB disabledLabel';
+
+            newMultiplicator();
         } else {
-            clearInterval(updater);
             if (tickTime > 0) {
                 tickTimeLabel.elt.className = 'label';
                 tickTimeMsLabel.elt.className = 'label msLabel';
                 tickTimeSlider.elt.disabled = false;
             }
+            multiplicatorSlider.elt.disabled = true;
+            multiplicatorLabel.elt.className = 'label msLabel disabledLabel';
+            multDescLabel.elt.className = 'label leftLabel disabledLabel';
             bpTickTimeCB.show();
             document.getElementsByClassName('tickTimeCB')[0].disabled = false;
             document.getElementsByClassName('tickTimeCB')[1].className = 'tickTimeCB';
+            stopTicks = true;
         }
     });
     sfcheckbox.elt.className = 'checkbox';
     sfcheckbox.parent(leftSideContainer);
     sfcheckbox.mouseOver(function () {
-        setHelpText('Synchronize the simulation speed with the frame rate');
+        setHelpText('Sync the Simulation Speed with the Frame Rate');
     });
     sfcheckbox.mouseOut(function () {
         setHelpText('');
     });
 
-    bpTickTimeCB = createCheckbox('Bypass min. tick time', true);
-    //document.getElementsByTagName('label')[1].innerHTML = 'Bypass min. tick time<span style="color: #c83232">.</span>';
-    document.getElementsByTagName('input')[2].className = 'tickTimeCB';
+    bpTickTimeCB = createCheckbox('Bypass min. ms/tick', true);
+    document.getElementsByTagName('input')[6].className = 'tickTimeCB';
     document.getElementsByTagName('label')[1].className = 'tickTimeCB';
     bpTickTimeCB.hide();
     bpTickTimeCB.checked(false);
@@ -757,15 +791,15 @@ function createElementOptions() {
     bpTickTimeCB.elt.className = 'checkbox';
     bpTickTimeCB.parent(leftSideContainer);
     bpTickTimeCB.mouseOver(function () {
-        setHelpText('Synchronize simulation without using a minimum time per tick');
+        setHelpText('Simulate with full Frame Rate Speed');
     });
     bpTickTimeCB.mouseOut(function () {
         setHelpText('');
     });
 
-    tickTimeLabel = createP('Minimum time per tick:');
+    tickTimeLabel = createP('Minimum ms/tick');
     tickTimeLabel.hide();
-    tickTimeLabel.elt.className = 'label';
+    tickTimeLabel.elt.className = 'label leftLabel';
     tickTimeLabel.parent(leftSideContainer);
 
     tickTimeSlider = createSlider(0, 100, 10, 1);
@@ -776,7 +810,7 @@ function createElementOptions() {
     tickTimeSlider.elt.className = 'slider sliderLeft';
     tickTimeSlider.parent(leftSideContainer);
     tickTimeSlider.mouseOver(function () {
-        setHelpText('Sets the minimum time per simulation tick');
+        setHelpText('Set the minimum time per Simulation Tick');
     });
     tickTimeSlider.mouseOut(function () {
         setHelpText('');
@@ -786,125 +820,158 @@ function createElementOptions() {
     tickTimeMsLabel.hide();
     tickTimeMsLabel.elt.className = 'label msLabel';
     tickTimeMsLabel.parent(leftSideContainer);
+
+    multDescLabel = createP('Speed Multiplier');
+    multDescLabel.hide();
+    multDescLabel.elt.className = 'label leftLabel disabledLabel';
+    multDescLabel.parent(leftSideContainer);
+    multDescLabel.elt.disabled = true;
+
+    multiplicatorSlider = createSlider(1, 10, 1, 1);
+    multiplicatorSlider.hide();
+    multiplicatorSlider.input(function () {
+        newMultiplicator();
+    });
+    multiplicatorSlider.elt.className = 'slider sliderLeft';
+    multiplicatorSlider.parent(leftSideContainer);
+    multiplicatorSlider.mouseOver(function () {
+        setHelpText('Speed up the Simulation at higher CPU cost');
+    });
+    multiplicatorSlider.mouseOut(function () {
+        setHelpText('');
+    });
+    multiplicatorSlider.elt.disabled = true;
+
+    multiplicatorLabel = createP('1');
+    multiplicatorLabel.hide();
+    multiplicatorLabel.elt.className = 'label msLabel disabledLabel';
+    multiplicatorLabel.parent(leftSideContainer);
+    multiplicatorLabel.elt.disabled = true;
 }
 
 function createDialogElements() {
-    moduleNameInput = createInput('');
-    moduleNameInput.attribute('placeholder', 'Module Name');
-    moduleNameInput.position(windowWidth / 2 - 238, windowHeight / 2 - 104);
-    moduleNameInput.elt.style.fontFamily = 'ArcaMajora3';
-    moduleNameInput.elt.className = 'textInput saveInput';
-    moduleNameInput.size(180, 27);
-    moduleNameInput.elt.onkeyup = function () {
+    document.getElementById('logo').addEventListener('mouseenter', function () {
+        setHelpText('Go to Start Page');
+    });
+    document.getElementById('logo').addEventListener('mouseleave', function () {
+        setHelpText('');
+    });
+
+    document.getElementById('copy-select-button').addEventListener('mouseenter', function () {
+        setHelpText('Copy this Sketch Part');
+    });
+    document.getElementById('copy-select-button').addEventListener('mouseleave', function () {
+        setHelpText('');
+    });
+
+    document.getElementById('delete-select-button').addEventListener('mouseenter', function () {
+        setHelpText('Delete this Sketch Part');
+    });
+    document.getElementById('delete-select-button').addEventListener('mouseleave', function () {
+        setHelpText('');
+    });
+
+    moduleNameInput = document.getElementById('module-input');
+    moduleNameInput.onkeyup = function () {
         moduleNameChanged = true;
-        reDraw();
+        showModulePreviewer();
     };
-    moduleNameInput.hide();
-    moduleNameInput.mouseOver(function () {
-        setHelpText('This is the text written on the module');
+    moduleNameInput.addEventListener('mouseenter', function () {
+        setHelpText('This is the Text written on the Module');
     });
-    moduleNameInput.mouseOut(function () {
+    moduleNameInput.addEventListener('mouseleave', function () {
         setHelpText('');
     });
 
-    sketchNameInput = createInput('');
-    sketchNameInput.attribute('placeholder', 'Sketch Name');
-    sketchNameInput.position(windowWidth / 2 - 23, windowHeight / 2 - 104);
-    sketchNameInput.elt.style.fontFamily = 'ArcaMajora3';
-    sketchNameInput.elt.className = 'textInput saveInput';
-    sketchNameInput.elt.onkeyup = function () {
-        if (!moduleNameInput.elt.disabled && !moduleNameChanged) {
-            moduleNameInput.value(sketchNameInput.value());
+    sketchNameInput = document.getElementById('sketchname-2');
+    sketchNameInput.onkeyup = function () {
+        if (!moduleNameInput.disabled && !moduleNameChanged) {
+            moduleNameInput.value = sketchNameInput.value;
         }
+        topSketchInput.value = sketchNameInput.value;
         reDraw();
     };
-    sketchNameInput.hide();
-    sketchNameInput.mouseOver(function () {
-        setHelpText('This is the file name of the sketch');
+    sketchNameInput.addEventListener('mouseenter', function () {
+        setHelpText('This is the File Name of the Sketch');
     });
-    sketchNameInput.mouseOut(function () {
+    sketchNameInput.addEventListener('mouseleave', function () {
         setHelpText('');
     });
 
-    descInput = createElement('textarea');
-    descInput.attribute('placeholder', 'Sketch Description');
-    descInput.position(windowWidth / 2 - 3, windowHeight / 2 - 30);
-    descInput.size(280, 114);
-    descInput.elt.style.fontFamily = 'ArcaMajora3';
-    descInput.elt.style.fontSize = '18px';
-    descInput.elt.className = 'textInput descInput';
+    topSketchInput = document.getElementById('sketchname-1');
+    topSketchInput.onkeyup = function () {
+        if (!moduleNameInput.disabled && !moduleNameChanged) {
+            moduleNameInput.value = topSketchInput.value;
+        }
+        sketchNameInput.value = topSketchInput.value;
+        reDraw();
+    };
+    topSketchInput.addEventListener('mouseenter', function () {
+        setHelpText('This is the File Name of the Sketch');
+    });
+    topSketchInput.addEventListener('mouseleave', function () {
+        setHelpText('');
+    });
+
+    descInput = document.getElementById('desc-input');
     if (getCookieValue('access_token') === '') {
-        descInput.attribute('placeholder', 'Sketch Description\n(Log in to give a description)');
-        descInput.elt.disabled = true;
+        descInput.placeholder = 'Sketch Description\n(Log in to give a description)';
+        descInput.disabled = true;
     }
-    descInput.hide();
-    descInput.mouseOver(function () {
-        setHelpText('This is the description displayed in the dashboard');
+    descInput.addEventListener('mouseenter', function () {
+        setHelpText('This is the Description displayed in the Dashboard');
     });
-    descInput.mouseOut(function () {
+    descInput.addEventListener('mouseleave', function () {
         setHelpText('');
     });
 
-    cancelButton = createButton('Cancel');
-    cancelButton.position(windowWidth / 2 - 13, windowHeight / 2 + 110);
-    cancelButton.mousePressed(cancelClicked);
-    cancelButton.elt.className = 'btn btn-lg btn-red hover-btn';
-    cancelButton.hide();
-
-    saveDialogText = createP('Save Sketch<span style="color: #c83232">.</span>');
-    saveDialogText.hide();
-    saveDialogText.elt.style.color = '#323232';
-    saveDialogText.elt.style.fontFamily = 'ArcaMajora3';
-    saveDialogText.elt.style.margin = '3px 0px 0px 0px';
-    saveDialogText.position(windowWidth / 2 - 65, windowHeight / 2 - 160);
-    saveDialogText.style('font-size', '36px');
-
-    // Button to save the sketch
     if (getCookieValue('access_token') !== '') {
-        saveButton = createButton('<i class="fas fa-save"></i> Save');
-        saveButton.mouseOver(function () {
-            setHelpText('Save this sketch to the dashboard');
+        document.getElementById('save-button').addEventListener('mouseenter', function () {
+            setHelpText('Save this Sketch to the Dashboard');
         });
     } else {
-        saveButton = createButton('<i class="fas fa-file-download"></i> Download');
-        saveButton.mouseOver(function () {
-            setHelpText('Download this sketch as a JSON file');
+        document.getElementById('save-button').addEventListener('mouseleave', function () {
+            setHelpText('Download this Sketch as a JSON File');
         });
     }
-    saveButton.position(windowWidth / 2 + 142, windowHeight / 2 + 113);
-    saveButton.mousePressed(saveClicked);
-    saveButton.elt.className = 'btn btn-lg btn-red hover-btn';
-    saveButton.mouseOut(function () {
+    document.getElementById('save-button').addEventListener('mouseleave', function () {
         setHelpText('');
     });
-    saveButton.hide();
 }
 
 function createTopRightButtons() {
-    document.getElementById('fileid').onchange = function() {
-        importJSONClicked();    
+    document.getElementById('fileid').onchange = function () {
+        importJSONClicked();
     };
 
     importButton = createButton('<i class="fas fa-file-upload icon"></i> Import');
     importButton.mousePressed(function () {
-        document.getElementById('fileid').click();    
+        document.getElementById('fileid').click();
     });
     importButton.elt.className = 'button';
     importButton.parent(topRightButtons);
     importButton.mouseOver(function () {
-        setHelpText('Import a JSON file');
+        setHelpText('Import a JSON File (Clears the current Sketch!)');
     });
     importButton.mouseOut(function () {
         setHelpText('');
     });
 
-    saveDialogButton = createButton('<i class="fas fa-save icon"></i> Save');
-    saveDialogButton.mousePressed(saveDialogClicked);
+    if (getCookieValue('access_token') !== '') {
+        saveDialogButton = createButton('<i class="fas fa-save icon"></i> Save');
+        saveDialogButton.mousePressed(saveDialogClicked);
+        saveDialogButton.mouseOver(function () {
+            setHelpText('Saves the Sketch');
+        });
+    } else {
+        saveDialogButton = createButton('<i class="fas fa-file-download icon"></i> Download');
+        saveDialogButton.mousePressed(saveClicked);
+        saveDialogButton.mouseOver(function () {
+            setHelpText('Download as JSON');
+        });
+    }
     saveDialogButton.elt.className = 'button';
     saveDialogButton.parent(topRightButtons);
-    saveDialogButton.mouseOver(function () {
-        setHelpText('Saves the sketch');
-    });
     saveDialogButton.mouseOut(function () {
         setHelpText('');
     });
@@ -913,7 +980,7 @@ function createTopRightButtons() {
         dashboardButton = createButton('<i class="fas fa-th icon"></i> Dashboard');
         dashboardButton.style('min-width', dashboardButton.width + 20 + 'px');
         dashboardButton.mouseOver(function () {
-            setHelpText('Get back to the dashboard');
+            setHelpText('Get back to the Dashboard');
         });
         dashboardButton.mouseOut(function () {
             setHelpText('');
@@ -922,7 +989,7 @@ function createTopRightButtons() {
         dashboardButton = createButton('<i class="fa fa-sign-in-alt icon"></i> Login');
         dashboardButton.style('min-width', dashboardButton.width + 5 + 'px');
         dashboardButton.mouseOver(function () {
-            setHelpText('Log into your LogiJS account');
+            setHelpText('Log into your LogiJS Account');
         });
         dashboardButton.mouseOut(function () {
             setHelpText('');

@@ -105,13 +105,14 @@ Output.prototype.updateColor = function () {
 /*
     Displays the output on the screen
 */
-Output.prototype.show = function () {
+Output.prototype.show = function (order = 0) {
     stroke(0);
     strokeWeight(3);
     if (this.state) {
         fill(this.highColor);
     } else if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
+        fill(230);
     } else {
         fill(50);
     }
@@ -120,11 +121,28 @@ Output.prototype.show = function () {
     if (this.state) {
         fill(this.accentColor);
     } else if (this.marked) {
-        fill(MARED, MAGREEN, MABLUE);
+        fill(255);
     } else {
         fill(LARED, LAGREEN, LABLUE);
     }
     arc(this.x, this.y, GRIDSIZE, GRIDSIZE, HALF_PI + QUARTER_PI, PI + HALF_PI + QUARTER_PI, OPEN);
+
+    if (order > 0) {
+        noStroke();
+        if (this.marked) {
+            fill(50);
+        } else {
+            fill(255);
+        }
+        textSize(20);
+        textFont('ArcaMajora3');
+        textAlign(LEFT, TOP);
+        if (order.toString().length === 1) {
+            text(order, this.x - 6, this.y - 8);
+        } else {
+            text(order, this.x - 12, this.y - 8);
+        }
+    }
     /*if (!this.state) {
         stroke(200);
     } else {

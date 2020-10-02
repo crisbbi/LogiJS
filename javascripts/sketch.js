@@ -28,6 +28,16 @@ let selection = [];
 let selectionConpoints = [];
 let selectionWires = [];
 
+let selWireIndizes = [];
+let selDiodeIndizes = [];
+let selGatesIndizes = [];
+let selInputsIndizes = [];
+let selOutputsIndizes = [];
+let selLabelIndizes = [];
+let selSegDisplayIndizes = [];
+let selCustomIndizes = [];
+let selConpointIndizes = [];
+
 /*
     These are the start coordinates for the wire preview elements
 */
@@ -104,6 +114,15 @@ let selectStartY = 0;
 let selectEndX = 0;
 let selectEndY = 0;
 
+/*
+    Position of the select box before dragging
+*/
+let selectionStartPosX = 0;
+let selectionStartPosY = 0;
+
+let selectionLog = [];
+let deleteLog = [];
+
 let sDragX1 = 0;
 let sDragX2 = 0;
 let sDragY1 = 0;
@@ -169,6 +188,10 @@ let importSketchData = {}; // Contains look and caption of all user sketches tha
 */
 let syncFramerate = true;
 
+let speedMultiplicator = 10;
+
+let stopTicks = false;
+
 let segIndices = [];
 let wireIndices = [];
 
@@ -227,23 +250,21 @@ let inputToModify = -1;
 let outputToModify = -1;
 let labelToModify = -1;
 
+let swapInput = -1;
+let swapOutput = -1;
+
 let modifierMenuX, modifierMenuY;
 
-let sequencerAdjusted = false;
+let moduleOptions = false;
+
 let clickedOutOfGUI = false;
 
 /*
     These are the modifier elements and their descriptional labels.
 */
-let inputIsTopBox, captionInput, minusLabel, plusLabel; // Input elements
+let inputIsTopBox, captionInput; // Input elements
 let redButton, yellowButton, greenButton, blueButton; // Output elements
 let labelTextBox; // Label elements
-
-/*
-    This is a select element that allows the user to alter the in- and output order.
-    It's displayed in the modifier menu of in- and outputs.
-*/
-let sequencer;
 
 let leftSideButtons, topLeftButtons, topRightButtons, topButtonsContainer;
 
@@ -251,22 +272,20 @@ let sketchNameInput, moduleNameInput, saveButton, saveDialogText;
 let helpLabel, cancelButton, descInput;
 let deleteButton, simButton, labelBasic, labelAdvanced, labelOptions, labelSimulation,
     andButton, orButton, xorButton, bufferButton, notButton, inputButton, buttonButton, clockButton,
-    outputButton, clockspeedSlider, undoButton, redoButton, modifierModeButton, labelButton, segDisplayButton;
+    outputButton, clockspeedSlider, undoButton, redoButton, modifierModeButton, labelButton, segDisplayButton, moduleButton;
 
 /*
     Right side elements
 */
-let importButton, saveDialogButton, dashboardButton, sketchNameLabel;
+let importButton, saveDialogButton, dashboardButton, topSketchInput;
 
 let counterButton, decoderButton, dFlipFlopButton, rsFlipFlopButton, reg4Button,
     muxButton, demuxButton, halfaddButton, fulladdButton, customButton;
 
-let updater, sfcheckbox;
-
 let gateInputSelect, labelGateInputs, directionSelect, bitSelect, labelDirection, labelBits, counterBitSelect, labelOutputWidth,
     decoderBitSelect, labelInputWidth, multiplexerBitSelect;
 
-let tickTimeSlider, tickTimeLabel, bpTickTimeCB, tickTimeMsLabel;
+let tickTimeSlider, tickTimeLabel, bpTickTimeCB, tickTimeMsLabel, sfcheckbox, multiplicatorSlider, multiplicatorLabel;
 
 /*
     This is the socket element used for socket communication with the server
@@ -279,9 +298,15 @@ let socket;
 let mainCanvas, pwCanvas;
 
 let PWp5; // The p5 element for the preview canvas
+let modulep5; // p5 element for the module canvas
 
 let lastTickTime = 0;
 let tickTime = 10;
+
+let lastrfTime = 0;
+let rfTime = 16;
+
+let tourStep = 0;
 
 /*
     Disable some error messages from p5
@@ -297,24 +322,20 @@ document.addEventListener('contextmenu', event => event.preventDefault());
     Sets up the canvas and caps the framerate
 */
 function setup() { // jshint ignore:line
-    topButtonsContainer = createDiv('');
-    topButtonsContainer.elt.className = 'topButtonsContainer';
+    topButtonsContainer = document.getElementById('topButtonsContainer');
 
     //Div for the Top Left Buttons
-    topLeftButtons = createDiv('');
-    topLeftButtons.elt.className = 'topLeftButtons';
-    topLeftButtons.parent(topButtonsContainer);
+    topLeftButtons = document.getElementById('topLeftButtons');
 
     //Div for the Top Right Buttons
-    topRightButtons = createDiv('');
-    topRightButtons.elt.className = 'topRightButtons';
-    topRightButtons.parent(topButtonsContainer);
+    topRightButtons = document.getElementById('topRightButtons');
 
     mainCanvas = createCanvas(windowWidth - 240, windowHeight - 50);     // Creates the canvas in full window size
     mainCanvas.position(240, 50);
     mainCanvas.id('mainCanvas');
 
     initPreviewCanvas();
+    initModuleCanvas();
 
     // Prevents the input field from being focused when clicking in the canvas
     document.addEventListener('mousedown', function (event) {
@@ -383,6 +404,8 @@ function setup() { // jshint ignore:line
     reDraw();
     setTimeout(reDraw, 100); // Redraw after 100ms in case fonts weren't loaded on first redraw
     justClosedMenu = false;
+
+    initTour();
 }
 
 // Credits to https://stackoverflow.com/questions/2405355/how-to-pass-a-parameter-to-a-javascript-through-a-url-and-display-it-on-a-page (Mic)
@@ -506,7 +529,7 @@ function importJSONClicked() {
         let result = JSON.parse(e.target.result);
         let name = files.item(0).name.split('.')[0];
         loadSketchFromJSON(result, name);
-        sketchNameInput.elt.value = name;
+        sketchNameInput.value = name;
     };
 
     fr.readAsText(files.item(0));
@@ -514,22 +537,20 @@ function importJSONClicked() {
 
 // Triggered when a sketch should be saved
 function saveClicked() {
-    setSketchNameLabel(sketchNameInput.value());
-    saveSketch(sketchNameInput.value() + '.json', function (look) {
-        closeSaveDialog();
-        look.desc = descInput.value();
-        //socket.emit('savePreview', { name: textInput.value(), img: previewImg, desc: JSON.stringify(look), access_token: getCookieValue('access_token') });
-        document.title = 'LogiJS: ' + sketchNameInput.value();
-        //socket.emit('savePreview', { name: sketchNameInput.value(), img: previewImg, desc: JSON.stringify(look), access_token: getCookieValue('access_token') });
+    filename = sketchNameInput.value;
+    if (filename === '') {
+        filename = 'untitled';
+    }
+    saveSketch(filename + '.json', function (look) {
+        enterModifierMode();
+        look.desc = descInput.value;
+        document.title = 'LogiJS: ' + filename;
+        socket.emit('savePreview', { name: filename, img: previewImg, desc: JSON.stringify(look), access_token: getCookieValue('access_token') });
     });
 }
 
 function cancelClicked() {
-    if (saveDialog) {
-        closeSaveDialog();
-    } else if (showCustomDialog) {
-        closeCustomDialog();
-    }
+    enterModifierMode();
 }
 
 function hideAllOptions() {
@@ -571,12 +592,6 @@ function clearActionStacks() {
     actionRedo = [];
 }
 
-function pushMoveSelectionAction(dx, dy, x1, y1, x2, y2) {
-    if ((Math.abs(dx) >= GRIDSIZE || Math.abs(dy) >= GRIDSIZE) && selection.length > 0) {
-        pushUndoAction('moveSel', [dx, dy, x1, y1, x2, y2], [_.cloneDeep(selection), _.cloneDeep(selectionConpoints), _.cloneDeep(selectionWires)]);
-    }
-}
-
 function setActive(btn, clear = true) {
     if (clear) {
         setUnactive();
@@ -616,6 +631,8 @@ function setUnactive() {
     selectButton.elt.className = 'button';
     modifierModeButton.elt.className = 'button';
     simButton.elt.className = 'button';
+    saveDialogButton.elt.className = 'button';
+    moduleButton.elt.className = 'button';
 }
 
 function deleteClicked() {
@@ -678,7 +695,7 @@ function deleteClicked() {
 function labelChanged() {
     textFont('Gudea');
     textSize(20);
-    labels[labelToModify].alterText(labelTextBox.value()); // Alter the text of the selected label
+    labels[labelToModify].alterText(labelTextBox.value); // Alter the text of the selected label
     reDraw();
     positionModifierElements();
 }
@@ -832,8 +849,12 @@ function newDirection() {
 function newClockspeed() {
     if (inputToModify >= 0) {
         if (inputs[inputToModify].clock) {
-            inputs[inputToModify].speed = 60 - clockspeedSlider.value();
-            console.log(inputs[inputToModify].speed);
+            inputs[inputToModify].speed = 61 - clockspeedSlider.value;
+            if (inputs[inputToModify].speed !== 1) {
+                document.getElementById('cs-label').innerHTML = inputs[inputToModify].speed + ' ticks/toggle';
+            } else {
+                document.getElementById('cs-label').innerHTML = inputs[inputToModify].speed + ' tick/toggle';
+            }
         }
     }
 }
@@ -841,6 +862,22 @@ function newClockspeed() {
 function newTickTime() {
     tickTime = tickTimeSlider.value();
     tickTimeMsLabel.elt.innerHTML = tickTimeSlider.value() + 'ms';
+}
+
+function newMultiplicator() {
+    speedMultiplicator = multiplicatorSlider.value() * 10;
+    if (simRunning) {
+        stopTicks = true;
+        setTimeout(function () {
+            stopTicks = false;
+            if (!syncFramerate) {
+                for (let i = 0; i < speedMultiplicator; i++) {
+                    updateTick();
+                }
+            }
+        }, 20);
+    }
+    multiplicatorLabel.elt.innerHTML = multiplicatorSlider.value();
 }
 
 /* 
@@ -1003,6 +1040,7 @@ function startSelect() {
     if (controlMode === 'select') {
         enterModifierMode();
     } else {
+        configureButtons('select');
         setActive(selectButton, true);
         setControlMode('select');
         setSelectMode('none');
@@ -1027,7 +1065,7 @@ function setControlMode(mode) {
         setSelectMode('none');
     }
     if (mode === 'addObject' || mode === 'select' || mode === 'delete') {
-        leaveModifierMode();
+        closeModifierMenu();
         controlMode = mode;
     } else if (mode === 'modify') {
         controlMode = 'modify';
@@ -1253,6 +1291,7 @@ function addOutput() {
     newOutput.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newOutput.updateClickBox();
     outputs.push(newOutput);
+    moduleButton.elt.disabled = false;
     pushUndoAction('addOut', [outputs.length - 1], [newOutput]);
     reDraw();
 }
@@ -1311,7 +1350,7 @@ function addLabel() {
             return;
         }
     }
-    var newLabel = new Label(mouseX, mouseY, 'New label', transform);
+    var newLabel = new Label(mouseX, mouseY, '', transform);
     newLabel.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newLabel.updateClickBox();
     labels.push(newLabel);
@@ -1361,6 +1400,8 @@ function deleteWires() {
         }
     }
 
+    let lengthBeforeDelete = wires.length;
+
     /*
         delete all wires that should be removed
     */
@@ -1373,7 +1414,7 @@ function deleteWires() {
     /*
         Add all newly created wires
     */
-    for (let i = wires.length - 1; i >= 0; i--) {
+    for (let i = lengthBeforeDelete - 1; i >= 0; i--) {
         if (deletedIndices.indexOf(i) >= 0) {
             if (replaceIndices.indexOf(i) >= 0) {
                 let newWires = newWiresList.pop();
@@ -1446,6 +1487,7 @@ function deleteCustom(customNumber) {
 */
 function deleteOutput(outputNumber) {
     pushUndoAction('delOut', [outputNumber], outputs.splice(outputNumber, 1));
+    moduleButton.elt.disabled = (outputs.length === 0);
     reDraw();
 }
 
@@ -1454,6 +1496,7 @@ function deleteOutput(outputNumber) {
 */
 function deleteInput(inputNumber) {
     pushUndoAction('delIn', [inputNumber], inputs.splice(inputNumber, 1));
+    moduleButton.elt.disabled = (outputs.length === 0);
     reDraw();
 }
 
@@ -1479,10 +1522,6 @@ function deleteSegDisplay(segDisNumber) {
     - simRunning is set so that the sketch can't be altered
 */
 function startSimulation() {
-    if (!sfcheckbox.checked()) {
-        updater = setInterval(updateTick, 1);
-    }
-
     setSimButtonText('<i class="fa fa-stop icon"></i> Stop'); // Alter the caption of the Start/Stop button
 
     // Go to modify mode to hide previews etc.
@@ -1520,10 +1559,15 @@ function startSimulation() {
     tickTimeMsLabel.show();
     tickTimeSlider.show();
     bpTickTimeCB.show();
+    multiplicatorSlider.show();
+    multiplicatorLabel.show();
+    multDescLabel.show();
+    multDescLabel.style('display', 'inline-block');
 
     // Start the simulation and exit the modifier mode
     simRunning = true;
-    leaveModifierMode();
+    closeModifierMenu();
+    newMultiplicator();
 }
 
 /*
@@ -1533,53 +1577,57 @@ function startSimulation() {
     - simRunning is cleared so that the sketch can be altered
 */
 function endSimulation() {
-    clearInterval(updater); // Stop the unsynced simulation updater
     setSimButtonText('<i class="fa fa-play icon"></i> Start'); // Set the button caption to 'Start'
     configureButtons('edit');
+    stopTicks = true;
+    setTimeout(function () { // wait until all updateTick functions have terminated
+        // Hide the checkbox
+        labelSimulation.hide();
+        sfcheckbox.hide();
 
-    // Hide the checkbox
-    labelSimulation.hide();
-    sfcheckbox.hide();
+        // Hide the tick time slider
+        tickTimeLabel.hide();
+        tickTimeMsLabel.hide();
+        tickTimeSlider.hide();
+        multiplicatorSlider.hide();
+        multiplicatorLabel.hide();
+        multDescLabel.hide();
 
-    // Hide the tick time slider
-    tickTimeLabel.hide();
-    tickTimeMsLabel.hide();
-    tickTimeSlider.hide();
+        bpTickTimeCB.hide();
 
-    bpTickTimeCB.hide();
+        leftSideButtons.show();
+        customButton.show();
 
-    leftSideButtons.show();
-    customButton.show();
+        groups = []; // Reset the groups, as they are regenerated when starting again
+        for (const elem of gates) {
+            elem.shutdown(); // Tell all the gates to leave the simulation mode
+        }
+        for (const elem of customs) {
+            elem.setSimRunning(false); // Shutdown all custom elements
+        }
+        for (const elem of segDisplays) {
+            elem.shutdown();
+        }
+        // Set all item states to zero
+        for (const elem of conpoints) {
+            elem.state = false;
+        }
+        for (const elem of outputs) {
+            elem.state = false;
+        }
+        for (const elem of inputs) {
+            elem.setState(false);
+        }
+        for (const elem of diodes) {
+            elem.setState(false);
+        }
+        for (const elem of wires) {
+            elem.setState(false);
+        }
 
-    groups = []; // Reset the groups, as they are regenerated when starting again
-    for (const elem of gates) {
-        elem.shutdown(); // Tell all the gates to leave the simulation mode
-    }
-    for (const elem of customs) {
-        elem.setSimRunning(false); // Shutdown all custom elements
-    }
-    for (const elem of segDisplays) {
-        elem.shutdown();
-    }
-    // Set all item states to zero
-    for (const elem of conpoints) {
-        elem.state = false;
-    }
-    for (const elem of outputs) {
-        elem.state = false;
-    }
-    for (const elem of inputs) {
-        elem.setState(false);
-    }
-    for (const elem of diodes) {
-        elem.setState(false);
-    }
-    for (const elem of wires) {
-        elem.setState(false);
-    }
-
-    simRunning = false;
-    reDraw();
+        simRunning = false;
+        reDraw();
+    }, 20);
 }
 
 function setSimButtonText(text) {
@@ -1601,44 +1649,79 @@ function updateUndoButtons() {
 }
 
 function configureButtons(mode) {
-    let toolbox, modifiers, simulation, customimport, savedialog;
+    let toolbox, modifiers, simulation, customimport, savedialog, jsonimport, moduleimport, select;
     if (mode === 'edit') {
         toolbox = false;
         modifiers = false;
         savedialog = false;
         simulation = false;
         customimport = false;
+        jsonimport = false;
+        moduleimport = false;
+        select = false;
     } else if (mode === 'simulation') {
         toolbox = true;
         modifiers = true;
         savedialog = false;
         simulation = false;
         customimport = true;
-        //leftSideButtons.style('display', 'none');
+        jsonimport = false;
+        moduleimport = true;
+        select = true;
     } else if (mode === 'savedialog') {
         toolbox = true;
         modifiers = true;
-        savedialog = true;
+        savedialog = false;
         simulation = true;
         customimport = true;
+        jsonimport = true;
+        moduleimport = true;
+        select = true;
     } else if (mode === 'customdialog') {
         toolbox = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
         customimport = false;
+        jsonimport = true;
+        moduleimport = true;
+        select = true;
     } else if (mode === 'loading') {
         toolbox = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
         customimport = true;
+        jsonimport = true;
+        moduleimport = true;
+        select = true;
+    } else if (mode === 'moduleOptions') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = true;
+        simulation = true;
+        customimport = true;
+        jsonimport = true;
+        moduleimport = false;
+        select = true;
+    } else if (mode === 'select') {
+        toolbox = true;
+        modifiers = true;
+        savedialog = true;
+        simulation = true;
+        customimport = true;
+        jsonimport = true;
+        moduleimport = true;
+        select = false;
     } else {
         toolbox = false;
         modifiers = false;
         savedialog = false;
         simulation = false;
         customimport = false;
+        jsonimport = false;
+        moduleimport = false;
+        select = false;
     }
     andButton.elt.disabled = toolbox;
     orButton.elt.disabled = toolbox;
@@ -1666,7 +1749,7 @@ function configureButtons(mode) {
 
     modifierModeButton.elt.disabled = modifiers;
     deleteButton.elt.disabled = modifiers;
-    selectButton.elt.disabled = true;
+    selectButton.elt.disabled = select;
     if (!modifiers) {
         updateUndoButtons();
     } else {
@@ -1675,37 +1758,34 @@ function configureButtons(mode) {
     }
     simButton.elt.disabled = simulation;
     saveDialogButton.elt.disabled = savedialog;
+    importButton.elt.disabled = jsonimport;
+    moduleButton.elt.disabled = moduleimport || (outputs.length === 0);
 }
 
-/*
-    Executes in every frame, draws everything and updates the sketch logic
-*/
 function draw() {
-    //console.log(passedUpdateTime);
+    let curTime = performance.now();
     if (simRunning) {
-        if (!syncFramerate || (syncFramerate && performance.now() - lastTickTime >= tickTime)) {
-            updateTick(); // Updates the circuit logic
-            lastTickTime = performance.now();
+        if (syncFramerate && curTime - lastTickTime >= tickTime) {
+            updateTick(false);
+            lastTickTime = curTime;
         }
-        reDraw(); // Redraw all elements of the sketch
+        reDraw();
     } else {
-        if ((wireMode === 'preview' || wireMode === 'delete') && !mouseOverGUI() && !modifierMenuDisplayed()) {
+        if ((wireMode === 'preview' || wireMode === 'delete') && !mouseOverGUI() && !elementMenuShown()) {
             generatePreviewWires(wirePreviewStartX, wirePreviewStartY, Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE,
                 Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
             reDraw();
-        } else if (controlMode === 'select' || controlMode === 'addObject' && !mouseIsPressed && !modifierMenuDisplayed()) {
+        } else if (controlMode === 'select' || controlMode === 'addObject' && !mouseIsPressed && !elementMenuShown()) {
             reDraw();
         }
-
     }
-
     handleDragging();
 }
 
 /*
     Executes one update tick of the sketch logic
 */
-function updateTick() {
+function updateTick(rec = true) {
     // Tell all gates to update
     for (const value of gates) {
         value.update();
@@ -1756,6 +1836,10 @@ function updateTick() {
             groups[value.groupB].diodeHigh();
         }
     }
+
+    if (simRunning && !stopTicks && rec) {
+        setTimeout(updateTick, 20);
+    }
 }
 
 /*
@@ -1771,7 +1855,6 @@ function reDraw() {
     translate(transform.dx, transform.dy);
 
     // Draw all sketch elements on screen
-    //let t0 = performance.now();
     showElements();
 
     // Display the preview wire segment set
@@ -1786,7 +1869,7 @@ function reDraw() {
     }
 
     if (controlMode === 'select' && selectMode === 'start') {
-        fill(0, 0, 0, 100); // Set the fill color to a semi-transparent black
+        fill(0, 50); // Set the fill color to a semi-transparent black
         noStroke();
         selectEndX = Math.round(((mouseX + GRIDSIZE / 2) / transform.zoom - transform.dx - GRIDSIZE / 2) / GRIDSIZE) * GRIDSIZE + GRIDSIZE / 2;
         selectEndY = Math.round(((mouseY + GRIDSIZE / 2) / transform.zoom - transform.dy - GRIDSIZE / 2) / GRIDSIZE) * GRIDSIZE + GRIDSIZE / 2;
@@ -1794,40 +1877,16 @@ function reDraw() {
             Math.abs(selectStartX - selectEndX), Math.abs(selectStartY - selectEndY));
     }
 
-    //let t1 = performance.now();
-    //console.log('took ' + (t1 - t0) + ' milliseconds.');
-
     // Reverse the scaling and translating to draw the stationary elements of the GUI
     scale(1 / transform.zoom);
     translate(-transform.zoom * transform.dx, -transform.zoom * transform.dy);
 
-    // If the modifier mode is active and an object was selected, show the modifier menu background
-    if (modifierMenuDisplayed()) {
-        scale(transform.zoom);
-        translate(transform.dx, transform.dy);
-        if (inputToModify >= 0) {
-            inputs[inputToModify].show();
-        } else if (outputToModify >= 0) {
-            outputs[outputToModify].show();
-        } else if (labelToModify >= 0) {
-            labels[labelToModify].show();
-        }
-        scale(1 / transform.zoom);
-        translate(-transform.zoom * transform.dx, -transform.zoom * transform.dy);
-        showModifierMenu();
-        cursor(ARROW);
+    if (loading) {
+        showMessage('Loading Sketch...', loadFile.split('.json')[0]);
     }
 
-    if (loading && !showCustomDialog) {
-        showMessage('Loading sketch...', loadFile.split('.json')[0]);
-    }
-
-    if (error !== '') {
+    if (error.length > 0) {
         showMessage(error, errordesc);
-    }
-
-    if (saveDialog) {
-        showSaveDialog();
     }
 
     // Draw the zoom and framerate labels
@@ -1838,6 +1897,11 @@ function reDraw() {
     noStroke();
     text(Math.round(transform.zoom * 100) + '%', 10, window.height - 20); // Zoom label
     text(Math.round(frameRate()), window.width - 20, window.height - 20); // Framerate label
+
+    if (moduleOptions) {
+        textSize(20);
+        text('Click on the in- and outputs to swap them!', 30, 30);
+    }
 }
 
 function fetchImportData() {
@@ -1890,13 +1954,20 @@ function showElements() {
     for (const elem of conpoints) {
         elem.show();
     }
-
-    for (const elem of outputs) {
-        elem.show();
-    }
-
-    for (const elem of inputs) {
-        elem.show();
+    if (moduleOptions) {
+        for (let i = 0; i < outputs.length; i++) {
+            outputs[i].show(i + 1);
+        }
+        for (let i = 0; i < inputs.length; i++) {
+            inputs[i].show(i + 1);
+        }
+    } else {
+        for (let i = 0; i < outputs.length; i++) {
+            outputs[i].show();
+        }
+        for (let i = 0; i < inputs.length; i++) {
+            inputs[i].show();
+        }
     }
 
     for (const elem of diodes) {
@@ -1940,10 +2011,13 @@ function updateGroups() {
     Check if a key was pressed and act accordingly
 */
 function keyPressed() {
-    if (captionInput.elt === document.activeElement || labelTextBox.elt === document.activeElement || loading || saveDialog) {
+    if ((saveDialog || moduleOptions) && keyCode === ESCAPE) {
+        enterModifierMode();
+    }
+    if (captionInput.elt === document.activeElement || labelTextBox === document.activeElement || loading || saveDialog || moduleOptions) {
         return;
     }
-    if (sketchNameInput.elt !== document.activeElement) {
+    if (sketchNameInput !== document.activeElement) {
         if (keyCode >= 49 && keyCode <= 57) {
             gateInputCount = keyCode - 48;
             gateInputSelect.value(gateInputCount);
@@ -1955,13 +2029,13 @@ function keyPressed() {
                 reDraw();
                 break;
             case RETURN:
-                leaveModifierMode();
+                closeModifierMenu();
                 hideAllOptions();
                 simClicked();
                 break;
             case CONTROL:
                 //startSelect();
-                console.log(wires.length);
+                //console.log(wires.length);
                 // Uncomment to make screenshots
                 //let img  = canvas.toDataURL("image/png");
                 //document.write('<img src="'+img+'"/>');

@@ -8,3 +8,4 @@ nodemon.json
 google76e7434874552abc.html
 site_scripts/knexfile.js
 public.key
+views/images/legacy/

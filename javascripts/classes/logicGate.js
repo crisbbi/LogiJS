@@ -276,11 +276,11 @@ LogicGate.prototype.show = function () {
         (this.x + this.transform.dx) * this.transform.zoom > windowWidth || (this.y + this.transform.dy) * this.transform.zoom > windowHeight) {
         return;
     }
-    stroke(0);
+    fill(255);
     if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
     } else {
-        fill(255, this.alpha);
+        stroke(0);
     }
     strokeWeight(3);
 
@@ -293,7 +293,11 @@ LogicGate.prototype.show = function () {
     noStroke();
     textSize(this.textSize);
     textAlign(CENTER, CENTER);
-    fill(0);
+    if (this.marked) {
+        fill(MRED, MGREEN, MBLUE);
+    } else {
+        fill(0);
+    }
     text(this.caption, this.x + this.w / 2, this.y + this.h / 2 + 2); // Draw text
 
     // Draw inputs

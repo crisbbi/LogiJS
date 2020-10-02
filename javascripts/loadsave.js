@@ -3,7 +3,7 @@
 function saveSketch(filename, callback) {
     // Create a new json object to store all elements in
     let json = {};
-    json.caption = moduleNameInput.value();
+    json.caption = moduleNameInput.value;
     json.gates = [];
     json.outputs = [];
     json.inputs = [];
@@ -43,6 +43,8 @@ function saveSketch(filename, callback) {
         }
     }
     if (getCookieValue('access_token') !== '') {
+        sketchNameInput.value = filename.split('.')[0];
+        topSketchInput.value = filename.split('.')[0];
         socket.emit('saveUserSketch', { file: filename, json: json, access_token: getCookieValue('access_token') });
     } else {
         saveJSON(json, filename); // Save the file as json (asks for directory...)
@@ -60,7 +62,6 @@ function loadSketch(file) {
         socket.emit('getUserSketch', { file: file.split('.')[0], access_token: getCookieValue('access_token') });
         socket.on('userSketchData', (data) => {
             if (data.success === true) {
-                setSketchNameLabel(file.split('.')[0]);
                 load(data.data);
             } else {
                 fileNotFoundError();
@@ -76,7 +77,6 @@ function loadSketchFromJSON(data, file) {
     setLoading(true);
     loadFile = file;
     document.title = 'LogiJS: ' + file;
-    setSketchNameLabel(file);
     load(data);
 }
 
@@ -101,7 +101,7 @@ function load(loadData) {
     currentGridSize = GRIDSIZE;
     actionUndo = []; // Clear Undo / Redo stacks
     actionRedo = [];
-    moduleNameInput.value(loadData.caption);
+    moduleNameInput.value = loadData.caption;
     // Load all gate parameters and create new gates based on that information
     for (let i = 0; i < loadData.gates.length; i++) {
         gates[i] = new LogicGate(JSON.parse(loadData.gates[i].x), JSON.parse(loadData.gates[i].y), transform, JSON.parse(loadData.gates[i].direction),
@@ -337,7 +337,7 @@ function getThisLook() {
     look.tops = [];
     look.inputLabels = [];
     look.outputLabels = [];
-    look.caption = moduleNameInput.value();
+    look.caption = moduleNameInput.value;
     look.inputs = inputs.length;
     look.outputs = outputs.length;
     for (let i = 0; i < inputs.length; i++) {
@@ -356,9 +356,11 @@ function loadURLSketch() {
     let loadfile = urlParam('sketch');
     if (loadfile !== '') {
         if (loadfile.indexOf('lib') === 0) {
-            sketchNameInput.value(loadfile.substring(10));
+            sketchNameInput.value = loadfile.substring(10);
+            topSketchInput.value = loadfile.substring(10);
         } else {
-            sketchNameInput.value(loadfile);
+            sketchNameInput.value = loadfile;
+            topSketchInput.value = loadfile;
         }
         setLoading(true);
         loadSketch(loadfile + '.json');
@@ -367,19 +369,15 @@ function loadURLSketch() {
             try {
                 let d = JSON.parse(data.data);
                 if (data.success === true) {
-                    descInput.value(d.desc);
-                    moduleNameInput.value(d.caption);
+                    descInput.value = d.desc;
+                    moduleNameInput.value = d.caption;
                 }
             } catch (e) {
                 if (data.success === true) {
-                    descInput.value(data.data);
+                    descInput.value = data.data;
                 }
             }
             socket.off('sketchDescription');
         });
     }
-}
-
-function setSketchNameLabel(name) {
-    sketchNameLabel.elt.innerHTML = name;
 }

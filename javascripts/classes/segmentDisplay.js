@@ -137,11 +137,11 @@ SegmentDisplay.prototype.update = function () {
 Draws the gate on the screen
 */
 SegmentDisplay.prototype.show = function () {
-    stroke(0);
+    fill(255);
     if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
     } else {
-        fill(255, 255);
+        stroke(0);
     }
     strokeWeight(3);
     
@@ -154,7 +154,11 @@ SegmentDisplay.prototype.show = function () {
     noStroke();
     textSize(80);
     textAlign(CENTER, CENTER);
-    fill(0);
+    if (this.marked) {
+        fill(MRED, MGREEN, MBLUE);
+    } else {
+        fill(0);
+    }
     let txt = '';
     for (let i = 0; i < this.digits - this.value.toString().length; i++) {
         txt += '0';

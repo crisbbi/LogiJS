@@ -41,11 +41,6 @@ body
             li
               a.internal-link(rel='nofollow', href='#about', target='_parent') About
           .navbar-header
-            button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-              span.sr-only Toggle navigation
-              span.icon-bar
-              span.icon-bar
-              span.icon-bar
             a.navbar-brand(href='#top')
               img#top_logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
           .navbar-collapse.collapse
@@ -80,12 +75,12 @@ body
       a.btn.btn-lg.btn-orange(href='/editor', rel="nofollow", role='button')
               <i class="fa fa-plus-circle"></i> New Sketch
     else
-      a.btn.btn-lg.btn-orange(href='/editor', rel="nofollow", role='button') 
-            <i class="fa fa-magic"></i> Get started
+      a.btn.btn-lg.btn-orange(href='/getstarted', rel="nofollow", role='button') 
+            <i class="fa fa-magic"></i> Get Started
   .scroll_down
     a(href="#features" title="Scroll down") <i class="fa fa-chevron-down fa-4x"></i>
   #features
-  img#front_teaser(src='images/front_teaser_alt.png', alt='LogiJS Editor', title='LogiJS Editor')
+  img#front_teaser(src='images/front_teaser_white.png', alt='LogiJS Editor', title='LogiJS Editor')
   .carousel#main-carousel
         <div id="myCarousel" class="carousel slide" data-ride="carousel">
           <ol class="carousel-indicators">
@@ -97,28 +92,28 @@ body
             <div class="item active">
               <span class="carousel-text"><h2 class="carousel-caption">Learn the basics of logic<br>gates and circuits<span class="red">.</span></h2>
                 <div class="carousel-button">
-                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                  <a class="btn btn-lg btn-orange" href="/getstarted" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
                 </div>
               </span> 
-              <img class="carousel-image" src="images/carousel_1_new.png" alt="A LogiJS example sketch showing a traffic light simulation">
+              <img id="carousel-1" class="carousel-image" src="images/carousel_1_new.png" alt="A LogiJS example sketch showing a traffic light simulation">
             </div>
 
             <div class="item">
               <span class="carousel-text"><h2 class="carousel-caption">Import your circuits as<br>custom components<span class="red">.</span></h2>
                 <div class="carousel-button">
-                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                  <a class="btn btn-lg btn-orange" href="/getstarted" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
                 </div>
               </span> 
-              <img class="carousel-image" src="images/carousel_2_new.png" alt="A LogiJS example sketch showing a basic cpu structure">
+              <img id="carousel-2" class="carousel-image" src="images/carousel_2_new.png" alt="A LogiJS example sketch showing a basic cpu structure">
             </div>
 
             <div class="item">
               <span class="carousel-text"><h2 class="carousel-caption">Save and access your<br>circuits online<span class="red">.</span></h2>
                 <div class="carousel-button">
-                  <a class="btn btn-lg btn-orange" href="/editor" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
+                  <a class="btn btn-lg btn-orange" href="/getstarted" rel="nofollow" role="button"><i class="fa fa-magic"></i> Get started</a>
                 </div>
               </span>
-              <img class="carousel-image" src="images/carousel_3_new.png" alt="A LogiJS example sketch showing a more complex cpu structure">
+              <img id="carousel-3" class="carousel-image" src="images/carousel_3_new.png" alt="The LogiJS user dashboard">
             </div>
           </div>
           <a class="left carousel-control" href="#myCarousel" data-slide="prev">
@@ -131,7 +126,7 @@ body
           </a>
         </div>
   #samples(style="display: block; position: relative; top: -150px; visibility: hidden;")
-  h2.normal-caption Samples
+  h2#samples-caption.normal-caption Samples
   .sample-element.left-elem
     .sample-description
       a(href="/editor?sketch=library__0gates", rel="nofollow")
@@ -200,7 +195,7 @@ body
   h2.normal-caption
     | Who whe are
     span.red .
-  .justify(style="margin: 0 30% 60px 30%;")
+  .justify(style="margin-bottom: 60px;")
     p
       | LogiJS is an open source logic circuit simulator. Logic circuits are everywhere these days and therefore taught at universities worldwide. 
     p
@@ -212,7 +207,7 @@ body
   h2.normal-caption
     | What we're working on
     span.red .
-  .justify(style="margin: 0 30% 0 30%;")
+  .justify
     ul
       li First things first, we will finally complete the selection feature so that you can move, copy and delete sketch parts.
       li We'd like to have a showroom for user-built circuits, where you can view other user's circuits and edit them as copies in your own dashboards. For this, we need to find a way to handle sketch dependencies (custom elements used in the sketch).

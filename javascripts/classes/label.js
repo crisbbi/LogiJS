@@ -50,9 +50,11 @@ function Label(x, y, txt, transform) {
 
     this.alterText = function (txt) {
         this.txt = txt;
-        //this.lines = txt.split('\n');
         this.lines = txt.split('\n').filter(e => e !== '');
-        this.w = Math.ceil((textWidth(this.lines.reduce(function (a, b) { return a.length > b.length ? a : b; })) + 35) / 30) * 30;
+        if (this.lines.length === 0) {
+            this.lines = ['New Label'];
+        }
+        this.w = Math.ceil((textWidth(this.lines.reduce(function (a, b) { return a.length > b.length ? a : b; })) + 20) / 30) * 30;
         this.h = 30 * this.lines.length - 10;
         this.updateClickBox();
     };
@@ -72,16 +74,21 @@ function Label(x, y, txt, transform) {
         strokeWeight(3);
         stroke(140);
         noStroke();
+        fill(150, 200);
+        rect(this.x, this.y - 15, this.w, this.h + 10);
         if (this.marked) {
             fill(MRED, MGREEN, MBLUE);
-            //stroke(0);
         } else {
-            fill(150, 200);
+            fill(50);
         }
-        rect(this.x - 15, this.y - 15, this.w, this.h + 10);
-        fill(50);
-        rect(this.x - 5, this.y - 5, 10, 10);
-        fill(0);
+        for (let i = 0; i < this.lines.length; i++) {
+            rect(this.x, this.y - 15 + i * 30, 3, 30);
+        }
+        if (this.marked) {
+            fill(255);
+        } else {
+            fill(0);
+        }
         for (let i = 0; i < this.lines.length; i++) {
             text(this.lines[i], this.x + 15, this.y - 9 + i * 30, this.w, this.h);
         }
