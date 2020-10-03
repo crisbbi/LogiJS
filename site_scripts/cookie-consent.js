@@ -6,8 +6,9 @@ window.addEventListener("load", function () {
       },
       "palette": {
         "popup": {
-          "background": "#888",
-          "text": "#fff"
+          "background": "#fff",
+          "text": "#323232",
+          "link": "#c83232"
         },
         "button": {
           "background": "#c83232",
