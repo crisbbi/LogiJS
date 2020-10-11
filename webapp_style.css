@@ -62,15 +62,23 @@ body {
   }
 
   .dark-theme .button {
-    color: white;
+    color: #fff;
+  }
+
+  .icon {
+      min-width: 18px;
   }
 
   .button > .icon, .buttonLeft > .icon {
-    color: rgb(200, 50, 50);
+    color: #c83232;
+  }
+
+  .buttonLeft:disabled > .icon {
+    color: #969696;
   }
 
   .button.active > .icon, .buttonLeft.active > .icon, .button:active > .icon {
-    color: rgb(255, 255, 255);
+    color: #fff;
   }
 
   .button:hover {
@@ -119,91 +127,47 @@ body {
     border: 3px solid rgba(0, 0, 0, 0);
     border-radius: 0;
     outline: none;
+    transition: all 100ms linear;
 }
 
-.redButton {
+#redButton {
     background: rgb(200, 50, 50);
 }
 
-.yellowButton {
+#yellowButton {
     background: rgb(240, 240, 50);
 }
 
-.greenButton {
+#greenButton {
     background: rgb(40, 180, 40);
 }
 
-.blueButton {
+#blueButton {
     background: rgb(10, 100, 190);
 }
 
-.colorButton:hover {
-    -webkit-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-}
-
-.redButton:hover {
+#redButton:hover {
     background: rgb(209, 71, 71);
 }
 
-.yellowButton:hover {
+#yellowButton:hover {
     background: rgb(255, 255, 83);
 }
 
-.greenButton:hover {
+#greenButton:hover {
     background: rgb(78, 208, 69);
 }
 
-.blueButton:hover {
+#blueButton:hover {
     background: rgb(63, 125, 218);
 }
 
-.colorButton:active, .colorButton.col-active {
-    -webkit-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
+.colorButton.active {
     border: 3px solid #323232;
 }
 
-.dark-theme .colorButton:active, .dark-theme .colorButton.col-active {
+.dark-theme .colorButton.active {
     border: 3px solid white;
-}
-
-/*.redButton:active, .redButton.col-active {
-    border: 3px solid #9f2828;
-}
-
-.yellowButton:active, .yellowButton.col-active {
-    border: 3px solid #dfdf11;
-}
-
-.greenButton:active, .greenButton.col-active {
-    border: 3px solid #1e8a1e;
-}
-
-.blueButton:active, .blueButton.col-active {
-    border: 3px solid #074a8d;
-}*/
-
-.ease_in {
-    opacity: 0.0;
-    -webkit-transition: all 500ms ease-in-out;
-    -moz-transition: all 500ms ease-in-out;
-    -ms-transition: all 500ms ease-in-out;
-    -o-transition: all 500ms ease-in-out;
-    transition: all 500ms ease-in-out;
-}
-
-.ease_out {
-    opacity: 1.0;
-    -webkit-transition: all 500ms ease-in-out;
-    -moz-transition: all 500ms ease-in-out;
-    -ms-transition: all 500ms ease-in-out;
-    -o-transition: all 500ms ease-in-out;
-    transition: all 500ms ease-in-out;
 }
 
 .label {
@@ -233,47 +197,98 @@ body {
     margin-bottom: 0;
 }
 
-.scrollContainerLeft > .label {
+#multiplier-label, #ticktime-label {
     margin: 30px 0 10px 0;
     width: 230px;
 }
 
-.scrollContainerLeft > .simLabel {
-    margin: 20px 0;
+#sim-label, #options-label {
+    margin: 20px 0 20px 0;
+    font-size: 25px;
+    text-align: center;
+    display: none;
 }
 
-.scrollContainerLeft > .msLabel {
+#dashboard-login-button {
+    min-width: 70px;
+}
+
+#dashboard-login-button.dashboard-button {
+    min-width: 118px;
+}
+
+#leftSideContainer > .msLabel {
     float: right;
     width: 60px;
     margin: 0 20px 0 0;
     line-height: 30px;
+    display: none;
 }
 
-.disabledLabel {
-    color: #969696;
+.topCheckbox {
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: all 200ms linear;
+    cursor: pointer;
 }
 
-.dark-theme .disabledLabel {
-    color: #969696;
+.topCheckbox:hover {
+    outline: 1px solid #969696;
 }
 
 .checkbox {
+    display: none;
     -ms-user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
-    color: #323232;
-    font-family: ArcaMajora3, 'Open Sans', sans-serif;
-    font-size: 17px;
     margin: 20px 0 20px 20px;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    padding: 5px;
+    transition: all 200ms linear;
+    cursor: pointer;
+}
+
+.checkbox:hover {
+    outline: 1px solid #969696;
+}
+
+.checkbox:disabled {
+    outline: 1px solid rgba(0, 0, 0, 0);
+    cursor: default;
 }
 
 .dark-theme .checkbox {
     color: #fff;
 }
 
-.scrollContainerLeft > .checkbox {
-    margin: 10px 20px;
+#leftSideContainer > .checkbox {
+    margin: 10px 20px 10px 10px;
+}
+
+.checkbox-label {
+    display: none;
+    color: #323232;
+    font-family: ArcaMajora3, 'Open Sans', sans-serif;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.dark-theme .checkbox-label {
+    color: #fff;
+}
+
+.disabledLabel, .dark-theme .disabledLabel {
+    color: #969696;
+    cursor: default;
+}
+
+#ticktime-label, #multiplier-label, #multiplier-value-label {
+    display: none;
+}
+
+.preview-span .no-outputs {
+    padding: 0 20px;
+    font-size: 18px;
 }
 
 .buttonLeft{
@@ -344,19 +359,15 @@ body {
     box-sizing: content-box;
     cursor: pointer;
     border-radius: 0;
-    border: none;
-    font-family: ArcaMajora3, 'Open Sans', sans-serif;
-    font-size: 17px;
-    color: rgb(255, 255, 255);
-    -o-text-overflow: clip;
-    text-overflow: clip;
+    border: none;   
     background: none;
 
     -ms-user-select: none;
     -webkit-user-select: none;
+    -webkit-user-drag: none;
     -moz-user-select: none;
     user-select: none;
-    box-shadow: 0 0 4px #969696;
+    box-shadow: 0 0 3px #969696;
     outline: none;
 }
 
@@ -365,10 +376,7 @@ body {
 }
 
 .previewButton:hover {
-    -webkit-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
+    transition: all 100ms linear;
     background: #ddd;
 }
 
@@ -377,10 +385,7 @@ body {
 }
 
 .previewButton:active, .previewButton.active {
-    -webkit-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 100ms cubic-bezier(0.42, 0, 0.58, 1);
+    transition: all 100ms linear;
     background: #969696;
 }
 
@@ -389,23 +394,17 @@ body {
 }
 
 .previewButton:disabled {
-    -webkit-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
+    transition: all 100ms linear;
     cursor: default;
-    background: #ddd;
+    background: #eee;
 }
 
 .dark-theme .previewButton:disabled {
-    background: #202020;
+    background: #323232;
 }
 
 .previewButton:disabled >  .preview {
-    -webkit-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -moz-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    -o-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
-    transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
+    transition: all 100ms linear;
     filter: brightness(90%);
 }
 
@@ -413,6 +412,12 @@ body {
     filter: brightness(50%);
 }
 
+.preview {
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-select: none;
+}
 
 .topBox {
     appearance: none;
@@ -439,7 +444,7 @@ body {
 .optionLabel {
     margin: 5px 0 5px 10px;
     width: 110px;
-    display: inline-block;
+    display: none;
     -ms-user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -457,7 +462,7 @@ body {
 	margin-top : 10px;
 	margin-left : 5px;
 	width: 80px;
-	display: inline-block;
+	display: none;
     -webkit-box-sizing: content-box;
     -moz-box-sizing: content-box;
     box-sizing: content-box;
@@ -475,8 +480,17 @@ body {
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     user-select: none;
+    background: #969696;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: all 200ms linear;
+}
+
+.selectLeft:hover {
+    outline: 1px solid #969696;
+}
+
+.dark-theme .selectLeft {
     background: #585858;
-    outline: none;
 }
 
 #label-textbox {
@@ -489,17 +503,17 @@ body {
     color: #323232;
     border: none;
     width: 220px;
-    height: 60px;
-    outline: none;
+    height: 70px;
     resize: none;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: all 200ms linear;
+}
+
+#label-textbox:hover {
+    outline: 1px solid #969696;
 }
 
 .dark-theme #label-textbox {
-    background: #323232;
-    color: #fff;
-}
-
-.dark-theme .labelTextBox {
     background: #323232;
     color: #fff;
 }
@@ -515,6 +529,12 @@ body {
     -webkit-transition: .2s;
     transition: opacity .2s;
     border-radius: 0;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    cursor: pointer;
+}
+
+.slider:disabled {
+    cursor: default;
 }
 
 .slider::-webkit-slider-thumb {
@@ -525,7 +545,6 @@ body {
     border-radius: 0;
     border: none;
     background: #323232;
-    cursor: pointer;
 }
 
 .slider::-moz-range-thumb {
@@ -534,7 +553,6 @@ body {
     border-radius: 0;
     border: none;
     background: #323232;
-    cursor: pointer;
 }
 
 .dark-theme .slider::-webkit-slider-thumb {
@@ -546,6 +564,7 @@ body {
 }
 
 .sliderLeft {
+    display: none;
     float: left;
     -ms-user-select: none;
     -webkit-user-select: none;
@@ -598,7 +617,12 @@ input[type=range]::-ms-tooltip {
     border: none;
     background: white;
     color: #323232;
-    outline: none;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: 200ms linear;
+}
+
+.textInput:hover {
+    outline: 1px solid #969696;
 }
 
 .textInput:disabled::placeholder {
@@ -692,11 +716,11 @@ input[type=range]::-ms-tooltip {
 
 #select-tools {
     position: absolute;
-    padding: 0 5px;
+    padding: 0;
     left: 50vh;
     top: 50vh;
     background: none;
-    width: 190px;
+    width: 195px;
     height: 50px;
     margin: 0;
     display: none;
@@ -843,9 +867,10 @@ input[type=range]::-ms-tooltip {
 
 #module-input {
     font-family: ArcaMajora3, 'Open Sans', Arial, sans-serif;
-    width: 200px;
+    width: 180px;
     height: 27px;
     margin: 10px;
+    margin-left: 20px;
     text-align: center;
 }
 
@@ -857,27 +882,40 @@ input[type=range]::-ms-tooltip {
     background: none;
     color: #969696;
     text-align: right;
-    padding: 5px 15px 5px 0;
-    outline: none;
+    padding: 7px 10px 5px 0;
+    margin-right: 5px;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: all 200ms linear;
 }
 
 #sketchname-1::placeholder {
     color: #969696;
+    transition: all 200ms linear;
+}
+
+#sketchname-1:hover {
+    outline: 1px solid #969696;
+    color: #323232;
+}
+
+.dark-theme #sketchname-1:hover {
+    color: #fff;
 }
 
 #sketchname-2 {
     font-family: ArcaMajora3, 'Open Sans', Arial, sans-serif;
     height: 27px;
-    width: 200px;
+    width: 180px;
+    margin-left: 30px;
 }
 
 #desc-input {
     font-family: ArcaMajora3, 'Open Sans', Arial, sans-serif;
     font-size: 18px;
     position: absolute;
-    right: 50px;
+    right: 40px;
     bottom: 100px;
-    width: 280px;
+    width: 300px;
     height: 172px;
     resize: none;
 }
@@ -895,6 +933,7 @@ input[type=range]::-ms-tooltip {
     background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
     transition: 0.2s ease-in-out;
     display: none;
+    z-index: 1;
 }
 
 .customDialogButton {
@@ -992,15 +1031,20 @@ input[type=range]::-ms-tooltip {
     width: 70px;
     background: white;
     font-family: ArcaMajora3, 'Open Sans', Arial, sans-serif;
-    padding: 5px;
+    padding: 0px;
     height: 40px;
     color: #323232;
     font-size: 20px;
-    outline: none;
     border: none;
     border-radius: 0;
-    margin: 5px;
+    margin: 10px;
     text-align: center;
+    outline: 1px solid rgba(0, 0, 0, 0);
+    transition: all 200ms linear;
+}
+
+.inputLabel:hover {
+    outline: 1px solid #969696;
 }
 
 .dark-theme .inputLabel {
@@ -1034,6 +1078,41 @@ input[type=range]::-ms-tooltip {
     height: 200px;
     width: 200px;
     z-index: -1;
+}
+
+#helpLabelContainer {
+    position: absolute;
+    padding: 14px 10px 16px 10px;
+    left: 240px;
+    bottom: 0;
+    background: white;
+    margin: 20px;
+    height: 20px;
+    z-index: 100;
+    opacity: 0;
+    transition: 100ms linear;
+}
+
+.dark-theme #helpLabelContainer {
+    background: #323232;
+}
+
+#zoomLabelContainer {
+    position: absolute;
+    padding: 14px 10px 16px 10px;
+    left: 240px;
+    bottom: 0;
+    background: white;
+    margin: 20px;
+    height: 20px;
+    z-index: 100;
+    opacity: 0;
+    transition: 100ms linear;
+}
+
+.dark-theme #zoomLabelContainer {
+    background: #323232;
+
 }
 
 .sketch_item {
@@ -1249,6 +1328,7 @@ h1 {
     background: white;
     overflow: hidden;
     z-index: 100;
+    overflow: visible;
 }
 
 .dark-theme #topButtonsContainer {
@@ -1264,21 +1344,57 @@ h1 {
     margin-right: 10px;
 }
 
-.scrollBoxLeft{
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
     display: inline-block;
-	width: 230px;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background: #fff;
+    box-shadow: 0px 0px 4px #969696;
+    z-index: 1;
+}
+
+.dark-theme .dropdown-content {
+    background: #323232;
+    box-shadow: 0px 0px 4px #272727;
+}
+
+/* Links inside the dropdown */
+.dropdown-content .button {
+    width: 140px;
+    text-align: left;
+    padding: 5px 20px;
+    margin: 0;
+    text-decoration: none;
+    line-height: 35px;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+#toolbox{
+    display: inline-block;
+    width: 230px;
+    height: min(495px, 100vh - 300px);
 	overflow-y: auto;
 	overflow-x: hidden;
     padding-right: 2px;
     scrollbar-width: thin;
-    scrollbar-color: #969696 #fff;
+    scrollbar-color: #ccc #fff;
 }
 
-.dark-theme .scrollBoxLeft {
-    scrollbar-color: #969696 #323232;
+.dark-theme #toolbox {
+    scrollbar-color: #202020 #323232;
 }
 
-.scrollContainerLeft{
+#leftSideContainer {
     display: inline-block;
 	width: 235px;
 	overflow-y: hidden;
@@ -1291,7 +1407,7 @@ h1 {
     height: 100%;
 }
 
-.dark-theme .scrollContainerLeft {
+.dark-theme #leftSideContainer {
     background: #323232;
 }
 
@@ -1301,7 +1417,7 @@ h1 {
 }
   
 ::-webkit-scrollbar-thumb {
-    background: #969696;
+    background: #ccc;
 }
 
 .dark-theme ::-webkit-scrollbar-thumb {

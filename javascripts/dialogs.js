@@ -123,7 +123,9 @@ function saveDialogClicked() {
     }
     enterModifierMode();
     saveDialog = true;
-    setActive(saveDialogButton, true);
+    setUnactive();
+    hideAllOptions();
+    saveDownloadButton.classList.add('active');
     // Take a picture before redrawing
     previewImg = document.getElementById('mainCanvas').toDataURL('image/png');
     document.getElementById('preview-image').src = previewImg;
@@ -150,59 +152,11 @@ function showSaveDialog() {
     }
 }
 
-
 function closeSaveDialog() {
     saveDialog = false;
     document.getElementById('save-dialog').style.display = 'none';
     justClosedMenu = true;
     mainCanvas.elt.classList.remove('dark-canvas');
-}
-
-function displayCustomDialog() {
-    mainCanvas.elt.classList.add('dark-canvas');
-    document.getElementById('custom-dialog').style.display = 'block';
-    if (importSketchData.looks.length > 0) {
-        PWp5.showImportPreview(importSketchData.looks[0], 0, 0);
-    } else {
-        PWp5.showEmptyGrid();
-    }
-    configureButtons('customdialog');
-}
-
-function closeCustomDialog() {
-    showCustomDialog = false;
-    document.getElementById('custom-dialog').style.display = 'none';
-
-    configureButtons('edit');
-
-    if (controlMode === 'modify') {
-        setActive(modifierModeButton, true);
-    }
-
-    justClosedMenu = true;
-    mainCanvas.elt.classList.remove('dark-canvas');
-}
-
-function custom_element_clicked(r) {
-    if (r >= importSketchData.sketches.length || importSketchData.looks[r].outputs === 0) {
-        return; // If the place should be greater than the number of available modules or the module has no outputs, return.
-    }
-    setActive(customButton, true); // Set the custom modules button as activated
-    setPreviewElement(true, importSketchData.looks[r]); // Show a preview of the module at the users mouse position
-    importCustom(importSketchData.sketches[r] + '.json'); // Import the module on mouse click
-}
-
-function custom_element_hovered(r) {
-    if (importSketchData.looks.length <= r) {
-        return;
-    }
-    PWp5.clear();
-    if (importSketchData.looks[r].outputs > 0) {
-        PWp5.showImportPreview(importSketchData.looks[r], 0, 0);
-    } else {
-        document.getElementsByClassName('preview-span')[r].innerHTML = '<i class="fa fa-exclamation-circle"></i> This Sketch has no Outputs';
-        PWp5.showNoOutputs();
-    }
 }
 
 function showModuleOptions() {
@@ -255,7 +209,7 @@ function initPinConfigurator() {
                 setHelpText('Sets this input on top of the module');
             });
             checkbox.addEventListener('mouseleave', function () { // jshint ignore:line
-                setHelpText('');
+                setHelpText('Click on the in- and outputs to swap them!');
             });
             let newInput = document.createElement('input');
             newInput.classList.add('inputLabel');
@@ -271,7 +225,7 @@ function initPinConfigurator() {
                 setHelpText('The name of this input on the module');
             });
             newInput.addEventListener('mouseleave', function () { // jshint ignore:line
-                setHelpText('');
+                setHelpText('Click on the in- and outputs to swap them!');
             });
             configurator.appendChild(checkbox);
             configurator.appendChild(newInput);
@@ -292,7 +246,7 @@ function initPinConfigurator() {
                 setHelpText('The name of this output on the module');
             });
             newInput.addEventListener('mouseleave', function () { // jshint ignore:line
-                setHelpText('');
+                setHelpText('Click on the in- and outputs to swap them!');
             });
             configurator.appendChild(newInput);
         }
