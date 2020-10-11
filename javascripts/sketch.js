@@ -12,13 +12,15 @@ let wires = []; // List of wires
 let labels = []; // List of text labels
 let segDisplays = []; // List of 7-segment displays
 
-let segBits = 4; // Number of bits for new 7-segment displays
-let counterBitWidth = 4; // Output width of counter objects
+let sevenSegmentBits = 4; // Number of bits for new 7-segment displays
+let counterBitWidth = 2; // Output width of counter objects
 let decoderBitWidth = 2; // Input width of decoder objects
 let muxBitWidth = 1; // In/output width for (de-) multiplexers
 
 let startDirection = 0; // Start direction for the current wire preview
 let traced = []; // List of all traced wires (needed by parseGroups)
+
+let superscripts = ['º', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
 
 /*
     This is a list of all elements that are currently selected with the selection tool
@@ -50,14 +52,11 @@ let wirePreviewStartY = 0;
 let groups = [];
 
 /*
-    Name that is displayed on the sketch's custom module
-*/
-let moduleCaption = []; // Name of the sketch, displayed on customs
-
-/*
     Current size of the grid in pixels, scaled to the current zoom level
 */
 let currentGridSize = GRIDSIZE;
+
+let isScrolling, showHelpTimeout;
 
 /*
     The control mode represents the current state of the system.
@@ -91,15 +90,7 @@ let gateInputCount = 2;
 */
 let gateDirection = 0;
 
-/*
-    If this is true, the inputs that are placed will be buttons
-*/
-let newIsButton = false;
-
-/*
-    If this is true, the inputs that are placed will be clock elements
-*/
-let newIsClock = false;
+let inputType = 'switch'; // Type of newly placed inputs
 
 /*
     The name of the custom module that is currently selected to be placed
@@ -167,10 +158,7 @@ let simRunning = false;
 */
 let saveDialog = false;
 
-/*
-    If this variable is true, the custom module dialog is displayed
-*/
-let showCustomDialog = false;
+let customDialog;
 
 let error = '';
 let errordesc = '';
@@ -191,9 +179,6 @@ let syncFramerate = true;
 let speedMultiplicator = 10;
 
 let stopTicks = false;
-
-let segIndices = [];
-let wireIndices = [];
 
 /*
     These arrays contain the data of custom modules that have already been loaded from server once.
@@ -240,7 +225,10 @@ let moduleNameChanged = false;
     These variable is set if a negation, connection point or diode preview was added to the last drawn frame.
     In this case, the canvas will be redrawn with the next mouse movement.
 */
-let removeOldPreview = false;
+let redrawNextFrame = false;
+
+let clickedOutOfGUI = false;
+let dropdownClicked = false;
 
 /*
     When an element is selected in modifier mode, it's number is saved in the respective variable.
@@ -255,37 +243,37 @@ let swapOutput = -1;
 
 let modifierMenuX, modifierMenuY;
 
-let moduleOptions = false;
-
-let clickedOutOfGUI = false;
+let moduleOptions = false; // This indicates if the module configurator is open
 
 /*
-    These are the modifier elements and their descriptional labels.
+    DOM element definitions
 */
-let inputIsTopBox, captionInput; // Input elements
+
+let logoImage; // The logo image in the top left corner (DOM element)
+
 let redButton, yellowButton, greenButton, blueButton; // Output elements
 let labelTextBox; // Label elements
+let clockspeedSlider; // Clock elements
 
-let leftSideButtons, topLeftButtons, topRightButtons, topButtonsContainer;
+let toolbox, topLeftButtons, topRightButtons, topButtonsContainer, leftSideContainer; // Element containers
 
-let sketchNameInput, moduleNameInput, saveButton, saveDialogText;
-let helpLabel, cancelButton, descInput;
-let deleteButton, simButton, labelBasic, labelAdvanced, labelOptions, labelSimulation,
-    andButton, orButton, xorButton, bufferButton, notButton, inputButton, buttonButton, clockButton,
-    outputButton, clockspeedSlider, undoButton, redoButton, modifierModeButton, labelButton, segDisplayButton, moduleButton;
+let copySelectButton, deleteSelectButton; // These appear when a sketch part is selected
 
-/*
-    Right side elements
-*/
-let importButton, saveDialogButton, dashboardButton, topSketchInput;
+let sketchNameInput, descInput; // Save dialog elements
+let moduleNameInput; // Module configurator elements
+let helpLabel; // Help text label
 
-let counterButton, decoderButton, dFlipFlopButton, rsFlipFlopButton, reg4Button,
-    muxButton, demuxButton, halfaddButton, fulladdButton, customButton;
+let editButton, deleteButton, simButton, undoButton, redoButton, selectButton, moduleButton; // Tool buttons
+let topSketchInput, importButton, saveDownloadButton, dashboardButton, screenshotButton; // Right side elements
 
-let gateInputSelect, labelGateInputs, directionSelect, bitSelect, labelDirection, labelBits, counterBitSelect, labelOutputWidth,
-    decoderBitSelect, labelInputWidth, multiplexerBitSelect;
+let andButton, orButton, xorButton, bufferButton, notButton, switchButton, buttonButton, clockButton, outputButton, labelButton, displayButton; // Standard element buttons
+let counterButton, decoderButton, dFlipFlopButton, rsFlipFlopButton, jkFlipFlopButton, registerButton, muxButton, demuxButton, halfaddButton, fulladdButton, customButton; // Advanced element buttons
+let labelOptions, labelSimulation, labelGateInputs, labelDirection, labelDisplay, labelOutputWidth,
+    labelInputWidth, tickTimeLabel, tickTimeMsLabel, multiplierValueLabel; // Left side labels
 
-let tickTimeSlider, tickTimeLabel, bpTickTimeCB, tickTimeMsLabel, sfcheckbox, multiplicatorSlider, multiplicatorLabel;
+let gateInputSelect, directionSelect, displaySelect, counterBitSelect, decoderBitSelect, multiplexerBitSelect; // Options elements
+
+let tickTimeSlider, bypassCheckbox, bypassLabel, syncFPSCheckbox, syncFPSLabel, multiplierSlider, multiplierLabel; // Simulation options elements
 
 /*
     This is the socket element used for socket communication with the server
@@ -295,16 +283,13 @@ let socket;
 /*
     This is the main HTML5 canvas variable for the sketch area
 */
-let mainCanvas, pwCanvas;
+let mainCanvas;
 
-let PWp5; // The p5 element for the preview canvas
-let modulep5; // p5 element for the module canvas
+let PWp5; // The p5 element for the preview canvas in the customs dialog
+let modulep5; // p5 element for the module canvas in the module configurator
 
 let lastTickTime = 0;
 let tickTime = 10;
-
-let lastrfTime = 0;
-let rfTime = 16;
 
 let tourStep = 0;
 
@@ -318,18 +303,14 @@ p5.disableFriendlyErrors = true; // jshint ignore:line
 */
 document.addEventListener('contextmenu', event => event.preventDefault());
 
+function preload() {
+    customDialog = new CustomDialog();
+}
+
 /*
     Sets up the canvas and caps the framerate
 */
 function setup() { // jshint ignore:line
-    topButtonsContainer = document.getElementById('topButtonsContainer');
-
-    //Div for the Top Left Buttons
-    topLeftButtons = document.getElementById('topLeftButtons');
-
-    //Div for the Top Right Buttons
-    topRightButtons = document.getElementById('topRightButtons');
-
     mainCanvas = createCanvas(windowWidth - 240, windowHeight - 50);     // Creates the canvas in full window size
     mainCanvas.position(240, 50);
     mainCanvas.id('mainCanvas');
@@ -337,75 +318,46 @@ function setup() { // jshint ignore:line
     initPreviewCanvas();
     initModuleCanvas();
 
-    // Prevents the input field from being focused when clicking in the canvas
-    document.addEventListener('mousedown', function (event) {
-        if (event.detail > 1) {
-            event.preventDefault();
-        }
-    }, false);
+    document.title = 'LogiJS: Untitled Sketch';
 
-    document.title = 'LogiJS: New Sketch';
-
-    leftSideContainer = createDiv('');
-    //leftSideContainer.elt.style.height = (windowHeight - 74 - 32 - 15).toString() + 'px';
-    leftSideContainer.elt.className = 'scrollContainerLeft';
-    //leftSideContainer.elt.style.margin = '20px 0px';
-
-    //Div for the Left Side Buttons
-    leftSideButtons = createDiv('');
-    leftSideButtons.elt.className = 'scrollBoxLeft';
-    leftSideButtons.parent(leftSideContainer);
-    leftSideButtons.elt.style.height = Math.min(500, windowHeight - 300) + 'px';
-
-    createTopButtons();
-
-    createBasicElements();
-    createAdvancedElements();
-
-    createCustomImportButton();
-    createElementOptions();
-
-    createDialogElements();
-
-    createTopRightButtons();
-
-    createModifierElements();
+    linkElementsFromDOM();
+    addElementHelpTexts();
 
     frameRate(60); // Caps the framerate at 60 FPS
 
     enterModifierMode();
 
-    socket = io.connect();
+    socket = io.connect(); // Initialize socket connection to the server
+
     loadURLSketch();
 
     socket.on('demousererror', function () {
-        error = 'Saving failed: No permissions!';
-        errordesc = 'This is a demo account.';
-        reDraw();
-        setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
+        showError('Saving failed: No permissions!', 'This is a demo account.');
     });
 
     socket.on('regexerror', function () {
-        error = 'Saving failed: Forbidden characters!';
-        errordesc = 'Please use only letters and numbers.';
-        reDraw();
-        setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
+        showError('Saving failed: Forbidden characters!', 'Please use only letters and numbers.');
     });
 
     socket.on('nametoolongerror', function () {
-        error = 'Saving failed: Sketch name too long!';
-        errordesc = 'Please keep your file names shorter than 50 characters.';
-        reDraw();
-        setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
+        showError('Saving failed: Sketch name too long!', 'Please keep your file names shorter than 50 characters.');
     });
 
     fetchImportData();
 
     reDraw();
-    setTimeout(reDraw, 100); // Redraw after 100ms in case fonts weren't loaded on first redraw
-    justClosedMenu = false;
+    setTimeout(reDraw, 200); // Redraw after 200ms in case fonts weren't loaded on first redraw
 
-    initTour();
+    moduleButton.disabled = (outputs.length === 0); // If there are outputs, enable module configuration
+
+    initTour(); // Show the tour if the variable has been passed
+}
+
+function showError(errorText, description) {
+    error = errorText;
+    errordesc = description;
+    reDraw();
+    setTimeout(function () { error = ''; errordesc = ''; reDraw(); }, 3000);
 }
 
 // Credits to https://stackoverflow.com/questions/2405355/how-to-pass-a-parameter-to-a-javascript-through-a-url-and-display-it-on-a-page (Mic)
@@ -422,95 +374,34 @@ function importCustom(filename) {
         enterModifierMode();
     } else {
         setControlMode('addObject');
-        if (showCustomDialog) {
+        if (customDialog.isVisible) {
             addType = 11; // external custom
-            closeCustomDialog();
+            customDialog.hide();
         } else {
             addType = 10; // internal custom
         }
-        labelDirection.show();
-        labelDirection.style('display', 'inline-block');
-        directionSelect.show();
-        directionSelect.style('display', 'inline-block');
-        labelOptions.show();
+        labelDirection.style.display = 'inline-block';
+        directionSelect.style.display = 'inline-block';
+        labelOptions.style.display = 'block';
         custFile = filename;
     }
 }
 
 function customClicked() {
-    if (showCustomDialog) {
-        closeCustomDialog();
-        return;
+    if (customDialog.isVisible) {
+        customDialog.hide();
+        configureButtons('edit');
+        mainCanvas.elt.classList.remove('dark-canvas');
+    } else {
+        setControlMode('modify');
+        setPreviewElement(false, {}, 'none');
+        setUnactive();
+        hideAllOptions();
+        customButton.classList.add('active');
+        mainCanvas.elt.classList.add('dark-canvas');
+        customDialog.display();
+        configureButtons('customdialog');
     }
-    showCustomDialog = true;
-    setPreviewElement(false, {}, 'none');
-    setActive(customButton, true);
-    setControlMode('modify');
-    displayCustomDialog();
-}
-
-function counterClicked() {
-    hideAllOptions();
-    setControlMode('addObject');
-    addType = 10;
-    labelDirection.show();
-    labelDirection.style('display', 'inline-block');
-    directionSelect.show();
-    directionSelect.style('display', 'inline-block');
-    labelOutputWidth.show();
-    labelOutputWidth.style('display', 'inline-block');
-    counterBitSelect.show();
-    counterBitSelect.style('display', 'inline-block');
-    labelOptions.show();
-    custFile = counterBitWidth + '-counter.json';
-}
-
-function decoderClicked() {
-    hideAllOptions();
-    setControlMode('addObject');
-    addType = 10;
-    labelDirection.show();
-    labelDirection.style('display', 'inline-block');
-    directionSelect.show();
-    directionSelect.style('display', 'inline-block');
-    labelInputWidth.show();
-    labelInputWidth.style('display', 'inline-block');
-    decoderBitSelect.show();
-    decoderBitSelect.style('display', 'inline-block');
-    labelOptions.show();
-    custFile = decoderBitWidth + '-decoder.json';
-}
-
-function muxClicked() {
-    hideAllOptions();
-    setControlMode('addObject');
-    addType = 10;
-    labelDirection.show();
-    labelDirection.style('display', 'inline-block');
-    directionSelect.show();
-    directionSelect.style('display', 'inline-block');
-    labelInputWidth.show();
-    labelInputWidth.style('display', 'inline-block');
-    multiplexerBitSelect.show();
-    multiplexerBitSelect.style('display', 'inline-block');
-    labelOptions.show();
-    custFile = muxBitWidth + '-mux.json';
-}
-
-function demuxClicked() {
-    hideAllOptions();
-    setControlMode('addObject');
-    addType = 10;
-    labelDirection.show();
-    labelDirection.style('display', 'inline-block');
-    directionSelect.show();
-    directionSelect.style('display', 'inline-block');
-    labelInputWidth.show();
-    labelInputWidth.style('display', 'inline-block');
-    multiplexerBitSelect.show();
-    multiplexerBitSelect.style('display', 'inline-block');
-    labelOptions.show();
-    custFile = muxBitWidth + '-demux.json';
 }
 
 function importJSONClicked() {
@@ -554,19 +445,19 @@ function cancelClicked() {
 }
 
 function hideAllOptions() {
-    bitSelect.hide();
-    labelBits.hide();
-    directionSelect.hide();
-    labelDirection.hide();
-    gateInputSelect.hide();
-    labelGateInputs.hide();
-    counterBitSelect.hide();
-    labelOutputWidth.hide();
-    decoderBitSelect.hide();
-    multiplexerBitSelect.hide();
-    labelInputWidth.hide();
-    labelOptions.hide();
-    labelSimulation.hide();
+    displaySelect.style.display = 'none';
+    labelDisplay.style.display = 'none';
+    directionSelect.style.display = 'none';
+    labelDirection.style.display = 'none';
+    gateInputSelect.style.display = 'none';
+    labelGateInputs.style.display = 'none';
+    counterBitSelect.style.display = 'none';
+    labelOutputWidth.style.display = 'none';
+    decoderBitSelect.style.display = 'none';
+    multiplexerBitSelect.style.display = 'none';
+    labelInputWidth.style.display = 'none';
+    labelOptions.style.display = 'none';
+    labelSimulation.style.display = 'none';
 }
 
 /*
@@ -592,47 +483,36 @@ function clearActionStacks() {
     actionRedo = [];
 }
 
-function setActive(btn, clear = true) {
-    if (clear) {
-        setUnactive();
-    }
-    hideAllOptions();
-    btn.elt.className += ' active';
-}
-
-function isActive(btn) {
-    return btn.elt.className.includes('active');
-}
-
 function setUnactive() {
-    andButton.elt.className = 'previewButton';
-    orButton.elt.className = 'previewButton';
-    xorButton.elt.className = 'previewButton';
-    bufferButton.elt.className = 'previewButton';
-    notButton.elt.className = 'previewButton';
-    inputButton.elt.className = 'previewButton';
-    buttonButton.elt.className = 'previewButton';
-    clockButton.elt.className = 'previewButton';
-    outputButton.elt.className = 'previewButton';
-    labelButton.elt.className = 'previewButton';
-    segDisplayButton.elt.className = 'previewButton';
-    counterButton.elt.className = 'previewButton';
-    decoderButton.elt.className = 'previewButton';
-    dFlipFlopButton.elt.className = 'previewButton';
-    rsFlipFlopButton.elt.className = 'previewButton';
-    reg4Button.elt.className = 'previewButton';
-    muxButton.elt.className = 'previewButton';
-    demuxButton.elt.className = 'previewButton';
-    halfaddButton.elt.className = 'previewButton';
-    fulladdButton.elt.className = 'previewButton';
-    customButton.elt.className = 'buttonLeft';
+    andButton.classList.remove('active');
+    orButton.classList.remove('active');
+    xorButton.classList.remove('active');
+    bufferButton.classList.remove('active');
+    notButton.classList.remove('active');
+    switchButton.classList.remove('active');
+    buttonButton.classList.remove('active');
+    clockButton.classList.remove('active');
+    outputButton.classList.remove('active');
+    labelButton.classList.remove('active');
+    displayButton.classList.remove('active');
+    counterButton.classList.remove('active');
+    decoderButton.classList.remove('active');
+    dFlipFlopButton.classList.remove('active');
+    rsFlipFlopButton.classList.remove('active');
+    jkFlipFlopButton.classList.remove('active');
+    registerButton.classList.remove('active');
+    muxButton.classList.remove('active');
+    demuxButton.classList.remove('active');
+    halfaddButton.classList.remove('active');
+    fulladdButton.classList.remove('active');
+    customButton.classList.remove('active');
 
-    deleteButton.elt.className = 'button';
-    selectButton.elt.className = 'button';
-    modifierModeButton.elt.className = 'button';
-    simButton.elt.className = 'button';
-    saveDialogButton.elt.className = 'button';
-    moduleButton.elt.className = 'button';
+    deleteButton.classList.remove('active');
+    selectButton.classList.remove('active');
+    moduleButton.classList.remove('active');
+    editButton.classList.remove('active');
+    simButton.classList.remove('active');
+    saveDownloadButton.classList.remove('active');
 }
 
 function deleteClicked() {
@@ -683,7 +563,9 @@ function deleteClicked() {
         if (controlMode === 'delete') {
             enterModifierMode();
         } else {
-            setActive(deleteButton, true);
+            setUnactive();
+            hideAllOptions();
+            deleteButton.classList.add('active');
             setControlMode('delete');
         }
     }
@@ -701,30 +583,20 @@ function labelChanged() {
 }
 
 function newGateInputNumber() {
-    gateInputCount = parseInt(gateInputSelect.value());
-    // Ensure that the correct preview gate is displayed when user selection changes
-    switch(addType){
-        case 1: previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'and', '&'));
-                    break;
-        case 2:  previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'or', '≥1'));
-                    break;   
-        case 3: previewSymbol = new CreatePreviewSymbol(new LogicGate(mouseX, mouseY, transform, gateDirection, gateInputCount, 1, 'xor', '=1'));
-                    break;           
-    }
-    
+    gateInputCount = parseInt(gateInputSelect.value);
 }
 
-function newBitLength() {
-    segBits = parseInt(bitSelect.value());
+function newDisplayBitLength() {
+    sevenSegmentBits = parseInt(displaySelect.value);
 }
 
 function newCounterBitLength() {
-    counterBitWidth = parseInt(counterBitSelect.value());
+    counterBitWidth = parseInt(counterBitSelect.value);
     custFile = counterBitWidth + '-counter.json';
-    if (isActive(counterButton)) {
+    if (counterButton.className.includes('active')) {
         let opLabels = [];
         for (let i = 0; i < counterBitWidth; i++) {
-            opLabels.push(i);
+            opLabels.push('2' + superscripts[counterBitWidth - i - 1]);
         }
         setPreviewElement(true, {
             tops: [],
@@ -738,9 +610,9 @@ function newCounterBitLength() {
 }
 
 function newDecoderBitLength() {
-    decoderBitWidth = parseInt(decoderBitSelect.value());
+    decoderBitWidth = parseInt(decoderBitSelect.value);
     custFile = decoderBitWidth + '-decoder.json';
-    if (isActive(decoderButton)) {
+    if (decoderButton.className.includes('active')) {
         let opLabels = [];
         for (let i = 0; i < Math.pow(2, decoderBitWidth); i++) {
             opLabels.push(i);
@@ -758,8 +630,8 @@ function newDecoderBitLength() {
 }
 
 function newMuxBitLength() {
-    muxBitWidth = parseInt(multiplexerBitSelect.value());
-    if (isActive(muxButton)) {
+    muxBitWidth = parseInt(multiplexerBitSelect.value);
+    if (muxButton.className.includes('active')) {
         let ipLabels = [];
         switch (muxBitWidth) {
             case 1:
@@ -791,7 +663,7 @@ function newMuxBitLength() {
             outputs: 1
         });
         custFile = muxBitWidth + '-mux.json';
-    } else if (isActive(demuxButton)) {
+    } else if (demuxButton.className.includes('active')) {
         let ipLabels = [];
         switch (muxBitWidth) {
             case 1:
@@ -829,7 +701,7 @@ function newMuxBitLength() {
 }
 
 function newDirection() {
-    switch (directionSelect.value()) {
+    switch (directionSelect.value) {
         case 'Right': gateDirection = 0; break;
         case 'Up': gateDirection = 3; break;
         case 'Left': gateDirection = 2; break;
@@ -860,12 +732,12 @@ function newClockspeed() {
 }
 
 function newTickTime() {
-    tickTime = tickTimeSlider.value();
-    tickTimeMsLabel.elt.innerHTML = tickTimeSlider.value() + 'ms';
+    tickTime = tickTimeSlider.value;
+    tickTimeMsLabel.innerHTML = tickTimeSlider.value + 'ms';
 }
 
 function newMultiplicator() {
-    speedMultiplicator = multiplicatorSlider.value() * 10;
+    speedMultiplicator = multiplierSlider.value * 10;
     if (simRunning) {
         stopTicks = true;
         setTimeout(function () {
@@ -877,7 +749,7 @@ function newMultiplicator() {
             }
         }, 20);
     }
-    multiplicatorLabel.elt.innerHTML = multiplicatorSlider.value();
+    multiplierValueLabel.innerHTML = multiplierSlider.value;
 }
 
 /* 
@@ -903,19 +775,16 @@ function andClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 1 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(andButton, true);
+        setUnactive();
+        andButton.classList.add('active');
         setControlMode('addObject');
         addType = 1; // and
         setPreviewElement(false, {}, 'and');
-        gateInputSelect.show();
-        gateInputSelect.style('display', 'inline-block');
-        labelGateInputs.show();
-        labelGateInputs.style('display', 'inline-block');
-        directionSelect.show();
-        directionSelect.style('display', 'inline-block');
-        labelDirection.show();
-        labelDirection.style('display', 'inline-block');
-        labelOptions.show();
+        gateInputSelect.style.display = 'inline-block';
+        labelGateInputs.style.display = 'inline-block';
+        directionSelect.style.display = 'inline-block';
+        labelDirection.style.display = 'inline-block';
+        labelOptions.style.display = 'block';
     }
 }
 
@@ -924,19 +793,16 @@ function orClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 2 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(orButton, true);
+        setUnactive();
+        orButton.classList.add('active');
         setControlMode('addObject');
         addType = 2; // or
         setPreviewElement(false, {}, 'or');
-        gateInputSelect.show();
-        gateInputSelect.style('display', 'inline-block');
-        labelGateInputs.show();
-        labelGateInputs.style('display', 'inline-block');
-        directionSelect.show();
-        directionSelect.style('display', 'inline-block');
-        labelDirection.show();
-        labelDirection.style('display', 'inline-block');
-        labelOptions.show();
+        gateInputSelect.style.display = 'inline-block';
+        labelGateInputs.style.display = 'inline-block';
+        directionSelect.style.display = 'inline-block';
+        labelDirection.style.display = 'inline-block';
+        labelOptions.style.display = 'block';
     }
 }
 
@@ -945,30 +811,27 @@ function xorClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 3 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(xorButton, true);
+        setUnactive();
+        xorButton.classList.add('active');
         setControlMode('addObject');
         addType = 3; // xor
         setPreviewElement(false, {}, 'xor');
-        gateInputSelect.show();
-        gateInputSelect.style('display', 'inline-block');
-        labelGateInputs.show();
-        labelGateInputs.style('display', 'inline-block');
-        directionSelect.show();
-        directionSelect.style('display', 'inline-block');
-        labelDirection.show();
-        labelDirection.style('display', 'inline-block');
-        labelOptions.show();
+        gateInputSelect.style.display = 'inline-block';
+        labelGateInputs.style.display = 'inline-block';
+        directionSelect.style.display = 'inline-block';
+        labelDirection.style.display = 'inline-block';
+        labelOptions.style.display = 'block';
     }
 }
 
-function inputClicked(dontToggle = false) {
+function switchClicked(dontToggle = false) {
     hideAllOptions();
     if (controlMode === 'addObject' && addType === 4 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(inputButton, true);
-        newIsButton = false;
-        newIsClock = false;
+        setUnactive();
+        switchButton.classList.add('active');
+        inputType = 'switch';
         setPreviewElement(false, {}, 'switch');
         setControlMode('addObject');
         addType = 4; // switch
@@ -981,9 +844,9 @@ function buttonClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 5 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(buttonButton, true);
-        newIsButton = true;
-        newIsClock = false;
+        setUnactive();
+        buttonButton.classList.add('active');
+        inputType = 'button';
         setPreviewElement(false, {}, 'button');
         setControlMode('addObject');
         addType = 5; // button
@@ -996,9 +859,9 @@ function clockClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 6 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(clockButton, true);
-        newIsButton = false;
-        newIsClock = true;
+        setUnactive();
+        clockButton.classList.add('active');
+        inputType = 'clock';
         setPreviewElement(false, {}, 'clock');
         setControlMode('addObject');
         addType = 6; // clock
@@ -1011,27 +874,27 @@ function outputClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 7 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(outputButton, true);
+        setUnactive();
+        outputButton.classList.add('active');
         setControlMode('addObject');
         addType = 7; // output
         setPreviewElement(false, {}, 'output');
     }
 }
 
-function segDisplayClicked(dontToggle = false) {
+function displayClicked(dontToggle = false) {
     hideAllOptions();
     if (controlMode === 'addObject' && addType === 8 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(segDisplayButton, true);
+        setUnactive();
+        displayButton.classList.add('active');
         setControlMode('addObject');
         addType = 8; // segDisplay
         setPreviewElement(false, {}, '7-segment');
-        bitSelect.show();
-        bitSelect.style('display', 'inline-block');
-        labelBits.show();
-        labelBits.style('display', 'inline-block');
-        labelOptions.show();
+        displaySelect.style.display = 'inline-block';
+        labelDisplay.style.display = 'inline-block';
+        labelOptions.style.display = 'block';
     }
 }
 
@@ -1041,7 +904,9 @@ function startSelect() {
         enterModifierMode();
     } else {
         configureButtons('select');
-        setActive(selectButton, true);
+        setUnactive();
+        hideAllOptions();
+        selectButton.classList.add('active');
         setControlMode('select');
         setSelectMode('none');
     }
@@ -1053,7 +918,8 @@ function labelButtonClicked(dontToggle = false) {
     if (controlMode === 'addObject' && addType === 9 && !dontToggle) {
         enterModifierMode();
     } else {
-        setActive(labelButton, true);
+        setUnactive();
+        labelButton.classList.add('active');
         setControlMode('addObject');
         addType = 9; // label
         setPreviewElement(false, {}, 'label');
@@ -1291,7 +1157,7 @@ function addOutput() {
     newOutput.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newOutput.updateClickBox();
     outputs.push(newOutput);
-    moduleButton.elt.disabled = false;
+    moduleButton.disabled = false;
     pushUndoAction('addOut', [outputs.length - 1], [newOutput]);
     reDraw();
 }
@@ -1327,14 +1193,14 @@ function addInput() {
     var newInput = new Input(mouseX, mouseY, transform);
     newInput.setCoordinates(mouseX / transform.zoom - transform.dx, mouseY / transform.zoom - transform.dy);
     newInput.updateClickBox();
-    if (newIsButton) {
+    if (inputType === 'button') {
         newInput.framecount = BUTCOUNT;
-    } else if (newIsClock) {
+    } else if (inputType === 'clock') {
         newInput.resetFramecount();
     } else {
         newInput.framecount = -1;
     }
-    newInput.clock = newIsClock;
+    newInput.clock = (inputType === 'clock');
     inputs.push(newInput);
     pushUndoAction('addIn', [inputs.length - 1], [newInput]);
     reDraw();
@@ -1487,7 +1353,7 @@ function deleteCustom(customNumber) {
 */
 function deleteOutput(outputNumber) {
     pushUndoAction('delOut', [outputNumber], outputs.splice(outputNumber, 1));
-    moduleButton.elt.disabled = (outputs.length === 0);
+    moduleButton.disabled = (outputs.length === 0);
     reDraw();
 }
 
@@ -1496,7 +1362,7 @@ function deleteOutput(outputNumber) {
 */
 function deleteInput(inputNumber) {
     pushUndoAction('delIn', [inputNumber], inputs.splice(inputNumber, 1));
-    moduleButton.elt.disabled = (outputs.length === 0);
+    moduleButton.disabled = (outputs.length === 0);
     reDraw();
 }
 
@@ -1528,11 +1394,12 @@ function startSimulation() {
     setControlMode('modify');
 
     // Configure the DOMs for simulation mode
-    setActive(simButton, true);
+    setUnactive();
+    simButton.classList.add('active');
     configureButtons('simulation');
     hideAllOptions();
-    leftSideButtons.hide();
-    customButton.hide();
+    toolbox.style.display = 'none';
+    customButton.style.display = 'none';
 
     // Parse all wire groups and attach the components
     parseGroups();
@@ -1550,19 +1417,19 @@ function startSimulation() {
         customs[i].setSimRunning(true);
     }
 
-    labelSimulation.show();
+    labelSimulation.style.display = 'block';
 
-    // Show the frame sync checkbox
-    sfcheckbox.show();
+    syncFPSCheckbox.style.display = 'inline-block';
+    syncFPSLabel.style.display = 'inline-block';
 
-    tickTimeLabel.show();
-    tickTimeMsLabel.show();
-    tickTimeSlider.show();
-    bpTickTimeCB.show();
-    multiplicatorSlider.show();
-    multiplicatorLabel.show();
-    multDescLabel.show();
-    multDescLabel.style('display', 'inline-block');
+    tickTimeLabel.style.display = 'block';
+    tickTimeMsLabel.style.display = 'inline-block';
+    tickTimeSlider.style.display = 'inline-block';
+    bypassCheckbox.style.display = 'inline-block';
+    bypassLabel.style.display = 'inline-block';
+    multiplierLabel.style.display = 'inline-block';
+    multiplierSlider.style.display = 'inline-block';
+    multiplierValueLabel.style.display = 'inline-block';
 
     // Start the simulation and exit the modifier mode
     simRunning = true;
@@ -1581,22 +1448,22 @@ function endSimulation() {
     configureButtons('edit');
     stopTicks = true;
     setTimeout(function () { // wait until all updateTick functions have terminated
-        // Hide the checkbox
-        labelSimulation.hide();
-        sfcheckbox.hide();
+        labelSimulation.style.display = 'none';
+        syncFPSCheckbox.style.display = 'none';
+        syncFPSLabel.style.display = 'none';
 
-        // Hide the tick time slider
-        tickTimeLabel.hide();
-        tickTimeMsLabel.hide();
-        tickTimeSlider.hide();
-        multiplicatorSlider.hide();
-        multiplicatorLabel.hide();
-        multDescLabel.hide();
+        tickTimeLabel.style.display = 'none';
+        tickTimeMsLabel.style.display = 'none';
+        tickTimeSlider.style.display = 'none';
+        multiplierSlider.style.display = 'none';
+        multiplierValueLabel.style.display = 'none';
+        multiplierLabel.style.display = 'none';
 
-        bpTickTimeCB.hide();
+        bypassCheckbox.style.display = 'none';
+        bypassLabel.style.display = 'none';
 
-        leftSideButtons.show();
-        customButton.show();
+        toolbox.style.display = 'inline-block';
+        customButton.style.display = 'block';
 
         groups = []; // Reset the groups, as they are regenerated when starting again
         for (const elem of gates) {
@@ -1631,7 +1498,7 @@ function endSimulation() {
 }
 
 function setSimButtonText(text) {
-    simButton.elt.innerHTML = text;
+    simButton.innerHTML = text;
 }
 
 /*
@@ -1640,18 +1507,18 @@ function setSimButtonText(text) {
 */
 function updateUndoButtons() {
     if (loading) {
-        redoButton.elt.disabled = true;
-        undoButton.elt.disabled = true;
+        redoButton.disabled = true;
+        undoButton.disabled = true;
     } else {
-        redoButton.elt.disabled = (actionRedo.length === 0);
-        undoButton.elt.disabled = (actionUndo.length === 0);
+        redoButton.disabled = (actionRedo.length === 0);
+        undoButton.disabled = (actionUndo.length === 0);
     }
 }
 
 function configureButtons(mode) {
-    let toolbox, modifiers, simulation, customimport, savedialog, jsonimport, moduleimport, select;
+    let tools, modifiers, simulation, customimport, savedialog, jsonimport, moduleimport, select;
     if (mode === 'edit') {
-        toolbox = false;
+        tools = false;
         modifiers = false;
         savedialog = false;
         simulation = false;
@@ -1660,7 +1527,7 @@ function configureButtons(mode) {
         moduleimport = false;
         select = false;
     } else if (mode === 'simulation') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = false;
         simulation = false;
@@ -1669,7 +1536,7 @@ function configureButtons(mode) {
         moduleimport = true;
         select = true;
     } else if (mode === 'savedialog') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = false;
         simulation = true;
@@ -1678,7 +1545,7 @@ function configureButtons(mode) {
         moduleimport = true;
         select = true;
     } else if (mode === 'customdialog') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
@@ -1687,7 +1554,7 @@ function configureButtons(mode) {
         moduleimport = true;
         select = true;
     } else if (mode === 'loading') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
@@ -1696,7 +1563,7 @@ function configureButtons(mode) {
         moduleimport = true;
         select = true;
     } else if (mode === 'moduleOptions') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
@@ -1705,7 +1572,7 @@ function configureButtons(mode) {
         moduleimport = false;
         select = true;
     } else if (mode === 'select') {
-        toolbox = true;
+        tools = true;
         modifiers = true;
         savedialog = true;
         simulation = true;
@@ -1714,7 +1581,7 @@ function configureButtons(mode) {
         moduleimport = true;
         select = false;
     } else {
-        toolbox = false;
+        tools = false;
         modifiers = false;
         savedialog = false;
         simulation = false;
@@ -1723,43 +1590,44 @@ function configureButtons(mode) {
         moduleimport = false;
         select = false;
     }
-    andButton.elt.disabled = toolbox;
-    orButton.elt.disabled = toolbox;
-    xorButton.elt.disabled = toolbox;
-    bufferButton.elt.disabled = toolbox;
-    notButton.elt.disabled = toolbox;
-    inputButton.elt.disabled = toolbox;
-    outputButton.elt.disabled = toolbox;
-    segDisplayButton.elt.disabled = toolbox;
-    labelButton.elt.disabled = toolbox;
-    buttonButton.elt.disabled = toolbox;
-    clockButton.elt.disabled = toolbox;
+    andButton.disabled = tools;
+    orButton.disabled = tools;
+    xorButton.disabled = tools;
+    bufferButton.disabled = tools;
+    notButton.disabled = tools;
+    switchButton.disabled = tools;
+    outputButton.disabled = tools;
+    displayButton.disabled = tools;
+    labelButton.disabled = tools;
+    buttonButton.disabled = tools;
+    clockButton.disabled = tools;
 
-    reg4Button.elt.disabled = toolbox;
-    decoderButton.elt.disabled = toolbox;
-    counterButton.elt.disabled = toolbox;
-    muxButton.elt.disabled = toolbox;
-    demuxButton.elt.disabled = toolbox;
-    dFlipFlopButton.elt.disabled = toolbox;
-    rsFlipFlopButton.elt.disabled = toolbox;
-    halfaddButton.elt.disabled = toolbox;
-    fulladdButton.elt.disabled = toolbox;
+    registerButton.disabled = tools;
+    decoderButton.disabled = tools;
+    counterButton.disabled = tools;
+    muxButton.disabled = tools;
+    demuxButton.disabled = tools;
+    dFlipFlopButton.disabled = tools;
+    jkFlipFlopButton.disabled = tools;
+    rsFlipFlopButton.disabled = tools;
+    halfaddButton.disabled = tools;
+    fulladdButton.disabled = tools;
 
-    customButton.elt.disabled = (customimport || (getCookieValue('access_token') === ''));
+    customButton.disabled = (customimport || (getCookieValue('access_token') === ''));
 
-    modifierModeButton.elt.disabled = modifiers;
-    deleteButton.elt.disabled = modifiers;
-    selectButton.elt.disabled = select;
+    editButton.disabled = modifiers;
+    deleteButton.disabled = modifiers;
+    selectButton.disabled = select;
     if (!modifiers) {
         updateUndoButtons();
     } else {
-        undoButton.elt.disabled = true;
-        redoButton.elt.disabled = true;
+        undoButton.disabled = true;
+        redoButton.disabled = true;
     }
-    simButton.elt.disabled = simulation;
-    saveDialogButton.elt.disabled = savedialog;
-    importButton.elt.disabled = jsonimport;
-    moduleButton.elt.disabled = moduleimport || (outputs.length === 0);
+    simButton.disabled = simulation;
+    saveDownloadButton.disabled = savedialog;
+    importButton.disabled = jsonimport;
+    moduleButton.disabled = moduleimport || (outputs.length === 0);
 }
 
 function draw() {
@@ -1890,18 +1758,12 @@ function reDraw() {
     }
 
     // Draw the zoom and framerate labels
-    textFont('ArcaMajora3');
+    /*textFont('ArcaMajora3');
     textAlign(LEFT, TOP);
     textSize(12);
-    fill(0);
     noStroke();
-    text(Math.round(transform.zoom * 100) + '%', 10, window.height - 20); // Zoom label
-    text(Math.round(frameRate()), window.width - 20, window.height - 20); // Framerate label
-
-    if (moduleOptions) {
-        textSize(20);
-        text('Click on the in- and outputs to swap them!', 30, 30);
-    }
+    fill(0);
+    text(Math.round(frameRate()), window.width - 20, window.height - 20); // Framerate label*/
 }
 
 function fetchImportData() {
@@ -1975,7 +1837,6 @@ function showElements() {
     }
 
     if (segDisplays.length > 0) {
-        textFont('PT Mono');
         for (const elem of segDisplays) {
             elem.show();
         }
@@ -1988,13 +1849,17 @@ function showElements() {
         elem.show();
     }
 
-    if (controlMode === 'addObject') {
+    if (controlMode === 'addObject' && !dropdownClicked) {
         textFont('Consolas');
         showElementPreview();
     }
 
     if (showSelectionBox) {
-        selectionBox.markClickBox();
+        selectionBox.markClickBox(true);
+    }
+
+    if (frameRate() < 20) {
+        setHelpText('Low Frame Rate!', 'exclamation-circle');
     }
 }
 
@@ -2014,13 +1879,13 @@ function keyPressed() {
     if ((saveDialog || moduleOptions) && keyCode === ESCAPE) {
         enterModifierMode();
     }
-    if (captionInput.elt === document.activeElement || labelTextBox === document.activeElement || loading || saveDialog || moduleOptions) {
+    if (labelTextBox === document.activeElement || loading || saveDialog || moduleOptions) {
         return;
     }
     if (sketchNameInput !== document.activeElement) {
         if (keyCode >= 49 && keyCode <= 57) {
             gateInputCount = keyCode - 48;
-            gateInputSelect.value(gateInputCount);
+            gateInputSelect.value = gateInputCount;
             return;
         }
         switch (keyCode) {
@@ -2052,23 +1917,23 @@ function keyPressed() {
                 break;
             case 48: // 0
                 gateInputCount = 10;
-                gateInputSelect.value('10');
+                gateInputSelect.value = 10;
                 break;
             case RIGHT_ARROW:
                 gateDirection = 0;
-                directionSelect.value('Right');
+                directionSelect.value = 'Right';
                 break;
             case DOWN_ARROW:
                 gateDirection = 1;
-                directionSelect.value('Down');
+                directionSelect.value = 'Down';
                 break;
             case LEFT_ARROW:
                 gateDirection = 2;
-                directionSelect.value('Left');
+                directionSelect.value = 'Left';
                 break;
             case UP_ARROW:
                 gateDirection = 3;
-                directionSelect.value('Up');
+                directionSelect.value = 'Up';
                 break;
             default:
                 break;
@@ -2076,12 +1941,19 @@ function keyPressed() {
     }
 }
 
-function setHelpText(str) {
+function setHelpText(str, icon = 'question-circle') {
     if (str !== '') {
-        helpLabel.elt.innerHTML = '<i class="fa fa-question-circle icon" style="color: rgb(200, 50, 50);"></i> ' + str;
-        helpLabel.style('display', 'inline-block');
+        helpLabel.innerHTML = '<i class="fa fa-' + icon + ' icon" style="color: #c83232;"></i> ' + str;
+        if (document.getElementById('helpLabelContainer').style.opacity === '0') {
+            showHelpTimeout = setTimeout(function () {
+                document.getElementById('helpLabelContainer').style.opacity = '1';
+                document.getElementById('zoomLabelContainer').style.bottom = '60px';
+            }, 500);
+        }
     } else {
-        helpLabel.hide();
+        window.clearTimeout(showHelpTimeout);
+        document.getElementById('helpLabelContainer').style.opacity = '0';
+        document.getElementById('zoomLabelContainer').style.bottom = '0px';
     }
 }
 
