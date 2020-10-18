@@ -1,5 +1,13 @@
 html {
     scroll-behavior: smooth;
+    --white-theme-background: #fff;
+    --dark-theme-background: #323232;
+    --highlight-accent-color: #c83232;
+}
+
+body {
+    margin: 0;
+    padding: 0;
 }
 
 @font-face {
@@ -117,12 +125,12 @@ a:focus {
 	clear: both;
 }
 
-.top-menu {
+/* .top-menu {
     min-height: 110px;
     top: 0;
     z-index: 5000;
     width: 100%;
-}
+} */
 
 .top-menu a {
     font-weight: lighter;

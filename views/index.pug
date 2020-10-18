@@ -18,7 +18,8 @@ head
   link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300', rel='stylesheet', type='text/css')
   style
     include css/bootstrap4.css
-    include css/index_style.css
+    include css/index-page-style.css
+    //include css/index_style.css
   link(rel='stylesheet', type='text/css', href='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css')
   link(rel="stylesheet", type='text/css', href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
   script(src='https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js')
@@ -29,34 +30,32 @@ body
   |   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WKSH2RQ"
   |   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   |   <!-- End Google Tag Manager (noscript) -->
-  .top-menu#top
-    .container
-      .navbar.navbar-default.navbar-fixed-top(role='navigation')
-        .container
-          ul.nav.navbar-nav.navbar-left
-            li
-              a.internal-link(rel='nofollow', href='#features', target='_parent') Features
-            li
-              a.internal-link(rel='nofollow', href='#samples', target='_parent') Samples
-            li
-              a.internal-link(rel='nofollow', href='#about', target='_parent') About
-          .navbar-header
-            a.navbar-brand(href='#top')
-              img#top_logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
-          .navbar-collapse.collapse
-            ul.nav.navbar-nav.navbar-right
-              if user !== ''
-                li
-                  a.user-button.internal-link(rel='nofollow', href='/dashboard', target='_parent') <i class="fa fa-user red"></i> #{user}
-                li
-                  a.Logout.internal-link(rel='nofollow', href='#', target='_parent') <i class="fa fa-sign-out-alt red"></i> Logout
-              else
-                li
-                  a.login-button.internal-link(rel='nofollow', href='/login', target='_parent') <i class="fa fa-sign-in-alt red"></i> Login
-                li
-                  a.internal-link(rel='nofollow', href='/signup', target='_parent') <i class="fa fa-user-plus red"></i> Register
-              li
-                a#mode-button.internal-link(rel='nofollow', href='javascript:;', target='_parent' title='Toggle Dark Mode') <i class="fa fa-moon red"></i>
+  nav.navbar.navbar-expand-sm.fixed-top(role='navigation')
+    a.navbar-brand(href='#top')
+      img#top-logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
+    button.navbar-toggler(data-toggle="collapse", data-target="#dropdownMenu", type="button")
+      i.fas.fa-bars
+    .collapse.navbar-collapse#dropdownMenu
+      ul.navbar-nav.mr-auto
+        li.nav-item
+          a.nav-link.text-decoration-none(rel='nofollow', href='#features', target='_parent') Features
+        li.nav-item
+          a.nav-link.text-decoration-none(rel='nofollow', href='#samples', target='_parent') Samples
+        li.nav-item
+          a.nav-link.text-decoration-none(rel='nofollow', href='#about', target='_parent') About
+      ul.navbar-nav
+        if user !== ''
+          li.nav-item
+            a.nav-link.text-decoration-none(rel='nofollow', href='/dashboard', target='_parent') <i class="fa fa-user red"></i> #{user}
+          li.nav-item
+            a.nav-link.text-decoration-none(rel='nofollow', href='#', target='_parent') <i class="fa fa-sign-out-alt red"></i> Logout
+        else
+          li.nav-item
+            a.nav-link.text-decoration-none(rel='nofollow', href='/login', target='_parent') <i class="fa fa-sign-in-alt red"></i> Login
+          li.nav-item
+            a.nav-link.text-decoration-none(rel='nofollow', href='/signup', target='_parent') <i class="fa fa-user-plus red"></i> Register
+        li.nav-item
+          a.nav-link.text-decoration-none(rel='nofollow', href='javascript:;', target='_parent' title='Toggle Dark Mode') <i class="fa fa-moon red"></i>
   .slogan-container
     h1.background-text Discover the world
     if user !== ''
@@ -233,6 +232,6 @@ body
           p(style="text-align: right;") Made with <i class="fas fa-heart red"></i> in Lübeck
             span.red .
   script
-    include ../libraries/jquery.min.js
-    include ../libraries/bootstrap.min.js
+    include ../libraries/jquery-3.5.1.min.js
+    include ../libraries/bootstrap-4.5.2.min.js
     include ../site_scripts/index_page.js
