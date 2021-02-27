@@ -399,7 +399,7 @@ function showElementPreview() {
                 for (let i = 0; i < Math.pow(2, segBits).toString().length; i++) {
                     txt += '0';
                 }
-                text(txt, mx + GRIDSIZE * Math.max(Math.max((segBits + 1), Math.pow(2, segBits).toString().length * 2), 3) / 2, my + (GRIDSIZE * 3) / 2);
+                text(txt, mx + GRIDSIZE * Math.max(Math.max((sevenSegmentBits + 1), Math.pow(2, sevenSegmentBits).toString().length * 2), 3) / 2, my + (GRIDSIZE * 3) / 2 - 3);
 
                 // Draw inputs
                 for (let i = 1; i <= segBits; i++) {
@@ -412,6 +412,16 @@ function showElementPreview() {
                     x2 = mx + (GRIDSIZE * i);
                     y2 = my + GRIDSIZE * 3 + 6;
                     line(x1, y1, x2, y2);
+
+                    noStroke();
+                    textSize(14);
+                    textFont('Arial');
+
+                    if (sevenSegmentBits - i < 10) {
+                        text('2' + superscripts[sevenSegmentBits - i], x1, y1 - 10);
+                    } else {
+                        text('2' + superscripts[Math.floor((sevenSegmentBits - i) / 10)] + superscripts[sevenSegmentBits - i - Math.floor((sevenSegmentBits - i) / 10) * 10], x1, y1 - 10);
+                    }
                 }
                 break;
             case 'label':
@@ -419,15 +429,14 @@ function showElementPreview() {
                 textSize(20);
                 textAlign(LEFT, TOP);
                 strokeWeight(3);
-                //stroke(140);
                 noStroke();
                 fill(150, 200);
                 rect(mx - 15, my - 15, GRIDSIZE * 5, GRIDSIZE);
                 noStroke();
                 fill(50);
-                rect(mx - 5, my - 5, 10, 10);
+                rect(mx, my - 15, 3, 30);
                 fill(0);
-                text('New label', mx + 15, my - 9, GRIDSIZE * 5, GRIDSIZE);
+                text('New Label', mx + 15, my - 9, GRIDSIZE * 5, GRIDSIZE);
                 break;
         }
     }
@@ -460,119 +469,8 @@ function showNegationPreview(clickBox, isOutput, direction, isTop) {
     }
 }
 
-function showImportPreview(item, x, y) {
-    let x1, x2, y1, y2;
-    let w = Math.max((item.tops.length - 1), 0) * 30 + 60;
-    let h = (Math.max(item.inputs - item.tops.length, item.outputs) + 1) * 30;
-    let scaling = 1;
-    if (h >= 120) {
-        scaling = 120 / h;
-        x += 180 - w * scaling;
-        scale(scaling);
-    } else {
-        x += 180 - w;
-    }
-    y += 20 * scaling;
-    stroke(0);
-    strokeWeight(3);
-    fill(255);
-    textFont('Open Sans');
-
-    // Draw the body
-    if (item.tops.length === 0) {
-        rect(x / scaling, (y / scaling) + GRIDSIZE / 2, w, h - GRIDSIZE);
-    } else {
-        rect(x / scaling, y / scaling, w, h);
-    }
-
-    noStroke();
-    textAlign(CENTER, CENTER);
-    fill(0);
-    textSize(10);
-    text(item.caption, (x / scaling) + w / 2, (y / scaling) + h / 2);
-    textSize(14);
-    let tops = 0;
-    for (let i = 1; i <= item.inputs; i++) {
-        stroke(0);
-        strokeWeight(2);
-        if (item.tops.includes(i - 1)) {
-            tops++;
-            x1 = (x / scaling) + (30 * tops);
-            y1 = (y / scaling) - 6;
-            x2 = (x / scaling) + (30 * tops);
-            y2 = (y / scaling);
-            if (item.inputLabels[i - 1] === ">") {
-                line(x1, y2 + 14, x1 - 6, y2);
-                line(x1, y2 + 14, x1 + 6, y2);
-            } else {
-                noStroke();
-                text(item.inputLabels[i - 1], x1, y2 + 10);
-            }
-        } else {
-            x1 = (x / scaling) - 6;
-            y1 = (y / scaling) + (30 * (i - tops));
-            x2 = (x / scaling);
-            y2 = (y / scaling) + (30 * (i - tops));
-            if (item.inputLabels[i - 1] === ">") {
-                line(x2 + 14, y1, x2, y1 - 6);
-                line(x2 + 14, y1, x2, y1 + 6);
-            } else {
-                noStroke();
-                text(item.inputLabels[i - 1], x2 + 10, y1);
-            }
-        }
-        stroke(0);
-        strokeWeight(3);
-        line(x1, y1, x2, y2);
-    }
-
-    for (let i = 1; i <= item.outputs; i++) {
-        stroke(0);
-        strokeWeight(3);
-        x1 = (x / scaling) + w;
-        y1 = (y / scaling) + (30 * i);
-        x2 = (x / scaling) + w + 6;
-        y2 = (y / scaling) + (30 * i);
-        noStroke();
-        text(item.outputLabels[i - 1], x1 - 10, y1);
-        stroke(0);
-        strokeWeight(3);
-        line(x1, y1, x2, y2);
-    }
-
-    scale(1 / scaling);
-    textAlign(LEFT, TOP);
-}
-
-function showPreviewImage() {
-    let raw = new Image(window.height, window.height);
-    raw.src = previewImg;
-    let gradImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAQAAAAHUWYVAAABV0lEQVR4Ae3YBxEAMRADMafwxxwU6RKFHd+XnpKDIIggCCIIggiCIIKwWk8NFoIggiCIIAgiCIIIgiD4dWIhCCIIggiCIILgOwQLEQRBBEEQQRBEEARBEEHwL8tCEEQQBBEEQRDEdwgWIgiCCIIggiAIggiCIH6dYCGCIIggCIIggiCID0MsRBAEEQRBEEQQfIdYCIIIgiCCIAiCCIIggiCIf1lYiCAI8idBBEEQQfAdYiEIIgiCIIggCCIIggiCXycWgiAIIgiCCIIggiCIIAhCDxaChVgIFmIhCOJkYSGC4GRhIRaChQiCk2UhCOJkYSFYiIUgiJOFhVgIFmIhWAiCOFlYiCA4WRaChVgIguBkWQgWYiEI4mRhIRaChSCIk4WFWAgWIghOloUgCE6WhWAhFoIgThYWYiFYCII4WViIhWAhguBkWQgWgoUIgpNlIViIhSDIFwafxgPUTiURLQAAAABJRU5ErkJggg==';
-    let gradientRaw = new Image(200, 200);
-    gradientRaw.src = gradImg;
-    raw.onload = function () {
-        let img = createImage(raw.width, raw.height);
-        img.drawingContext.drawImage(raw, 0, 0, window.height, window.height, 0, 0, window.height, window.height);
-        img.resize(0, window.height / 1.5);
-        img.resize(0, window.height / 3);
-        img.resize(0, 200);
-        //img.drawingContext.drawImage(gradientRaw, 0, 0);
-        image(img, window.width / 2 - 333, window.height / 2 - 52);
-        fill('rgba(0, 0, 0, 0)');
-        strokeWeight(10);
-        stroke(255);
-        rect(window.width / 2 - 333, window.height / 2 - 52, 200, 200, 10);
-        let look = getThisLook();
-        if (look.outputs > 0) {
-            showImportPreview(look, window.width / 2 - 330, window.height / 2 - 46);
-        } else {
-            moduleNameInput.attribute('placeholder', 'No outputs!');
-        }
-    };
-}
-
-function initPreviewCanvas() {
-    let pwSketch = function (p) {
+function initModuleCanvas() {
+    let moduleSketch = function (p) {
         p.setup = function () {
             p.createCanvas(200, 200);
         };
@@ -591,12 +489,6 @@ function initPreviewCanvas() {
                 p.strokeWeight(3);
                 p.line(i * 30, 0, i * 30, 200);
             }
-
-            p.textFont('ArcaMajora3');
-            p.noStroke();
-            p.fill(200, 50, 50);
-            p.textSize(14);
-            p.text('This sketch has no outputs.', 12, 94);
         };
 
         p.showEmptyGrid = function () {
@@ -613,12 +505,6 @@ function initPreviewCanvas() {
                 p.strokeWeight(3);
                 p.line(i * 30, 0, i * 30, 200);
             }
-
-            p.textFont('ArcaMajora3');
-            p.noStroke();
-            p.fill(200, 50, 50);
-            p.textSize(18);
-            p.text('No sketch selected.', 18, 107);
         };
 
         p.showImportPreview = function (item, x, y) {
@@ -724,7 +610,7 @@ function initPreviewCanvas() {
     };
 
     let node = document.createElement('div');
-    node.setAttribute('id', 'preview-canvas');
-    PWp5 = new p5(pwSketch, node);
-    window.document.getElementById('canvas-container').appendChild(node);
+    node.setAttribute('id', 'module-canvas');
+    modulep5 = new p5(moduleSketch, node);
+    window.document.getElementById('module-container').appendChild(node);
 }

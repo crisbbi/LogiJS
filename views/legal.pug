@@ -22,6 +22,26 @@ head
   style
     include css/bootstrap.css
     include css/index_style.css
+  script.
+    window.addEventListener("load", function () {
+      window.cookieconsent.initialise({
+        "position": "bottom-right",
+        "content": {
+          "dismiss": "Allow Cookies"
+        },
+        "palette": {
+          "popup": {
+            "background": "#323232",
+            "text": "#fff",
+            "link": "#c83232"
+          },
+          "button": {
+            "background": "#c83232",
+            "text": "#ffffff"
+          }
+        }
+      })
+    });
 body
   |   <!-- Google Tag Manager (noscript) -->
   |   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WKSH2RQ"
@@ -39,13 +59,13 @@ body
             li
               a.internal-link(rel='nofollow', href='/#about', target='_parent') About
           .navbar-header
-            button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-              span.sr-only Toggle navigation
-              span.icon-bar
-              span.icon-bar
-              span.icon-bar
-            a.navbar-brand(href='/')
-              img#top_logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS')
+            a.navbar-brand(href='/#top', style="transition: 0.2s;")
+              img#top_logo(src='images/logo_index_new.png', alt='LogiJS logo', title='LogiJS', style='float: left;')
+              div#logo-div
+                p#logo-text Legal
+                  br
+                  | Notice
+                  span(style="color: #c83232;") .
           .navbar-collapse.collapse
             ul.nav.navbar-nav.navbar-right
               if user !== ''
@@ -58,10 +78,12 @@ body
                   a.login-button.internal-link(rel='nofollow', href='/login', target='_parent') <i class="fa fa-sign-in-alt" style="color: #c83232;"></i> Login
                 li
                   a.internal-link(rel='nofollow', href='/signup', target='_parent') <i class="fa fa-user-plus" style="color: #c83232;"></i> Register
+              li
+                a#mode-button.internal-link(rel='nofollow', href='javascript:;', target='_parent' title='Toggle Dark Mode') <i class="fa fa-moon red"></i>
 .slogan-container(style="margin-top: 150px;")
-  h1.background-text discover the world
+  h1.background-text Discover the world
 .legal-content
-  h1 Legal Notice
+  //h1 Legal Notice
     span(style="color: #c83232;") .
   h1.sub-caption (DE: Impressum & Datenschutz)
   p This is an open-source project by <a href="https://github.com/simonbuxx">Simon Buchholz</a> and others. This service underlies German law. At the moment, our privacy policy is provided in German only.
@@ -305,16 +327,16 @@ body
     | (mit Ergänzungen)
 .footer_bottom
     .footer_bottom_content
-      .footer_box
+      .footer_box.footer_box_outer
         a.internal-link(rel='nofollow', href='/terms-of-service', target='_parent') Terms of Service
         a.internal-link(rel='nofollow', href='#', target='_parent') Legal Notice
-      .footer_box
+      .footer_box.footer_box_inner
         p(style="text-align: center; display: inline-block; width: 100%;")
           a(href='https://twitter.com/logi_js', target='_blank', style="margin-right: 5px;")
             img(src="images/twitter.png" style="width: 40px; margin-top: -20px;")
           a(href='https://github.com/SimonBuxx/logijs', target='_blank', style="margin-left: 5px;")
             img(src="images/github_dark.png" style="width: 40px; margin-top: -20px;")
-      .footer_box
+      .footer_box.footer_box_outer.footer_right
         p(style="text-align: right;") Made with <i class="fas fa-heart" style="color: #c83232;"></i> in Lübeck
           span(style="color: #c83232;") .
 script

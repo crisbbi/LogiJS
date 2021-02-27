@@ -1,6 +1,6 @@
 // File: input.js
 
-function Input(x, y, transform) {
+function Input(x, y) {
     this.x = x; // X-Position
     this.y = y; // Y-Position
 
@@ -14,8 +14,6 @@ function Input(x, y, transform) {
     this.clock = false;
     this.speed = 30;
 
-    this.transform = transform;
-
     this.highColor = color(HRED, HGREEN, HBLUE); // Color for high inputs
     this.lowColor = color(50, 50, 50);   // Color for low inputs (dark grey)
 
@@ -26,7 +24,7 @@ function Input(x, y, transform) {
     this.id = 'i' + Date.now() + Math.random();
 
     // ClickBox is used for output and global
-    this.clickBox = new ClickBox(this.x - GRIDSIZE / 2, this.y - GRIDSIZE / 2, this.w, this.h, this.transform);
+    this.clickBox = new ClickBox(this.x - GRIDSIZE / 2, this.y - GRIDSIZE / 2, this.w, this.h, transform);
     this.updateClickBox();
 }
 
@@ -118,7 +116,7 @@ Input.prototype.setCoordinates = function (nx, ny) {
 
 Input.prototype.updateClickBox = function () {
     this.clickBox.updatePosition(this.x + GRIDSIZE / 2, this.y + GRIDSIZE / 2);
-    this.clickBox.setTransform(this.transform);
+    this.clickBox.setTransform(transform);
 };
 
 /*
@@ -138,13 +136,14 @@ Input.prototype.pointInOutput = function (dummy, px, py) {
 /*
     Displays the input on the screen
 */
-Input.prototype.show = function () {
+Input.prototype.show = function (order = 0) {
     stroke(0);
     strokeWeight(3);
     if (this.state) {
         fill(this.highColor);
     } else if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
+        fill(150);
     } else {
         fill(this.lowColor);
     }
@@ -154,17 +153,24 @@ Input.prototype.show = function () {
     if (this.state) {
         fill(HARED, HAGREEN, HABLUE);
     } else if (this.marked) {
-        fill(MARED, MAGREEN, MABLUE);
+        fill(170);
     } else {
         fill(LARED, LAGREEN, LABLUE);
     }
     triangle(this.x + 2, this.y + 2, this.x + GRIDSIZE - 2, this.y + 2, this.x + 2, this.y + GRIDSIZE - 2);
     noFill();
-    stroke(0);
+    if (this.marked) {
+        stroke(MRED, MGREEN, MBLUE);
+    } else {
+        stroke(0);
+    }
     rect(this.x, this.y, this.w, this.h);
-
     if (this.framecount >= 0 && !this.clock) {
-        fill(0);
+        if (this.marked) {
+            fill(MRED, MGREEN, MBLUE);
+        } else {
+            fill(0);
+        }
         if (this.state) {
             strokeWeight(7);
         }
@@ -172,10 +178,27 @@ Input.prototype.show = function () {
     }
 
     if (this.clock) {
-        stroke(0);
+        if (this.marked) {
+            stroke(MRED, MGREEN, MBLUE);
+        } else {
+            stroke(0);
+        }
         strokeWeight(3);
         line(this.x + 15, this.y + 6, this.x + 15, this.y + 15);
         line(this.x + 15, this.y + 15, this.x + 22, this.y + 20);
+    }
+
+    if (order > 0) {
+        noStroke();
+        fill(255);
+        textSize(20);
+        textFont('ArcaMajora3');
+        textAlign(LEFT, TOP);
+        if (order.toString().length === 1) {
+            text(order, this.x + 10, this.y + 7);
+        } else {
+            text(order, this.x + 4, this.y + 7);
+        }
     }
 
     //this.clickBox.markClickBox();

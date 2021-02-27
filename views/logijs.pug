@@ -35,6 +35,7 @@ head
     include ../javascripts/classes/diode.js
     include ../javascripts/classes/conpoint.js
     include ../javascripts/classes/group.js
+    include ../javascripts/customDialog.js
     include ../javascripts/selectionHandling.js
     include ../javascripts/modifierMenu.js
     include ../javascripts/previews.js
@@ -55,10 +56,67 @@ body
   |   <!-- End Google Tag Manager (noscript) -->
   a(href='/')
     img#logo(src='images/alt_logo_dark.png', alt='LogiJS logo')
-  .custom-container(style="position: relative;")
+  <input id='fileid' type='file' accept='.json' hidden onchange='importJSONClicked();'/>
+  #topButtonsContainer
+    #topLeftButtons
+      button#edit-button.button.active(rel="nofollow" onclick="enterModifierMode();") <i class="fa fa-pen icon"></i> Edit
+      button#delete-button.button(rel="nofollow" onclick="deleteClicked();") <i class="fa fa-trash-alt icon"></i> Delete
+      button#sim-button.button(rel="nofollow" onclick="simClicked();", style="min-width: 65px;") <i class="fa fa-play icon"></i> Start
+      button#undo-button.button(rel="nofollow" onclick="undoClicked();" disabled) <i class="fa fa-undo icon"></i> Undo
+      button#redo-button.button(rel="nofollow" onclick="redoClicked();" disabled) <i class="fa fa-redo icon"></i> Redo
+      button#select-button.button(rel="nofollow" onclick="startSelect();") <i class="fas fa-object-group icon"></i> Select
+      button#module-button.button(rel="nofollow" onclick="moduleClicked();" disabled) <i class="fas fa-tools icon"></i> Module
+    #topRightButtons
+      input#sketchname-1(placeholder='Untitled Sketch', autocomplete='off')
+      .dropdown
+        button#dd-button.button <i class="fas fa-chevron-down icon"></i> Tools
+        #tools-dropdown.dropdown-content
+          button#share-link-button.button(rel="nofollow" onclick="shareLinkClicked();") <i class="fas fa-link icon"></i> Share Link
+          button.button#download-button(rel="nofollow" onclick="downloadSketch();") <i class="fas fa-file-download icon"></i> Download
+          button.button#import-button(rel="nofollow" onclick="importButtonClicked();") <i class="fas fa-file-upload icon"></i> Import JSON
+          button.button#screenshot-button(rel="nofollow" onclick="screenshotClicked();") <i class="fas fa-camera icon"></i> Screenshot
+          button#darkmode-button.button(rel="nofollow" onclick="darkmodeClicked();") <i class="fas fa-moon icon"></i> Dark Mode
+      button.button#save-sketch-button(rel="nofollow" onclick="saveDialogClicked();") <i class="fas fa-save icon"></i> Save
+      if !no_login
+        button#dashboard-login-button.button(rel="nofollow" onclick="dashboardButtonClicked();") <i class="fas fa-sign-in-alt icon"></i> Login
+      else 
+        button#dashboard-login-button.button(disabled=true, rel="nofollow") <i class="fas fa-sign-in-alt icon"></i> Login
+  #helpLabelContainer
+      p#help-label.label.inlineLabel <i class="fa fa-question-circle icon" style="color: #c83232;"></i>
+  #zoomLabelContainer
+    p#zoomLabel.label.inlineLabel 100%
+
+  .message-container(style="position: relative; z-index: 1")
+    #message-dialog
+      h1#message-caption
+      p#message-text
+      .grey-rect-medium
+      .red-rect-medium
+
+  .screenshot-container(style="position: relative; z-index: 1")
+    #screenshot-dialog
+      h1 Screenshot<span style="color: #c83232">.</span>
+      img#screenshot(src='', alt='Screenshot')
+      p#screenshot-text Right-click on the image to save it
+        span(style="color: #c83232;") .
+      button#close-screenshot.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="closeScreenshotClicked();") Close
+      button#newtab-screenshot.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="screenshotNewTab();") Open in New Tab
+      .grey-rect
+      .red-rect
+
+    .link-container
+      #link-dialog
+        h1 Link created<span style="color: #c83232">.</span>
+        input#link-input.textInput(placeholder='Link', autocomplete='off', readonly)
+        p#link-text Users can edit a copy of this sketch and create new links or save their altered versions in their accounts<span style="color: #c83232">.</span>
+        button#copy-link-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="copyLinkClicked();") Copy Link
+        button#close-link-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="hideLinkDialog();") Close
+        .grey-rect-medium
+        .red-rect-medium
+  .custom-container(style="position: relative; z-index: 1")
     #custom-dialog
-      h1 Import your own elements<span style="color: #c83232">.</span>
-      button#cancel-button.btn.btn-lg.btn-red(rel="nofollow" onclick="cancelClicked();") Cancel
+      h1 Custom Modules<span style="color: #c83232">.</span>
+      button#cancel-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="cancelClicked();") Cancel
       if sketchData.sketches.length === 0
         .no_sketches_container
           p.no_sketches_info You don't have any sketches
@@ -70,19 +128,194 @@ body
             .sketch_item
               .preview_image
                 img(src='data:image/png;base64,' + images[r], alt=sketchData.sketches[r])
-                span.overlay(onclick='custom_element_clicked(' + r + ')', onmouseover='custom_element_hovered(' + r + ')')
-                  span.preview-span(id='span' + sketchData.sketches[r]) <i class="fa fa-search"></i> Details
+                span.overlay(onclick='customDialog.elementClicked(' + r + ')', onmouseover='customDialog.elementHovered(' + r + ')')
+                  span.preview-span(id='span' + sketchData.sketches[r]) <i class="fa fa-file-import"></i> Import
               p.sketch_name #{sketchData.sketches[r]}
                 span(style="color: #c83232;") .
             -r++;
       p.preview_name Preview
         span(style="color: #c83232;") .
       #canvas-container
-      p.preview_name How to
-        span(style="color: #c83232;") . 
-      p.preview_text In this menu, you can import structures you built in other sketch documents.<br><br>
-        | To prepare a sketch for being imported, you can 
-        | click on its in- and outputs in edit mode to alter their description and their order in which they appear on the final module. You can also place inputs at the top of your modules.
+      .grey-rect
+      .red-rect
+
+  .save-container(style="position: relative; z-index: 1")
+    #save-dialog
+      h1 Save Sketch<span style="color: #c83232">.</span>
+      input#sketchname-2.textInput.saveInput(placeholder='Sketch Name', autocomplete='off')
+      textarea#desc-input.textInput.descInput(placeholder='Sketch Description')
+      #img-container(style='width: 200px; height: 200px; overflow: hidden; position: absolute; left: 40px; bottom: 40px;')
+        img#preview-image
+      button#cancel-save-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="cancelClicked();") Cancel
+      button#save-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow" onclick="saveClicked();") <i class="fas fa-save"></i> Save
+      .grey-rect
+      .red-rect
+  .select-container(style="position: relative; z-index: 1")
+    #select-tools
+      button#copy-select-button.btn.btn-lg.button(rel="nofollow" onclick="copySelection();", style='z-index: -100;') <i class="fas fa-copy icon"></i> Copy
+      button#delete-select-button.btn.btn-lg.button(rel="nofollow" onclick="deleteSelection();", style='z-index: -100;') <i class="fas fa-trash-alt icon"></i> Delete
+  .output-container(style="position: relative; z-index: 1")
+    #output-modifier
+      h1 Output Color<span style="color: #c83232">.</span>
+      button#redButton.colorButton(rel="nofollow" onclick="newOutputColor(0);")
+      button#yellowButton.colorButton(rel="nofollow" onclick="newOutputColor(1);")
+      button#greenButton.colorButton(rel="nofollow" onclick="newOutputColor(2);")
+      button#blueButton.colorButton(rel="nofollow" onclick="newOutputColor(3);")
+      .grey-rect-mini
+      .red-rect-mini
+  .clock-container(style="position: relative; z-index: 1")
+    #clock-modifier
+      h1 Clock Speed<span style="color: #c83232">.</span>
+      input#cs-slider.slider(type='range', min='1', max='60', value='30', oninput='newClockspeed();')
+      p#cs-label 30 ticks/toggle
+      .grey-rect-mini
+      .red-rect-mini
+  .label-container(style="position: relative; z-index: 1")
+    #label-modifier
+      h1 Label Text<span style="color: #c83232">.</span>
+      textarea#label-textbox(placeholder='New Label' onkeyup='labelChanged();')
+      .grey-rect-mini
+      .red-rect-mini
+  .tour-container(style="position: relative; z-index: 1")
+    #tour-dialog
+      h1#tour-headline Welcome<span style="color: #c83232">.</span>
+      h1#tour-welcome Welcome to the Tour<span style="color: #c83232">.</span>
+      p#tour-text In this short tutorial, you will learn the basics on how to use LogiJS<span style="color: #c83232">.</span>
+      button#tour-button.btn.btn-lg.btn-red.hover-btn(rel="nofollow", onclick="advanceTour();") Start
+      .grey-rect
+      .red-rect
+  #module-overlay
+  .mp-container(style="position: relative; z-index: 1")
+    #module-previewer
+      h1 Module Preview<span style="color: #c83232">.</span>
+      input#module-input.textInput.saveInput(placeholder='Module Name', autocomplete='off')
+      #module-container
+      .grey-rect-medium
+  .mp-container(style="position: relative; z-index: 1")
+    #pin-configurator
+      h1 Pin Configurator<span style="color: #c83232">.</span>
+      #pin-head
+        .configuratorLabel(style='grid-column: 2') Top
+        .configuratorLabel(style='grid-column: 3') Inputs
+        .configuratorLabel(style='grid-column: 4') Outputs
+      #pin-inner
+      .red-rect-medium
+  #leftSideContainer
+    #toolbox
+      p.label Logic Gates<span style="color: #c83232">.</span>
+      button#and-button.previewButton(rel="nofollow" onclick="andClicked(false);") 
+        img.preview(src="images/and-gate.png")
+      button#or-button.previewButton(rel="nofollow" onclick="orClicked();") 
+        img.preview(src="images/or-gate.png")
+      button#xor-button.previewButton(rel="nofollow" onclick="xorClicked();") 
+        img.preview(src="images/xor-gate.png")
+      button#not-button.previewButton(rel="nofollow" onclick="notClicked();") 
+        img.preview(src="images/not-gate.png")
+      button#buffer-button.previewButton(rel="nofollow" onclick="bufferClicked();") 
+        img.preview(src="images/buffer.png")
+      p.label Inputs & Outputs<span style="color: #c83232">.</span>
+      button#switch-button.previewButton(rel="nofollow" onclick="switchClicked();") 
+        img.preview(src="images/switch.png")
+      button#button-button.previewButton(rel="nofollow" onclick="buttonClicked();") 
+        img.preview(src="images/button.png")
+      button#clock-button.previewButton(rel="nofollow" onclick="clockClicked();") 
+        img.preview(src="images/clock.png")
+      button#output-button.previewButton(rel="nofollow" onclick="outputClicked();") 
+        img.preview(src="images/output.png")
+      button#display-button.previewButton(rel="nofollow" onclick="displayClicked();") 
+        img.preview(src="images/segments.png")
+      p.label Memory<span style="color: #c83232">.</span>
+      button#rs-flipflop-button.previewButton(rel="nofollow" onclick="rsFlipFlopClicked();") 
+        img.preview(src="images/rs-flipflop.png")
+      button#d-flipflop-button.previewButton(rel="nofollow" onclick="dFlipFlopClicked();") 
+        img.preview(src="images/d-flipflop.png")
+      button#jk-flipflop-button.previewButton(rel="nofollow" onclick="jkFlipFlopClicked();") 
+        img.preview(src="images/jk-flipflop.png")
+      button#rs-clocked-button.previewButton(rel="nofollow" onclick="rsClockedClicked();") 
+        img.preview(src="images/rs-clocked.png")
+      button#t-flipflop-button.previewButton(rel="nofollow" onclick="tFlipFlopClicked();") 
+        img.preview(src="images/t-flipflop.png")
+      button#register-button.previewButton(rel="nofollow" onclick="registerClicked();") 
+        img.preview(src="images/register.png")  
+      p.label Converter<span style="color: #c83232">.</span>
+      button#decoder-button.previewButton(rel="nofollow" onclick="decoderClicked();") 
+        img.preview(src="images/decoder.png")
+      button#mux-button.previewButton(rel="nofollow" onclick="muxClicked();") 
+        img.preview(src="images/mux.png")
+      button#demux-button.previewButton(rel="nofollow" onclick="demuxClicked();") 
+        img.preview(src="images/demux.png")
+      p.label Adder<span style="color: #c83232">.</span>
+      button#halfadd-button.previewButton(rel="nofollow" onclick="halfaddClicked();") 
+        img.preview(src="images/halfadd.png") 
+      button#fulladd-button.previewButton(rel="nofollow" onclick="fulladdClicked();") 
+        img.preview(src="images/fulladd.png") 
+      p.label Various Elements<span style="color: #c83232">.</span>
+      button#counter-button.previewButton(rel="nofollow" onclick="counterClicked();") 
+        img.preview(src="images/counter.png")
+      button#label-button.previewButton(rel="nofollow" onclick="labelButtonClicked();") 
+        img.preview(src="images/label.png")
+    button#custom-button.buttonLeft(rel="nofollow" onclick="customClicked();" disabled) <i class="fa fa-paste icon"></i> Custom Modules
+    p#sim-label.label Simulation<span style="color: #c83232">.</span>
+    p#options-label.label Options<span style="color: #c83232">.</span>
+    p#gate-inputs-label.optionLabel Gate Inputs
+    select#gate-inputs-select.selectLeft(onchange="newGateInputNumber();")
+      option(value="1") 1
+      option(value="2" selected) 2
+      option(value="3") 3
+      option(value="4") 4
+      option(value="5") 5
+      option(value="6") 6
+      option(value="7") 7
+      option(value="8") 8
+      option(value="9") 9
+      option(value="10") 10
+    p#direction-label.optionLabel Direction
+    select#direction-select.selectLeft(onchange="newDirection();")
+      option(value="Right" selected) Right
+      option(value="Up") Up
+      option(value="Left") Left
+      option(value="Down") Down
+    p#display-label.optionLabel Input Width
+    p#output-width-label.optionLabel Output Width
+    p#input-width-label.optionLabel Input Width
+    select#display-select.selectLeft(onchange="newDisplayBitLength();")
+      option(value="1") 1
+      option(value="2") 2
+      option(value="3") 3
+      option(value="4" selected) 4
+      option(value="5") 5
+      option(value="6") 6
+      option(value="7") 7
+      option(value="8") 8
+      option(value="16") 16
+      option(value="32") 32
+    select#counter-select.selectLeft(onchange="newCounterBitLength();")
+      option(value="2" selected) 2
+      option(value="3") 3
+      option(value="4") 4
+      option(value="5") 5
+    select#decoder-select.selectLeft(onchange="newDecoderBitLength();")
+      option(value="2" selected) 2
+      option(value="3") 3
+      option(value="4") 4
+      option(value="5") 5
+    select#mux-select.selectLeft(onchange="newMuxBitLength();")
+      option(value="1" selected) 1
+      option(value="2") 2
+      option(value="3") 3
+    input#syncFPSCheckbox.checkbox(type="checkbox" onchange="syncFramerateCheckBoxChanged();" checked) 
+    label#syncFPSLabel.checkbox-label(for="syncFPSCheckbox") Sync Ticks to Frames
+
+    input#bypassCheckbox.checkbox(type="checkbox" onchange="bypassTickTimeChanged();")
+    label#bypassLabel.checkbox-label(for="bypassCheckbox") Bypass min. ms/tick
+
+    p#ticktime-label.label.leftLabel Minimum ms/tick
+    input#ticktime-slider.slider.sliderLeft(type="range" min="0" max="100" value="10" oninput="newTickTime();")
+    p#ticktime-ms.label.msLabel 10ms
+
+    p#multiplier-label.label.leftLabel.disabledLabel Speed Multiplier
+    input#multiplier-slider.slider.sliderLeft(type="range" min="1" max="10" value="1" oninput="updateMultiplierLabel();" onchange="newMultiplier();" disabled)
+    p#multiplier-value-label.label.msLabel.disabledLabel 1
   script
     include ../site_scripts/survicate.js
     include ../libraries/jquery.min.js
@@ -91,4 +324,12 @@ body
     let preview_spans = document.getElementsByClassName('preview-span');
     for (let i = 0; i < preview_spans.length; i++) {
       document.getElementsByClassName('preview-span')[i].innerHTML = '<i class="fa fa-file-import"></i> Import';
+    }
+
+    let currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme === 'dark') {
+        document.documentElement.classList.add('dark-theme');
+        document.getElementById('logo').src = 'images/alt_logo.png';
+        document.getElementById('darkmode-button').innerHTML = '<i class="fas fa-sun icon"></i> Light Mode';
     }

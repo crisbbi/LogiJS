@@ -1,18 +1,17 @@
 // File: segmentDisplay.js
 
-function SegmentDisplay(x, y, transform, bits) {
+function SegmentDisplay(x, y, bits) {
     this.x = x; // X-Position
     this.y = y; // Y-Position
     this.inputCount = bits;
     this.digits = Math.pow(2, bits).toString().length;
     this.w = GRIDSIZE * Math.max(Math.max((bits + 1), this.digits * 2), 3); // Width of the display
     this.h = GRIDSIZE * 3; // Height of the display
-    this.transform = transform;
     this.marked = false;
     this.lowColor = color(50, 50, 50); // dark grey color
     this.highColor = color(HRED, HGREEN, HBLUE); // Color for high inputs (red)
 
-    this.gClickBox = new ClickBox(this.x + GRIDSIZE / 2, this.y, this.w - GRIDSIZE, this.h, this.transform);
+    this.gClickBox = new ClickBox(this.x + GRIDSIZE / 2, this.y, this.w - GRIDSIZE, this.h, transform);
     this.inputClickBoxes = [];
 
     this.inputs = [];     // Vector of the input states
@@ -23,12 +22,14 @@ function SegmentDisplay(x, y, transform, bits) {
 
     this.id = 's' + Date.now() + Math.random();
 
+    this.superscripts = ['º', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+
     // Initialize the inputs
     for (let i = 0; i < this.inputCount; i++) {
         this.inputs.push(false); // Set all inputs to low
         this.ipset.push(false);
         this.inputsInv.push(false); // Set all inputs to not inverted
-        this.inputClickBoxes.push(new ClickBox(0, 0, IOCBSIZE, IOCBSIZE, this.transform)); // Create new clickBoxes for every input
+        this.inputClickBoxes.push(new ClickBox(0, 0, IOCBSIZE, IOCBSIZE, transform)); // Create new clickBoxes for every input
     }
 
     this.setCoordinates(this.x, this.y);
@@ -100,11 +101,11 @@ SegmentDisplay.prototype.updateClickBoxes = function () {
     // Update input clickBoxes
     for (let i = 0; i < this.inputClickBoxes.length; i++) {
         this.inputClickBoxes[i].updatePosition(this.x + GRIDSIZE * (i + 1), this.y + this.h);
-        this.inputClickBoxes[i].setTransform(this.transform);
+        this.inputClickBoxes[i].setTransform(transform);
     }
     this.gClickBox.updatePosition(this.x + this.w / 2, this.y + this.h / 2);
     this.gClickBox.updateSize(this.w - GRIDSIZE, this.h);
-    this.gClickBox.setTransform(this.transform);
+    this.gClickBox.setTransform(transform);
 };
 
 /*
@@ -127,6 +128,11 @@ SegmentDisplay.prototype.pointInInput = function (n, px, py) {
 SegmentDisplay.prototype.update = function () {
     this.value = 0;
     for (let i = 0; i < this.inputCount; i++) {
+        if (!this.ipset[i]) {
+            this.inputs[i] = this.inputsInv[i];
+        }
+    }
+    for (let i = 0; i < this.inputCount; i++) {
         if (this.inputs[i]) {
             this.value += Math.pow(2, this.inputCount - i - 1);
         }
@@ -137,11 +143,11 @@ SegmentDisplay.prototype.update = function () {
 Draws the gate on the screen
 */
 SegmentDisplay.prototype.show = function () {
-    stroke(0);
+    fill(255);
     if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
     } else {
-        fill(255, 255);
+        stroke(0);
     }
     strokeWeight(3);
     
@@ -154,14 +160,19 @@ SegmentDisplay.prototype.show = function () {
     noStroke();
     textSize(80);
     textAlign(CENTER, CENTER);
-    fill(0);
+    textFont('PT Mono');
+    if (this.marked) {
+        fill(MRED, MGREEN, MBLUE);
+    } else {
+        fill(0);
+    }
     let txt = '';
     for (let i = 0; i < this.digits - this.value.toString().length; i++) {
         txt += '0';
     }
     txt += this.value.toString();
-    text(txt, this.x + this.w / 2, this.y + this.h / 2);
-    
+    text(txt, this.x + this.w / 2, this.y + this.h / 2 - 3);
+
     // Draw inputs
     for (let i = 1; i <= this.inputCount; i++) {
         // Draw inputs
@@ -187,6 +198,21 @@ SegmentDisplay.prototype.show = function () {
         
         if (this.inputsInv[i - 1]) {
             ellipse(this.x1, this.y1 + this.h / 20 - 1.5, 10, 10);
+        }
+
+        if (this.marked) {
+            fill(MRED, MGREEN, MBLUE);
+        } else {
+            fill(0);
+        }
+        noStroke();
+        textSize(14);
+        textFont('Arial');
+
+        if (this.inputCount - i < 10) {
+            text('2' + this.superscripts[this.inputCount - i], this.x1, this.y1 - 10);
+        } else {
+            text('2' + this.superscripts[Math.floor((this.inputCount - i) / 10)] + this.superscripts[this.inputCount - i - Math.floor((this.inputCount - i) / 10) * 10], this.x1, this.y1 - 10);
         }
     }
     

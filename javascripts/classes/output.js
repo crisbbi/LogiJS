@@ -1,12 +1,11 @@
 // File: output.js
 
-function Output(x, y, transform, colr) {
+function Output(x, y, colr) {
     this.x = x; // X-Position
     this.y = y; // Y-Position
     this.w = GRIDSIZE; // Width of the putput
     this.h = GRIDSIZE; // Height of the output
     this.state = false; // Output state
-    this.transform = transform;
     this.lbl = '';
     this.colr = colr; // 0 = red, 1 = yellow, 2 = green, 3 = blue
     this.marked = false;
@@ -18,7 +17,7 @@ function Output(x, y, transform, colr) {
     this.id = 'o' + Date.now() + Math.random();
 
     // ClickBox is used for input and global
-    this.clickBox = new ClickBox(this.x, this.y, this.w, this.h, this.transform);
+    this.clickBox = new ClickBox(this.x, this.y, this.w, this.h, transform);
 
     this.updateColor();
     this.updateClickBox();
@@ -52,7 +51,7 @@ Output.prototype.setCoordinates = function (nx, ny) {
 
 Output.prototype.updateClickBox = function () {
     this.clickBox.updatePosition(this.x, this.y);
-    this.clickBox.setTransform(this.transform);
+    this.clickBox.setTransform(transform);
 };
 
 Output.prototype.alterPosition = function (x1, y1) {
@@ -105,13 +104,14 @@ Output.prototype.updateColor = function () {
 /*
     Displays the output on the screen
 */
-Output.prototype.show = function () {
+Output.prototype.show = function (order = 0) {
     stroke(0);
     strokeWeight(3);
     if (this.state) {
         fill(this.highColor);
     } else if (this.marked) {
-        fill(MRED, MGREEN, MBLUE);
+        stroke(MRED, MGREEN, MBLUE);
+        fill(150);
     } else {
         fill(50);
     }
@@ -120,11 +120,24 @@ Output.prototype.show = function () {
     if (this.state) {
         fill(this.accentColor);
     } else if (this.marked) {
-        fill(MARED, MAGREEN, MABLUE);
+        fill(170);
     } else {
         fill(LARED, LAGREEN, LABLUE);
     }
     arc(this.x, this.y, GRIDSIZE, GRIDSIZE, HALF_PI + QUARTER_PI, PI + HALF_PI + QUARTER_PI, OPEN);
+
+    if (order > 0) {
+        noStroke();
+        fill(255);
+        textSize(20);
+        textFont('ArcaMajora3');
+        textAlign(LEFT, TOP);
+        if (order.toString().length === 1) {
+            text(order, this.x - 6, this.y - 8);
+        } else {
+            text(order, this.x - 12, this.y - 8);
+        }
+    }
     /*if (!this.state) {
         stroke(200);
     } else {

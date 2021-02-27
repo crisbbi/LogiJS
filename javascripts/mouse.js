@@ -14,51 +14,10 @@ let previewSymbol = null;
     Triggers when the mouse wheel is used
 */
 function mouseWheel(event) {
-    if (loading || saveDialog || showCustomDialog || mouseOverGUI() || modifierMenuDisplayed()) { return; }
-    if (keyIsDown(18) && !simRunning) { // If the alt key is pressed => scroll trough basic elements
-        wheel = Math.sign(event.deltaY);
-        addType = Math.max(1, Math.min(9, addType + wheel));
-        switch (addType) {
-            case 1:
-                andClicked(true);
-                break;
-            case 2:
-                orClicked(true);
-                break;
-            case 3:
-                xorClicked(true);
-                break;
-            case 4:
-                inputClicked(true);
-                break;
-            case 5:
-                buttonClicked(true);
-                break;
-            case 6:
-                clockClicked(true);
-                break;
-            case 7:
-                outputClicked(true);
-                break;
-            case 8:
-                segDisplayClicked(true);
-                break;
-            case 9:
-                labelButtonClicked(true);          
-                break;
-            default:
-                console.log('Invalid object type!');
-                break;
-
-        }
-        if (controlMode !== 'modify' && selectMode === 'none') {
-            leaveModifierMode();
-        }
-        return;
-    }
+    if (loading || saveDialog || customDialog.isVisible || screenshotDialog || linkDialog || mouseOverGUI() || elementMenuShown()) { return; }
 
     if (mouseX > 0 && mouseY > 0) {
-        wheel = Math.sign(event.deltaY) * 1.5; // -1.5 for zoom in, +1.5 for zoom out
+        wheel = Math.sign(event.deltaY) * 2; // -1.5 for zoom in, +1.5 for zoom out
         if ((currentGridSize + 1 < maxZoom * GRIDSIZE && wheel < 1) || (currentGridSize - 1 > minZoom * GRIDSIZE) && wheel > 1) {
             origX = mouseX * (transform.zoom);
             origY = mouseY * (transform.zoom);
@@ -69,15 +28,24 @@ function mouseWheel(event) {
         }
         transform.zoom = (currentGridSize / GRIDSIZE);
         dragSpeed = 1 / transform.zoom;
-        if (!simRunning && !showCustomDialog) {
+        if (selectMode === 'end') {
+            positionSelectionTools();
+        }
+        if (!simRunning) {
             reDraw();
         }
+        document.getElementById('zoomLabelContainer').style.opacity = '1';
+        document.getElementById('zoomLabel').innerHTML = '<i class="fa fa-search icon" style="color: rgb(200, 50, 50);"></i> ' + Math.round(transform.zoom * 100) + '%';
+        window.clearTimeout(isScrolling);
+        isScrolling = setTimeout(function () {
+            document.getElementById('zoomLabelContainer').style.opacity = '0';
+        }, 2000);
     }
     updateCursors();
 }
 
 function mouseMoved() {
-    if (loading || saveDialog || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || screenshotDialog || linkDialog || elementMenuShown()) { return; }
     updateCursors();
 }
 
@@ -89,7 +57,7 @@ function updateCursors() {
     let hand = false;
     let showDPreview = false;
     let showCPPreview = false;
-    if ((simRunning || controlMode === 'modify') && !showCustomDialog) {
+    if ((simRunning || controlMode === 'modify') && !customDialog.isVisible) {
         if (!simRunning) {
             for (const elem of outputs) {
                 if (elem.mouseOver()) {
@@ -98,73 +66,75 @@ function updateCursors() {
                 }
             }
             for (const elem of inputs) {
-                if (elem.mouseOver()) {
+                if (elem.mouseOver() && (elem.getIsClock() || moduleOptions)) {
                     hand = true;
                     cursor(HAND);
                 }
             }
-            for (const elem of labels) {
-                if (elem.mouseOver()) {
-                    hand = true;
-                    cursor(HAND);
+            if (!moduleOptions) {
+                for (const elem of labels) {
+                    if (elem.mouseOver()) {
+                        hand = true;
+                        cursor(HAND);
+                    }
+                }
+                for (const elem of gates) {
+                    for (const e of elem.inputClickBoxes) {
+                        if (e.mouseOver()) {
+                            hand = true;
+                            cursor(HAND);
+                            negDir = elem.direction;
+                            negPort = e;
+                            isOutput = false;
+                        }
+                    }
+                    for (const e of elem.outputClickBoxes) {
+                        if (e.mouseOver()) {
+                            hand = true;
+                            cursor(HAND);
+                            negDir = elem.direction;
+                            negPort = e;
+                            isOutput = true;
+                        }
+                    }
+                }
+                for (const elem of segDisplays) {
+                    for (const e of elem.inputClickBoxes) {
+                        if (e.mouseOver()) {
+                            hand = true;
+                            cursor(HAND);
+                            negDir = 3;
+                            negPort = e;
+                            isOutput = false;
+                        }
+                    }
+                }
+                for (const elem of customs) {
+                    if (!elem.visible) {
+                        continue;
+                    }
+                    for (let i = 0; i < elem.inputClickBoxes.length; i++) {
+                        if (elem.inputClickBoxes[i].mouseOver()) {
+                            hand = true;
+                            cursor(HAND);
+                            negDir = elem.direction;
+                            negPort = elem.inputClickBoxes[i];
+                            isOutput = false;
+                            isTop = elem.objects[INPNUM][i].isTop; // Seems to work
+                        }
+                    }
+                    for (const e of elem.outputClickBoxes) {
+                        if (e.mouseOver()) {
+                            hand = true;
+                            cursor(HAND);
+                            negDir = elem.direction;
+                            negPort = e;
+                            isOutput = true;
+                        }
+                    }
                 }
             }
-            for (const elem of gates) {
-                for (const e of elem.inputClickBoxes) {
-                    if (e.mouseOver()) {
-                        hand = true;
-                        cursor(HAND);
-                        negDir = elem.direction;
-                        negPort = e;
-                        isOutput = false;
-                    }
-                }
-                for (const e of elem.outputClickBoxes) {
-                    if (e.mouseOver()) {
-                        hand = true;
-                        cursor(HAND);
-                        negDir = elem.direction;
-                        negPort = e;
-                        isOutput = true;
-                    }
-                }
-            }
-            for (const elem of segDisplays) {
-                for (const e of elem.inputClickBoxes) {
-                    if (e.mouseOver()) {
-                        hand = true;
-                        cursor(HAND);
-                        negDir = 3;
-                        negPort = e;
-                        isOutput = false;
-                    }
-                }
-            }
-            for (const elem of customs) {
-                if (!elem.visible) {
-                    continue;
-                }
-                for (let i = 0; i < elem.inputClickBoxes.length; i++) {
-                    if (elem.inputClickBoxes[i].mouseOver()) {
-                        hand = true;
-                        cursor(HAND);
-                        negDir = elem.direction;
-                        negPort = elem.inputClickBoxes[i];
-                        isOutput = false;
-                        isTop = elem.objects[INPNUM][i].isTop; // Seems to work
-                    }
-                }
-                for (const e of elem.outputClickBoxes) {
-                    if (e.mouseOver()) {
-                        hand = true;
-                        cursor(HAND);
-                        negDir = elem.direction;
-                        negPort = e;
-                        isOutput = true;
-                    }
-                }
-            }
-            if (fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
+            if (!moduleOptions && fullCrossing(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2))) {
                 hand = true;
                 cursor(HAND);
                 if (isConPoint(Math.round((mouseX / transform.zoom - transform.dx) / (GRIDSIZE / 2)) * (GRIDSIZE / 2), Math.round((mouseY / transform.zoom - transform.dy) / (GRIDSIZE / 2)) * (GRIDSIZE / 2)) < 0 ||
@@ -194,36 +164,44 @@ function updateCursors() {
             }
         }
     }
-    if (controlMode === 'select' && selectionBox.mouseOver() && showSelectionBox) {
-        hand = true;
-        cursor(MOVE);
+    if (controlMode === 'select') {
+        if (selectionBox.mouseOver() && showSelectionBox) {
+            hand = true;
+            cursor(MOVE);
+        } else if (showSelectionBox) {
+            hand = true;
+            cursor(HAND);
+        } else {
+            hand = true;
+            cursor('crosshair');
+        }
     }
     if (!hand) {
         cursor(ARROW);
     }
-    if (showCustomDialog) {
+    if (customDialog.isVisible || moduleOptions) {
         return;
     }
-    if (removeOldPreview) {
+    if (redrawNextFrame) {
         reDraw();
-        removeOldPreview = false;
+        redrawNextFrame = false;
     }
     if (showDPreview) {
         showPreview('diode', Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-        removeOldPreview = true;
+        redrawNextFrame = true;
     }
     if (showCPPreview) {
         showPreview('conpoint', Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE, Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE);
-        removeOldPreview = true;
+        redrawNextFrame = true;
     }
     if (negPort !== null) {
         showNegationPreview(negPort, isOutput, negDir, isTop);
-        removeOldPreview = true;
+        redrawNextFrame = true;
     }
 }
 
 function mouseDragged() {
-    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || customDialog.isVisible || screenshotDialog || linkDialog || elementMenuShown()) { return; }
     if (controlMode === 'select' && selectMode === 'drag') {
         if (sDragX2 !== Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE ||
             sDragY2 !== Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE) {
@@ -232,6 +210,8 @@ function mouseDragged() {
             sDragX2 = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
             sDragY2 = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
         }
+    } else if (controlMode === 'select' && selectMode === 'end') {
+        positionSelectionTools();
     }
 }
 
@@ -239,12 +219,12 @@ function mouseDragged() {
     Executed when a mouse button is pressed down
 */
 function mousePressed() {
-    if (modifierMenuDisplayed() && !mouseOverGUI()) {
+    if (elementMenuShown() && !mouseOverGUI()) {
         clickedOutOfGUI = true;
     } else {
         clickedOutOfGUI = false;
     }
-    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed()) { return; }
+    if (loading || saveDialog || customDialog.isVisible || screenshotDialog || linkDialog || moduleOptions || elementMenuShown()) { return; }
 
     if (wireMode === 'hold') {
         wireMode = 'none';
@@ -287,7 +267,7 @@ function mousePressed() {
                     case 'end':
                         selectEndX = Math.round(((mouseX + GRIDSIZE / 2) / transform.zoom - transform.dx - GRIDSIZE / 2) / GRIDSIZE) * GRIDSIZE + GRIDSIZE / 2;
                         selectEndY = Math.round(((mouseY + GRIDSIZE / 2) / transform.zoom - transform.dy - GRIDSIZE / 2) / GRIDSIZE) * GRIDSIZE + GRIDSIZE / 2;
-                        if (selectionBox.mouseOver()) {
+                        if (selectionBox.mouseOver(true)) {
                             // Start dragging
                             sDragX1 = Math.round((mouseX / transform.zoom - transform.dx) / GRIDSIZE) * GRIDSIZE;
                             sDragY1 = Math.round((mouseY / transform.zoom - transform.dy) / GRIDSIZE) * GRIDSIZE;
@@ -298,9 +278,9 @@ function mousePressed() {
                                 initY = sDragY1;
                             }
                             setSelectMode('drag');
+                            document.getElementById('copy-select-button').disabled = false;
+                            document.getElementById('delete-select-button').disabled = false;
                         } else {
-                            pushMoveSelectionAction(sDragX2 - initX, sDragY2 - initY, selectionBox.x - selectionBox.w / 2, selectionBox.y - selectionBox.h / 2,
-                                selectionBox.x + selectionBox.w / 2, selectionBox.y + selectionBox.h / 2);
                             finishSelection();
                             enterModifierMode();
                             initX = 0;
@@ -317,7 +297,7 @@ function mousePressed() {
 }
 
 function mouseClicked() {
-    if (loading || saveDialog || justClosedMenu || modifierMenuDisplayed() || mouseOverGUI()) {
+    if (loading || saveDialog || screenshotDialog || linkDialog || justClosedMenu || moduleOptions || customDialog.isVisible || elementMenuShown() || mouseOverGUI()) {
         return;
     }
     if (!simRunning && !mouseOverGUI()) {
@@ -389,8 +369,58 @@ function mouseClicked() {
           Finishing the selection process by invoking handleSelection
 */
 function mouseReleased() {
-    if (loading || showCustomDialog || saveDialog || mouseOverGUI()) { return; }
-    if (modifierMenuDisplayed()) {
+    if (moduleOptions && !mouseOverGUI() && mouseButton === LEFT) {
+        let swapped = false;
+        for (let i = 0; i < inputs.length; i++) {
+            if (inputs[i].mouseOver() && !swapped) {
+                if (swapInput !== i) {
+                    if (swapInput >= 0) {
+                        inputs[swapInput].mark(false);
+                        swapInputs(swapInput, i);
+                        swapInput = -1;
+                        swapped = true;
+                        initPinConfigurator();
+                        showModulePreviewer();
+                    } else {
+                        inputs[i].mark(true);
+                        swapInput = i;
+                    }
+                } else {
+                    inputs[swapInput].mark(false);
+                    swapInput = -1;
+                    swapped = true;
+                }
+                reDraw();
+            }
+        }
+        swapped = false;
+        for (let i = 0; i < outputs.length; i++) {
+            if (outputs[i].mouseOver() && !swapped) {
+                if (swapOutput !== i) {
+                    if (swapOutput >= 0) {
+                        outputs[swapOutput].mark(false);
+                        swapOutputs(swapOutput, i);
+                        swapOutput = -1;
+                        swapped = true;
+                        initPinConfigurator();
+                        showModulePreviewer();
+                    } else {
+                        outputs[i].mark(true);
+                        swapOutput = i;
+                    }
+                } else {
+                    outputs[swapOutput].mark(false);
+                    swapOutput = -1;
+                    swapped = true;
+                }
+                reDraw();
+            }
+        }
+    }
+
+    dropdownClicked = false;
+    if (loading || customDialog.isVisible || saveDialog || screenshotDialog ||linkDialog || moduleOptions || mouseOverGUI()) { return; }
+    if (elementMenuShown()) {
         if (!mouseOverGUI() && clickedOutOfGUI) {
             closeModifierMenu();
             unmarkPropTargets();
@@ -467,14 +497,15 @@ function mouseReleased() {
                                         if (inputToModify >= 0) {
                                             inputs[inputToModify].mark(false);
                                         }
-                                        inputs[i].mark(true);
-                                        inputToModify = i;
-                                        sequencerAdjusted = false;
-                                        showModifierMenu();
-                                        showInputPropMenu();
-                                        positionModifierElements();
-                                        wireMode = 'none';
-                                        reDraw();
+                                        if (inputs[i].clock) {
+                                            inputs[i].mark(true);
+                                            inputToModify = i;
+                                            updateModifierMenuPosition();
+                                            showClockPropMenu();
+                                            positionModifierElements();
+                                            wireMode = 'none';
+                                            reDraw();
+                                        }
                                     }
                                 }
                             }
@@ -486,8 +517,7 @@ function mouseReleased() {
                                         }
                                         outputs[i].mark(true);
                                         outputToModify = i;
-                                        sequencerAdjusted = false;
-                                        showModifierMenu();
+                                        updateModifierMenuPosition();
                                         showOutputPropMenu();
                                         positionModifierElements();
                                         wireMode = 'none';
@@ -503,8 +533,7 @@ function mouseReleased() {
                                         }
                                         labels[i].mark(true);
                                         labelToModify = i;
-                                        sequencerAdjusted = false;
-                                        showModifierMenu();
+                                        updateModifierMenuPosition();
                                         showLabelPropMenu();
                                         positionModifierElements();
                                         wireMode = 'none';
@@ -693,11 +722,14 @@ function mouseOverImport(baseX, baseY, rows, cols) {
 
 //Checks if the mouse hovers over the GUI(true) or the grid(false)
 function mouseOverGUI() {
-    /*if (mouseY > window.height - 220 && mouseX < 970 && showHints) {
+    if (moduleOptions && mouseX >= window.width - 360) {
         return true;
-    }*/
+    }
+    if (dropdownClicked) {
+        return true;
+    }
     if (controlMode === 'modify' && inputToModify + outputToModify + labelToModify >= -2) {
-        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 300 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 170;
+        return (mouseY < 0) || (mouseX < 0) || mouseX >= modifierMenuX && mouseX <= modifierMenuX + 300 && mouseY >= modifierMenuY && mouseY <= modifierMenuY + 150;
     }
     return (mouseY < 0) || (mouseX < 0);
 }
@@ -707,7 +739,7 @@ function mouseOverGUI() {
     by calculating dx and dy
 */
 function handleDragging() {
-    if (loading || saveDialog || showCustomDialog || modifierMenuDisplayed() || mouseOverGUI()) { return; }
+    if (loading || saveDialog || screenshotDialog || linkDialog || customDialog.isVisible || elementMenuShown() || mouseOverGUI()) { return; }
     if (mouseIsPressed && mouseButton === RIGHT && mouseX > 0 && mouseY > 0) {
         if (lastX !== 0) {
             transform.dx += Math.round((mouseX - lastX) * dragSpeed);
